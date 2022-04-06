@@ -1,14 +1,155 @@
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from .models import Word
+from .models import Word, Set
 import csv
 from django import forms
 from django.core.files.storage import FileSystemStorage
 import os
+import requests
+import json
 
 class UploadFileForm(forms.Form):
     csv = forms.FileField()
+
+def is_word(word):
+    r = requests.get('https://dictionaryapi.com/api/v3/references/collegiate/json/' + word + '?key=e115f2c9-c50e-4fc0-9711-f5264280ecff')
+    info = r.json()
+
+    error = False
+
+    try:
+        check = info[0]["meta"]["id"]
+    except IndexError:
+        error = True
+
+    there = False
+
+    if not error:
+        for stuff in info:
+            if (stuff["hwi"]["hw"].replace("*", "")) == word:
+                there = True
+
+    if not there:
+        error = True
+
+    cool = False
+
+    if not error:
+        for stuff in info:
+            try:
+                check = stuff["hwi"]["prs"]
+                cool = True
+            except KeyError:
+                pass
+
+    if not cool:
+        error = True
+    
+    return not error
+
+def create_word(word):
+    if is_word(word):
+        r = requests.get('https://dictionaryapi.com/api/v3/references/collegiate/json/' + word + '?key=e115f2c9-c50e-4fc0-9711-f5264280ecff')
+        info = r.json()
+
+        replacers = []
+        parts = []
+        right = []
+        origin = []
+        audio = []
+
+        final_parts = ""
+        final_right = "<ol>"
+        final_origin = "<ol>"
+        final_audio = ""
+
+        for stuff in info:
+            if (stuff["hwi"]["hw"].replace("*", "")) == word:
+                parts.append(stuff["fl"].capitalize())
+            parts = list(set(parts))
+
+        for stuff in info:
+            for thing in stuff["shortdef"]:
+                if (stuff["hwi"]["hw"].replace("*", "")) == word:
+                    right.append(thing.capitalize())
+
+        for stuff in info:
+            try:
+                stop = stuff["et"][0][1]
+                it = False
+                ayush = ""
+                count = 0
+                for i in range(len(stop)):
+                    if it:
+                        ayush += stop[i]
+                    
+                    print("STOP CURRENTLY EQUAL::::", stop)
+                    if stop[i] == '{' and it == False:
+                        it = True
+                        ayush += "{"
+
+                    if stop[i] == '}':
+                        if count == 0:
+                            count = 1
+                        else:
+                            count = 0
+                            it = False
+                            replacers.append(ayush)
+                            ayush = ""
+
+                for russia in replacers:
+                    stop = stop.replace(russia, "")
+                    
+                if (stuff["hwi"]["hw"].replace("*", "")) == word:
+                    origin.append(stop)
+            except KeyError:
+                pass
+
+        for stuff in info:
+            try:
+                check = stuff["hwi"]["prs"]
+                for thing in check:
+                    id = thing["sound"]["audio"]
+
+                    if id[0] + id[1] + id[2] == "bix":
+                        great = "bix"
+                    elif id[0] + id[1] == "gg":
+                        great = "gg"
+                    elif not id[0].isalpha():
+                        great = "number"
+                    else:
+                        great = id[0]
+                    
+                    if (stuff["hwi"]["hw"].replace("*", "")) == word:
+                        audio.append("https://media.merriam-webster.com/audio/prons/en/us/mp3/" + great + "/" + id + ".mp3")
+            except KeyError:
+                pass
+
+        for i in range(len(parts)):
+            if i != (len(parts) - 1):
+                final_parts += (parts[i] + ", ")
+            else: 
+                final_parts += parts[i]
+        
+        for i in range(len(origin)):
+            final_origin += ("<li>" + origin[i] + "</li>")
+        
+        final_origin += "</ol>"
+
+        for i in range(len(origin)):
+            final_right += ("<li>" + right[i] + "</li>")
+        
+        final_right += "</ol>"
+
+        for i in range(len(audio)):
+            if i != (len(audio) - 1):
+                final_audio += (audio[i] + ", ")
+            else: 
+                final_audio += audio[i]
+        
+        new = Word(word=word, speech = final_parts, origin = final_origin, definition = final_right, pronounce = final_audio)
+        new.save()
 
 # Create your views here.
 def index(request):
@@ -48,9 +189,13 @@ def upload(request):
     next(reader)
     for row in reader:
         new_word = row[0]
-        print(new_word)
-        new = Word(word=new_word)
-        new.save()
+        
+        if not Word.objects.filter(word=new_word):
+            create_word(new_word)
+        
+        find = Word.objects.get(word=new_word)
+        saver = Set(ref=find)
+        saver.save()
     f.close()
     os.remove("spell/static/spell/words.csv")
     return HttpResponseRedirect(reverse("admin_panel"))

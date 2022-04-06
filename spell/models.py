@@ -2,4 +2,11 @@ from django.db import models
 
 # Create your models here.
 class Word(models.Model):
-    word = models.CharField(max_length=100)
+    word = models.TextField(max_length=100)
+    speech = models.TextField(max_length=50)
+    origin = models.TextField(max_length=600)
+    definition = models.TextField(max_length=1000)
+    pronounce = models.TextField(max_length=600)
+
+class Set(models.Model):
+    ref = models.ForeignKey(Word, on_delete=models.CASCADE, related_name="ref")
