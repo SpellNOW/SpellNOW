@@ -1,13 +1,15 @@
+from re import L
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from .models import Word, Set
+from .models import Word
 import csv
 from django import forms
 from django.core.files.storage import FileSystemStorage
 import os
 import requests
 import json
+from os.path import exists
 
 class UploadFileForm(forms.Form):
     csv = forms.FileField()
@@ -185,6 +187,7 @@ def admin_panel(request):
 
 def upload(request):
     nots = []
+    already = []
     file = request.FILES["csv"]
     fs = FileSystemStorage()
     fs.save("spell/static/spell/words.csv", file)
@@ -197,21 +200,84 @@ def upload(request):
         if not Word.objects.filter(word=new_word):
             if is_word(new_word):
                 create_word(new_word)
-                find = Word.objects.get(word=new_word)
-                saver = Set(ref=find)
-                saver.save()
             else:
                 nots.append(new_word)
         else:
-            find = Word.objects.get(word=new_word)
-            saver = Set(ref=find)
-            saver.save()
+            already.append(new_word)
     f.close()
     os.remove("spell/static/spell/words.csv")
 
     if len(nots) > 0:
+        fields = ['Words', 'Part of Speech', 'Language of Origin', 'Definition']
+            
+        # writing to csv file 
+        with open("spell/static/spell/CustomTemplate.csv", 'w', newline="") as csvfile:
+            csvwriter = csv.writer(csvfile) 
+            csvwriter.writerow(fields) 
+            
+            for thingy in nots:
+                rows = [thingy, "", "", ""]
+                csvwriter.writerow(rows)
+
+    if len(nots) > 0 and not len(already) > 0:
         return render(request, "spell/unadded.html", {
             'nots': nots
         })
+    elif len(already) > 0 and not len(nots) > 0:
+        return render(request, "spell/unadded.html", {
+            'already': already
+        })
+    elif len(already) > 0 and len(nots) > 0:
+        return render(request, "spell/unadded.html", {
+            'nots': nots,
+            'already': already
+        })
     else:
         return HttpResponseRedirect(reverse("admin_panel"))
+
+def upload_custom(request):
+    if exists("spell/static/spell/custom.csv"):
+        os.remove("spell/static/spell/custom.csv")
+    already = []
+    new_word = []
+    file = request.FILES["custom"]
+    fs = FileSystemStorage()
+    fs.save("spell/static/spell/custom.csv", file)
+    f = open("spell/static/spell/custom.csv", "r")
+    reader = csv.reader(f)
+    next(reader)
+    counter = 0
+    for row in reader:
+        final = row[0].lower()
+        
+        if not Word.objects.filter(word=final):
+            new_word.append(final)
+        else:
+            already.append(final)
+        
+        counter += 1
+    f.close()
+    return render(request, "spell/custom.html", {
+        'words': new_word,
+        'already': already
+    })
+
+def upload_sounds(request):
+    f = open("spell/static/spell/custom.csv", "r")
+    reader = csv.reader(f)
+    next(reader)
+    for row in reader:
+        final = row[0].lower()
+        
+        if not Word.objects.filter(word=final):
+            file = request.FILES["file-"+final]
+            fs = FileSystemStorage()
+            fs.save("spell/static/spell/sounds/" + final + ".mp3", file)
+            new_word = row[0].lower()
+            new_speech = row[1].lower()
+            new_origin = row[2].lower()
+            new_def = row[3].lower()
+
+            new = Word(word=new_word, speech = new_speech, origin = new_origin, definition = new_def, pronounce = ("*--*" + new_word))
+            new.save()
+    return HttpResponseRedirect(reverse("admin_panel"))

@@ -8,24 +8,29 @@
         <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
     </head>
     <body>
-        {% if nots %}
-            <p>SpellNOW!&trade; was unable to add these words to your list:</p>
-            <ul>
-                {% for word in nots %}
-                    <li>{{ word }}</li>
-                {% endfor %}
-            </ul>
-            <a href="{% static 'spell/CustomTemplate.csv' %}"><button class="download">Download Custom CSV</button></a>
-        {% endif %}
         {% if already %}
             <p>SpellNOW!&trade; found these words already in your list:</p>
             <ul>
-                {% for word in already %}
-                    <li>{{ word }}</li>
+                {% for thingy in already %}
+                    <li>{{ thingy }}</li>
                 {% endfor %}
             </ul>
+            <br><br>
         {% endif %}
-        <a href="/admin_panel"><button class="admin">Admin Panel</button></a>
+        {% if words %}
+            <h2>Sounds</h2>
+                <form action="/upload_sounds" enctype="multipart/form-data" method="post">
+                    {% csrf_token %}
+                    {% for word in words %}
+                        <p>Sound for...<b>{{ word }}</b></p>
+                        <input required accept=".mp3" type="file" id="file-{{ word }}" name="file-{{ word }}">
+                    {% endfor %}
+                    <br><br>
+                    <input type="submit" value="Create Words" class="thingy">
+                </form>
+        {% else %}
+            <a href="/admin_panel"><button class="admin">Admin Panel</button></a>
+        {% endif %}
     </body>
 </html>
 <script>
@@ -51,6 +56,25 @@
         background-color: #00d0ff92;
         color: white;
     }
+    .thingy {
+        font-weight: 700;
+        color: white;
+        padding: 16px 35%;
+        text-align: center;
+        text-decoration: none;
+        font-size: 16px;
+        margin: 4px 2px;
+        transition-duration: 0.4s;
+        cursor: pointer;
+        background-color: white; 
+        color: #ff56e692; 
+        border: 2px solid #ff56e692;
+        font-family: 'Roboto Mono', monospace;
+    }
+    .thingy:hover {
+        background-color: #ff56e692;
+        color: white;
+    }
     table {
         width: 100%;
     }
@@ -71,9 +95,6 @@
     }
     .download:hover {
         background-color: #f44336;
-        color: white;
-    }
-    input[type=file] {
         color: white;
     }
     input[type=file]::file-selector-button {
@@ -109,7 +130,7 @@
     .within-tr:nth-child(even) {
         background-color: #dddddd;
     }
-    p, ul {
+    p, h2, li {
         font-family: 'Roboto Mono', monospace;
     }
 </style>

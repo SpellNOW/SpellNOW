@@ -7,6 +7,3 @@ class Word(models.Model):
     origin = models.TextField(max_length=600)
     definition = models.TextField(max_length=1000)
     pronounce = models.TextField(max_length=600)
-
-class Set(models.Model):
-    ref = models.ForeignKey(Word, on_delete=models.CASCADE, related_name="ref")
