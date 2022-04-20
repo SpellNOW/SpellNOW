@@ -1,0 +1,255 @@
+{% load static %}
+<html>
+    <head>
+        <title>SpellNOW!&trade; -- Home</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
+    </head>
+    <body>
+        <a href="/chooser"><button class="back">Back</button></a>
+        <img width="25%" src="{% static 'spell/logo.png' %}" alt="URMOM">
+        <br><br><br>
+        <button onclick="fun()" class="add">Add Tag</button>
+        <br><br>
+        <form action="/make_tag" method="post" id="form" style="display: none;">
+            {% csrf_token %}
+            <input id="tag_value" autocomplete="off" type="text" name="tag" placeholder="Tag..">
+            <input type="submit" value="Create">
+        </form>
+        <button style="display: none;" id="cancel" onclick="not()" class="cancel">Cancel</button>
+        <br><br>
+        <table class="within-table">
+            <tr class="within-tr">
+                <th class="within-th">Tags</th>
+            </tr>
+            {% for tags in tag %}
+                <tr class="within-tr">
+                    <td class="within-td">
+                        <h2><b>{{ tags.name }}</b></h2>
+                        <a href="/delete_tag/{{ tags.id }}"><button class="delete">Delete Tag</button></a>
+                        <table>
+                            <tr>
+                                <td>
+                                    <h2>Insert Words Under "{{ tags.name }}"</h2>
+                                    <form enctype="multipart/form-data" action="{% url 'ins_words_tag' %}" method="post">
+                                        {% csrf_token %}
+                                        <input onchange="document.getElementById('ins-{{ tags.id }}').click()" required accept=".csv" type="file" name="insert">
+                                        <input style="display: none;" value="{{ tags.id }}" name="id">
+                                        <input id="ins-{{ tags.id }}" type="submit" style="display: none;">
+                                    </form>
+                                </td>
+                                <td>
+                                    <h2>Delete Words Under "{{ tags.name }}"</h2>
+                                    <form enctype="multipart/form-data" action="{% url 'del_words_tag' %}" method="post">
+                                        {% csrf_token %}
+                                        <input style="display: none;" value="{{ tags.id }}" name="id">
+                                        <input onchange="document.getElementById('del-{{ tags.id }}').click()" required accept=".csv" type="file" name="del">
+                                        <input id="del-{{ tags.id }}" type="submit" style="display: none;">
+                                    </form>
+                                </td>
+                            </tr>
+                        </table>
+                        <ul>
+                            {% for word in tags.words.all %}
+                                <li>{{ word.word }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+        <br>
+        <p style="font-size: 10px; text-align: center;">© Copyright Lakshya Chauhan. All Rights Reserved. The SpellNOW!&trade; brand is wholly owned by The Chauhan Technology Company Inc. and is a division of The Chauhan Technology Company Inc.</p>
+    </body>
+</html>
+<script>
+    function fun() {
+        document.getElementById("form").style.display = "block";
+        document.getElementById("cancel").style.display = "block";
+    }
+    function not() {
+        document.getElementById("form").style.display = "none";
+        document.getElementById("cancel").style.display = "none";
+        document.getElementById("tag_value").value = "";
+    }
+</script>
+<style>
+    input[type=text], select {
+        width: 20%;
+        padding: 12px 20px;
+        margin: 8px 0;
+        display: inline-block;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        outline: none;
+        font-family: 'Roboto Mono', monospace;
+    }
+    input[type=submit] {
+        display:inline-block;
+        padding:0.35em 1.2em;
+        border:0.1em solid #9756a5;
+        margin:0 0.3em 0.3em 0;
+        border-radius:0.12em;
+        box-sizing: border-box;
+        text-decoration:none;
+        font-family:'Roboto',sans-serif;
+        font-weight:300;
+        color:#9756a5;
+        text-align:center;
+        transition: all 0.2s;
+        background-color: white;
+        font-family: 'Roboto Mono', monospace;
+    }
+    input[type=submit]:hover {
+        font-family: 'Roboto Mono', monospace;
+        color:white;
+        background-color:#9756a5;
+        cursor: pointer;
+    }
+    body {
+        font-family: 'Roboto Mono', monospace;
+    }
+    .add {
+        display:inline-block;
+        padding:0.35em 1.2em;
+        border:0.1em solid #3a6a88;
+        margin:0 0.3em 0.3em 0;
+        border-radius:0.12em;
+        box-sizing: border-box;
+        text-decoration:none;
+        font-family:'Roboto',sans-serif;
+        font-weight:300;
+        color:#3a6a88;
+        text-align:center;
+        transition: all 0.2s;
+        background-color: white;
+        font-family: 'Roboto Mono', monospace;
+    }
+    .add:hover{
+        font-family: 'Roboto Mono', monospace;
+        color:white;
+        background-color:#3a6a88;
+        cursor: pointer;
+    }
+    .delete {
+        display:inline-block;
+        padding:0.35em 1.2em;
+        border:0.1em solid #ff5e00;
+        margin:0 0.3em 0.3em 0;
+        border-radius:0.12em;
+        box-sizing: border-box;
+        text-decoration:none;
+        font-family:'Roboto',sans-serif;
+        font-weight:300;
+        color:#ff5e00;
+        text-align:center;
+        transition: all 0.2s;
+        background-color: white;
+        font-family: 'Roboto Mono', monospace;
+    }
+    .delete:hover{
+        font-family: 'Roboto Mono', monospace;
+        color:white;
+        background-color:#ff5e00;
+        cursor: pointer;
+    }
+    .back {
+        display:inline-block;
+        padding:0.35em 1.2em;
+        border:0.1em solid #000000;
+        margin:0 0.3em 0.3em 0;
+        border-radius:0.12em;
+        box-sizing: border-box;
+        text-decoration:none;
+        font-family:'Roboto',sans-serif;
+        font-weight:300;
+        color:#000000;
+        text-align:center;
+        transition: all 0.2s;
+        background-color: white;
+        font-family: 'Roboto Mono', monospace;
+    }
+    .back:hover{
+        font-family: 'Roboto Mono', monospace;
+        color:white;
+        background-color:#000000;
+        cursor: pointer;
+    }
+    .cancel {
+        display:inline-block;
+        padding:0.35em 1.2em;
+        border:0.1em solid #c7c7c7;
+        margin:0 0.3em 0.3em 0;
+        border-radius:0.12em;
+        box-sizing: border-box;
+        text-decoration:none;
+        font-family:'Roboto',sans-serif;
+        font-weight:300;
+        color:#c7c7c7;
+        text-align:center;
+        transition: all 0.2s;
+        background-color: white;
+        font-family: 'Roboto Mono', monospace;
+    }
+    .cancel:hover{
+        font-family: 'Roboto Mono', monospace;
+        color:white;
+        background-color:#c7c7c7;
+        cursor: pointer;
+    }
+    img {
+        margin-left: 37.5%;
+        margin-right: 37.5%;
+        margin-top: 1%;
+    }
+    
+    .within-table {
+        font-family: 'Roboto Mono', monospace;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    .within-td, .within-th {
+        font-family: 'Roboto Mono', monospace;
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 8px;
+    }
+
+    .within-tr:nth-child(even) {
+        font-family: 'Roboto Mono', monospace;
+        background-color: #dddddd;
+    }
+    h2 {
+        font-weight: 400;
+        font-size: 15px;
+    }
+    p {
+        font-weight: 700;
+    }
+    input[type=file]::file-selector-button {
+        font-weight: 700;
+        border: 2px solid #008CBA;;
+        padding: 16px 31%;
+        background-color: white;
+        color: #008CBA;
+        transition: 0.4s;
+        font-family: 'Roboto Mono', monospace;
+    }
+
+    input[type=file]::file-selector-button:hover {
+        background-color: #008CBA;
+        color: white;
+        cursor: pointer;
+    }
+
+    th {
+        font-size: 35px;
+    }
+    td {
+        width: 40%;
+    }
+</style>

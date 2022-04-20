@@ -7,3 +7,7 @@ class Word(models.Model):
     origin = models.TextField(max_length=600)
     definition = models.TextField(max_length=1000)
     pronounce = models.TextField(max_length=600)
+
+class Tag(models.Model):
+    name = models.TextField(max_length=100)
+    words = models.ManyToManyField(Word, null=True, blank=True)

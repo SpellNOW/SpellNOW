@@ -8,9 +8,10 @@
         <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
     </head>
     <body>
+        <a href="/chooser"><button class="back">Back</button></a>
         <table>
             <tr>
-                <th style="width: 20%;">
+                <th style="width: 30%;">
                     <a href="{% static 'spell/WordTemplate.csv' %}" download><button class="download">Template CSV (Existant Words)</button></a>
                     <br><br>
                     <a href="{% static 'spell/CustomWords.csv' %}" download><button class="download">Template CSV (Other Words)</button></a>
@@ -27,8 +28,14 @@
                         <input onchange="document.getElementById('thing').click()" type="file" name="custom">
                         <input id="thing" style="display: none;" type="submit">
                     </form>
+                    <h2>Upload Delete Word File</h2>
+                    <form enctype="multipart/form-data" action="{% url 'delete_words' %}" method="post">
+                        {% csrf_token %}
+                        <input onchange="document.getElementById('righter').click()" type="file" name="deleter">
+                        <input id="righter" style="display: none;" type="submit">
+                    </form>
                 </th>
-                <th style="width: 80%;">
+                <th style="width: 70%;">
                     <table class = "within-table">
                         <tr class = "within-tr">
                             <th style="font-weight: 700;" class = "within-th">WORDS</th>
@@ -49,6 +56,28 @@
     
 </script>
 <style>
+    .back {
+        display:inline-block;
+        padding:0.35em 1.2em;
+        border:0.1em solid #000000;
+        margin:0 0.3em 0.3em 0;
+        border-radius:0.12em;
+        box-sizing: border-box;
+        text-decoration:none;
+        font-family:'Roboto',sans-serif;
+        font-weight:300;
+        color:#000000;
+        text-align:center;
+        transition: all 0.2s;
+        background-color: white;
+        font-family: 'Roboto Mono', monospace;
+    }
+    .back:hover{
+        font-family: 'Roboto Mono', monospace;
+        color:white;
+        background-color:#000000;
+        cursor: pointer;
+    }
     h2 {
         font-family: 'Roboto Mono', monospace;
     }

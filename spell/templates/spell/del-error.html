@@ -1,0 +1,104 @@
+{% load static %}
+<html>
+    <head>
+        <title>SpellNOW!&trade; -- Words</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
+    </head>
+    <body>
+        <p>SpellNOW!&trade; was not able to remove these words from the tag:</p>
+        <ul>
+            {% for word in nots %}
+                <li>{{ word }}</li>
+            {% endfor %}
+        </ul>
+        <a href="/categories"><button class="admin">Tags</button></a>
+    </body>
+</html>
+<script>
+    
+</script>
+<style>
+    .admin {
+        font-weight: 700;
+        color: white;
+        padding: 16px 35%;
+        text-align: center;
+        text-decoration: none;
+        font-size: 16px;
+        margin: 4px 2px;
+        transition-duration: 0.4s;
+        cursor: pointer;
+        background-color: white; 
+        color: #00d0ff92; 
+        border: 2px solid #00d0ff92;
+        font-family: 'Roboto Mono', monospace;
+    }
+    .admin:hover {
+        background-color: #00d0ff92;
+        color: white;
+    }
+    table {
+        width: 100%;
+    }
+    .download {
+        font-weight: 700;
+        color: white;
+        padding: 16px 35%;
+        text-align: center;
+        text-decoration: none;
+        font-size: 16px;
+        margin: 4px 2px;
+        transition-duration: 0.4s;
+        cursor: pointer;
+        background-color: white; 
+        color: #f44336; 
+        border: 2px solid #f44336;
+        font-family: 'Roboto Mono', monospace;
+    }
+    .download:hover {
+        background-color: #f44336;
+        color: white;
+    }
+    input[type=file] {
+        color: white;
+    }
+    input[type=file]::file-selector-button {
+        font-weight: 700;
+        border: 2px solid #008CBA;;
+        padding: 16px 31%;
+        background-color: white;
+        color: #008CBA;
+        transition: 0.4s;
+        font-family: 'Roboto Mono', monospace;
+    }
+
+    input[type=file]::file-selector-button:hover {
+        background-color: #008CBA;
+        color: white;
+        cursor: pointer;
+    }
+
+    .within-table {
+        font-family: 'Roboto Mono', monospace;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    .within-td, .within-th {
+        font-family: 'Roboto Mono', monospace;
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 8px;
+        font-weight: 100;
+    }
+
+    .within-tr:nth-child(even) {
+        background-color: #dddddd;
+    }
+    p, ul {
+        font-family: 'Roboto Mono', monospace;
+    }
+</style>

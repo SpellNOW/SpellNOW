@@ -70,13 +70,13 @@ def create_word(word):
     final_audio = ""
 
     for stuff in info:
-        if (stuff["hwi"]["hw"].replace("*", "")).lower() == word:
+        if (stuff["hwi"]["hw"].replace("*", "")) == word:
             parts.append(stuff["fl"].capitalize())
         parts = list(set(parts))
 
     for stuff in info:
         for thing in stuff["shortdef"]:
-            if (stuff["hwi"]["hw"].replace("*", "")).lower() == word:
+            if (stuff["hwi"]["hw"].replace("*", "")) == word:
                 right.append(thing.capitalize())
 
     for stuff in info:
@@ -105,7 +105,7 @@ def create_word(word):
             for russia in replacers:
                 stop = stop.replace(russia, "")
                 
-            if (stuff["hwi"]["hw"].replace("*", "")).lower() == word:
+            if (stuff["hwi"]["hw"].replace("*", "")) == word:
                 origin.append(stop)
         except KeyError:
             pass
@@ -125,7 +125,7 @@ def create_word(word):
                 else:
                     great = id[0]
                 
-                if (stuff["hwi"]["hw"].replace("*", "")).lower() == word:
+                if (stuff["hwi"]["hw"].replace("*", "")) == word:
                     audio.append("https://media.merriam-webster.com/audio/prons/en/us/mp3/" + great + "/" + id + ".mp3")
         except KeyError:
             pass
@@ -174,7 +174,7 @@ def confirm(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         request.session["pin"] = "CONFIRMED"
-        return HttpResponseRedirect(reverse("chooser"))
+        return HttpResponseRedirect(reverse("admin_panel"))
 
 def admin_panel(request):
     if "pin" not in request.session or request.session["pin"] != "CONFIRMED":
@@ -283,12 +283,9 @@ def upload_sounds(request):
     return HttpResponseRedirect(reverse("admin_panel"))
 
 def categories(request):
-    if "pin" not in request.session or request.session["pin"] != "CONFIRMED":
-        return HttpResponseRedirect(reverse("index"))
-    else:
-        return render(request, "spell/categories.html", {
-            "tag": Tag.objects.all()
-        })
+    return render(request, "spell/categories.html", {
+        "tag": Tag.objects.all()
+    })
 
 def make_tag(request):
     thing = request.POST["tag"]
@@ -342,7 +339,7 @@ def ins_words_tag(request):
 
 def del_words_tag(request):
     nots = []
-    file = request.FILES["del"]
+    file = request.FILES["insert"]
     fs = FileSystemStorage()
     fs.save("spell/static/spell/delete-tags.csv", file)
     f = open("spell/static/spell/delete-tags.csv", "r")
@@ -359,49 +356,11 @@ def del_words_tag(request):
             tag.words.remove(word)
             tag.save()
     f.close()
-    os.remove("spell/static/spell/delete-tags.csv")
+    os.remove("spell/static/spell/insert-tags.csv")
 
     if len(nots) > 0:
-        return render(request, "spell/del-error.html", {
+        return render(request, "spell/ins-error.html", {
             'nots': nots,
         })
     else:
         return HttpResponseRedirect(reverse("categories"))
-
-def chooser(request):
-    if "pin" not in request.session or request.session["pin"] != "CONFIRMED":
-        return HttpResponseRedirect(reverse("index"))
-    else:
-        words = Word.objects.all()
-        return render(request, "spell/chooser.html")
-
-def delete_words(request):
-    nots = []
-    file = request.FILES["deleter"]
-    fs = FileSystemStorage()
-    fs.save("spell/static/spell/delete-words.csv", file)
-    f = open("spell/static/spell/delete-words.csv", "r")
-    reader = csv.reader(f)
-    next(reader)
-    for row in reader:
-        final = row[0].lower()
-        
-        if not Word.objects.filter(word=final):
-            nots.append(final)
-        else:
-            word = Word.objects.get(word=final)
-            word.delete()
-    f.close()
-    os.remove("spell/static/spell/delete-words.csv")
-
-    if len(nots) > 0:
-        return render(request, "spell/del-words-err.html", {
-            'nots': nots,
-        })
-    else:
-        return HttpResponseRedirect(reverse("admin_panel"))
-
-def delete_tag(request, id):
-    tag = Tag.objects.get(pk=id)
-    tag.delete()
-    return HttpResponseRedirect(reverse("categories"))
