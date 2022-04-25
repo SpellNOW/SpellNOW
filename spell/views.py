@@ -573,7 +573,7 @@ def finish(request):
     gmail_user = 'turboluckyc@gmail.com'
     gmail_password = 'ibwwfiwlmivwwfkd'
     sent_from = "SpellNOW!"
-    to = ['chauhanl@mcvts.net']
+    to = ['naveensc@gmail.com']
     subject = 'Official SpellNOW! Notification!'
     body = 'This is an Official SpellNOW! Notification...\n\nAnjali has recently complete a spelling activity on SpellNOW! with a score of ' + request.POST["score"] +".\n\nThank you."
 
