@@ -395,7 +395,7 @@ def delete_words(request):
             word.delete()
 
             if exists("spell/static/spell/sounds/" + final + ".mp3"):
-                os.remove("spell/static/sounds/" + final + ".mp3")
+                os.remove("spell/static/spell/sounds/" + final + ".mp3")
     f.close()
     os.remove("spell/static/spell/delete-words.csv")
 
