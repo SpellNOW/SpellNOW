@@ -15,5 +15,8 @@ urlpatterns = [
     path("del_words_tag", views.del_words_tag, name="del_words_tag"),
     path("chooser", views.chooser, name="chooser"),
     path("delete_words", views.delete_words, name="delete_words"),
-    path("delete_tag/<str:id>", views.delete_tag, name="delete_tag")
+    path("delete_tag/<str:id>", views.delete_tag, name="delete_tag"),
+    path("start", views.start, name="start"),
+    path("spell", views.spell, name="spell"),
+    path("finish", views.finish, name="finish"),
 ]

@@ -9,9 +9,12 @@
     </head>
     <body>
         <a href="/chooser"><button class="back">Back</button></a>
+        <br><br>
+        <img width="25%" src="{% static 'spell/logo.png' %}" alt="URMOM">
+        <br><br>
         <table>
             <tr>
-                <th style="width: 30%;">
+                <th style="width: 30%; vertical-align: top;">
                     <a href="{% static 'spell/WordTemplate.csv' %}" download><button class="download">Template CSV (Existant Words)</button></a>
                     <br><br>
                     <a href="{% static 'spell/CustomWords.csv' %}" download><button class="download">Template CSV (Other Words)</button></a>
@@ -50,12 +53,18 @@
                 </th>
             </tr>
         </table>
+        <br>
+        <p style="font-size: 10px; text-align: center; font-family: 'Roboto Mono', monospace;">© Copyright Lakshya Chauhan. All Rights Reserved. The SpellNOW!&trade; brand is wholly owned by The Chauhan Technology Company Inc. and is a division of The Chauhan Technology Company Inc.</p>
     </body>
 </html>
 <script>
     
 </script>
 <style>
+    img {
+        margin-left: 37.5%;
+        margin-right: 37.5%;
+    }
     .back {
         display:inline-block;
         padding:0.35em 1.2em;

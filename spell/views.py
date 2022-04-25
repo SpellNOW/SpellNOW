@@ -10,6 +10,8 @@ import os
 import requests
 import json
 from os.path import exists
+import random
+import smtplib
 
 class UploadFileForm(forms.Form):
     csv = forms.FileField()
@@ -67,7 +69,7 @@ def create_word(word):
     final_parts = ""
     final_right = "<ol>"
     final_origin = "<ol>"
-    final_audio = ""
+    final_audio = "["
 
     for stuff in info:
         if (stuff["hwi"]["hw"].replace("*", "")).lower() == word:
@@ -148,9 +150,9 @@ def create_word(word):
 
     for i in range(len(audio)):
         if i != (len(audio) - 1):
-            final_audio += (audio[i] + ", ")
+            final_audio += ("'" + audio[i] + "', ")
         else: 
-            final_audio += audio[i]
+            final_audio += ("'" + audio[i] + "']")
     
     new = Word(word=word, speech = final_parts, origin = final_origin, definition = final_right, pronounce = final_audio)
     new.save()
@@ -169,7 +171,7 @@ def index(request):
 
 def confirm(request):
     pin = request.POST["pin"]
-    if pin != "6911":
+    if pin != "5823":
         request.session["pin"] = "UNCONFIRMED"
         return HttpResponseRedirect(reverse("index"))
     else:
@@ -275,8 +277,8 @@ def upload_sounds(request):
             fs.save("spell/static/spell/sounds/" + final + ".mp3", file)
             new_word = row[0].lower()
             new_speech = row[1].lower()
-            new_origin = row[2].lower()
-            new_def = row[3].lower()
+            new_origin = "<ol><li>" + row[2].lower() + "</li></ol>"
+            new_def = "<ol><li>" + row[3].lower() + "</li></ol>"
 
             new = Word(word=new_word, speech = new_speech, origin = new_origin, definition = new_def, pronounce = ("*--*" + new_word))
             new.save()
@@ -391,6 +393,9 @@ def delete_words(request):
         else:
             word = Word.objects.get(word=final)
             word.delete()
+
+            if exists("spell/static/spell/sounds/" + final + ".mp3"):
+                os.remove("spell/static/sounds/" + final + ".mp3")
     f.close()
     os.remove("spell/static/spell/delete-words.csv")
 
@@ -405,3 +410,190 @@ def delete_tag(request, id):
     tag = Tag.objects.get(pk=id)
     tag.delete()
     return HttpResponseRedirect(reverse("categories"))
+
+def start(request):
+    total = ""
+    for tag in Tag.objects.all():
+        total += (", " + tag.name)
+    total += ", *..*"
+
+    return render(request, "spell/start.html", {
+        "tags": Tag.objects.all(),
+        "total": total,
+        "number": len(Word.objects.all())
+    })
+
+def spell(request):
+    if request.method == "POST":
+        thing = request.POST["tags"]
+        tags = thing.split(", ")
+        tags.remove('')
+        allwords = []
+
+        for tag in tags:
+            if not tag == "*..*":
+                right = Tag.objects.get(name=tag)
+                for word in right.words.all():
+                    if not word in allwords:
+                        allwords.append(word)
+            else:
+                for word in Word.objects.all():
+                    is_tagged = False
+                    for tag in Tag.objects.all():
+                        if word in tag.words.all():
+                            is_tagged = True
+                    if not is_tagged:
+                        if not word in allwords:
+                            allwords.append(word)
+        
+        if int(len(allwords)) < int(request.POST["numwords"]) or int(len(tags)) > int(request.POST["numwords"]):
+            total = ""
+            for tag in Tag.objects.all():
+                total += (", " + tag.name)
+            total += ", *..*"
+
+            return render(request, "spell/start.html", {
+                "tags": Tag.objects.all(),
+                "total": total,
+                "number": len(Word.objects.all()),
+                "message": "Invalid Word Count"
+            })
+        else:
+            allspeechs = []
+            allorigins = []
+            alldefs = []
+            allprons = ""
+            fines = []
+            count = 0
+            using = 0
+            thingybob = ""
+            nogo = False
+            i = 0
+
+            for i in range(int(request.POST["numwords"])):
+                while True:   
+                    nogo = False
+                    if not tags[count] == "*..*":
+                        lll = Tag.objects.get(name=tags[count])
+                        last = lll.words.all()
+                        currently = []
+
+                        for asdf in last:
+                            currently.append(asdf.word)
+
+                        while True:
+                            using = random.randint(0, (len(last) - 1))
+                            thingybob = last[using]
+                            currently.remove(thingybob.word)
+                            if (not thingybob.word in fines):
+                                break
+                            elif len(last) == 0:
+                                nogo = True
+                                break
+                    else:
+                        options = []
+                        for word in Word.objects.all():
+                            is_tagged = False
+                            for tag in Tag.objects.all():
+                                if word in tag.words.all():
+                                    is_tagged = True
+                            if not is_tagged:
+                                options.append(word)
+                        
+                        while True:
+                            using = random.randint(0, (len(options) - 1))
+                            thingybob = options[using]
+                            options.remove(thingybob)
+                            if (not thingybob.word in fines):
+                                break
+                            elif len(options) == 0:
+                                nogo = True
+                                break
+
+                    if not nogo:
+                        fines.append(thingybob.word)
+                        right = request.POST["chooser"]
+
+                        if "Part of Speech" in right:
+                            allspeechs.append(thingybob.speech)
+                        if "Language of Origin" in right:
+                            allorigins.append(thingybob.origin)
+                        if "Definition" in right:
+                            alldefs.append(thingybob.definition)
+                        
+                        if (count + 1) == int(request.POST["numwords"]):
+                            allprons += thingybob.pronounce
+                        else:
+                            allprons += (thingybob.pronounce + " || ")
+                        
+                        if count == (len(tags) - 1):
+                            count = 0
+                        else:
+                            count += 1
+                        
+                        break
+                    else:
+                        if count == (len(tags) - 1):
+                            count = 0
+                        else:
+                            count += 1
+            
+            return render(request, "spell/spell.html", {
+                "words": fines,
+                "speech": allspeechs,
+                "origin": allorigins,
+                "definition": alldefs,
+                "prons": allprons,
+                "tags": Tag.objects.all()
+            })
+
+def finish(request):
+    tags_rep = request.POST["new_tags"]
+    tags = tags_rep.split("[]")
+    tags.remove("")
+    
+    words_rep = request.POST["add_words"]
+    added_words = words_rep.split("[]")
+    length = (len(added_words) - 1)
+    count = 0
+
+    for tag in tags:
+        new = Tag(name=tag)
+        new.save()
+    
+    for word in added_words:
+        if not count == length:
+            cool = word.split("||")
+            bad = Tag.objects.get(name=cool[0])
+            word = Word.objects.get(word=cool[1])
+            bad.words.add(word)
+            bad.save()
+            count += 1
+
+    gmail_user = 'turboluckyc@gmail.com'
+    gmail_password = 'ibwwfiwlmivwwfkd'
+    sent_from = "SpellNOW!"
+    to = ['chauhanl@mcvts.net']
+    subject = 'Official SpellNOW! Notification!'
+    body = 'This is an Official SpellNOW! Notification...\n\nAnjali has recently complete a spelling activity on SpellNOW! with a score of ' + request.POST["score"] +".\n\nThank you."
+
+    email_text = """\
+    From: %s
+    To: %s
+    Subject: %s
+
+    %s
+    """ % (sent_from, ", ".join(to), subject, body)
+
+    try:
+        smtp_server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        smtp_server.ehlo()
+        smtp_server.login(gmail_user, gmail_password)       
+        smtp_server.sendmail(sent_from, to, email_text)
+        smtp_server.close()
+    except Exception as ex:
+        pass
+    
+    return render(request, "spell/score.html", {
+        "score": request.POST["score"]
+    })

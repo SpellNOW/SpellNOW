@@ -1,0 +1,188 @@
+{% load static %}
+<html>
+    <head>
+        <title>SpellNOW!&trade; -- Words</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
+    </head>
+    <body>
+        <a href="/"><button class="back">Back</button></a>
+        <br><br>
+        <img width="25%" src="{% static 'spell/logo.png' %}" alt="URMOM">
+        <br><br>
+        <table>
+            <tr>
+                <th style="width: 30%; text-align: left;">
+                    <p>Included Words:</p>
+                    {% for tag in tags %}
+                        <input onchange="finalrep('vehicle{{ tag.id }}')" checked type="checkbox" id="vehicle{{ tag.id }}" name="vehicle1" value="Bike">
+                        <label id="label{{ tag.id }}" for="vehicle{{ tag.id }}">{{ tag.name }}</label><br>
+                    {% endfor %}
+                    <input onchange="finalrep('vehiclea')" checked type="checkbox" id="vehiclea" name="vehicle3" value="Boat">
+                    <label id="labela" for="vehiclea">Untagged Words</label>
+                    <br>
+                    <p>Included Information:</p>
+                    <input onchange="finalkel('righter1')" checked type="checkbox" id="righter1" name="vehicle1" value="Bike">
+                    <label id="why1" for="righter1">Definition</label><br>
+                    <input onchange="finalkel('righter2')" checked type="checkbox" id="righter2" name="vehicle2" value="Car">
+                    <label id="why2" for="righter2">Part of Speech</label><br>
+                    <input onchange="finalkel('righter3')" checked type="checkbox" id="righter3" name="vehicle3" value="Boat">
+                    <label id="why3" for="righter3">Language of Origin</label><br>
+                </th>
+                <th style="width: 70%;">
+                    <form enctype="multipart/form-data" action="{% url 'spell' %}" method="post">
+                        {% csrf_token %}
+                        <input name="numwords" style="width: 100%; text-align: center; font-size: 300px; font-family: 'Roboto Mono', monospace; border: none; outline: none;" placeholder="Word Count..." value="{{ number }}" type="number">
+                        <textarea style="display: none;" name="tags" id="tagsarea">{{ total }}</textarea>
+                        <textarea style="display: none;" name="chooser" id="chooserarea">, Definition, Part of Speech, Language of Origin</textarea>
+                        <input class="download" value="Start" type="submit">
+                    </form>
+                    {% if message %}
+                        <p style="color: red;">Invalid Word Count!</p>
+                    {% endif %}
+                </th>
+            </tr>
+        </table>
+        <br>
+        <p style="font-size: 10px; text-align: center; font-family: 'Roboto Mono', monospace;">© Copyright Lakshya Chauhan. All Rights Reserved. The SpellNOW!&trade; brand is wholly owned by The Chauhan Technology Company Inc. and is a division of The Chauhan Technology Company Inc.</p>
+    </body>
+</html>
+<script>
+    function finalrep (id) {
+        if (!(document.getElementById(id).checked)) {
+            thingy = id.replace('vehicle', '');
+            right = document.getElementById("label" + thingy).innerHTML;
+            if (right == "Untagged Words") {
+                document.getElementById("tagsarea").innerHTML = (document.getElementById("tagsarea").innerHTML).replace(", *..*", '');
+            }
+            else {
+                document.getElementById("tagsarea").innerHTML = (document.getElementById("tagsarea").innerHTML).replace((", " + right), '');
+            }
+        }
+        else {
+            thingy = id.replace('vehicle', '');
+            right = document.getElementById("label" + thingy).innerHTML;
+            if (right == "Untagged Words") {
+                document.getElementById("tagsarea").innerHTML += ", *..*";
+            }
+            else {
+                document.getElementById("tagsarea").innerHTML += (", " + right);
+            }
+        }
+    }
+    function finalkel (id) {
+        if (!(document.getElementById(id).checked)) {
+            thingy = id.replace('righter', '');
+            right = document.getElementById("why" + thingy).innerHTML;
+            document.getElementById("chooserarea").innerHTML = (document.getElementById("chooserarea").innerHTML).replace((", " + right), '');
+        }
+        else {
+            thingy = id.replace('righter', '');
+            right = document.getElementById("why" + thingy).innerHTML;
+            document.getElementById("chooserarea").innerHTML += (", " + right);
+        }
+    }
+</script>
+<style>
+    img {
+        margin-left: 37.5%;
+        margin-right: 37.5%;
+    }
+    .back {
+        display:inline-block;
+        padding:0.35em 1.2em;
+        border:0.1em solid #000000;
+        margin:0 0.3em 0.3em 0;
+        border-radius:0.12em;
+        box-sizing: border-box;
+        text-decoration:none;
+        font-family:'Roboto',sans-serif;
+        font-weight:300;
+        color:#000000;
+        text-align:center;
+        transition: all 0.2s;
+        background-color: white;
+        font-family: 'Roboto Mono', monospace;
+    }
+    .back:hover{
+        font-family: 'Roboto Mono', monospace;
+        color:white;
+        background-color:#000000;
+        cursor: pointer;
+    }
+    h2 {
+        font-family: 'Roboto Mono', monospace;
+    }
+    p, label {
+        font-family: 'Roboto Mono', monospace;
+    }
+    label {
+        font-weight: 300;
+    }
+    input[type="checkbox"]:hover {
+        cursor: pointer;
+    }
+    label:hover {
+        cursor: pointer;
+    }
+    table {
+        width: 100%;
+    }
+    .download {
+        font-weight: 700;
+        color: white;
+        padding: 16px 35%;
+        text-align: center;
+        text-decoration: none;
+        font-size: 16px;
+        margin: 4px 2px;
+        transition-duration: 0.4s;
+        cursor: pointer;
+        background-color: white; 
+        color: #f44336; 
+        border: 2px solid #f44336;
+        font-family: 'Roboto Mono', monospace;
+    }
+    .download:hover {
+        background-color: #f44336;
+        color: white;
+    }
+    input[type=file] {
+        color: white;
+    }
+    input[type=file]::file-selector-button {
+        font-weight: 700;
+        border: 2px solid #008CBA;;
+        padding: 16px 31%;
+        background-color: white;
+        color: #008CBA;
+        transition: 0.4s;
+        font-family: 'Roboto Mono', monospace;
+    }
+
+    input[type=file]::file-selector-button:hover {
+        background-color: #008CBA;
+        color: white;
+        cursor: pointer;
+    }
+
+    .within-table {
+        font-family: 'Roboto Mono', monospace;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    .within-td, .within-th {
+        font-family: 'Roboto Mono', monospace;
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 8px;
+        font-weight: 100;
+    }
+
+    .within-tr:nth-child(even) {
+        background-color: #dddddd;
+    }
+</style>
