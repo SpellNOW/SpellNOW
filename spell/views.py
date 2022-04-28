@@ -54,6 +54,14 @@ def is_word(word):
     if not cool:
         error = True
     
+    if not error:
+        for stuff in info:
+            if (stuff["hwi"]["hw"].replace("*", "")).lower() == word:
+                try:
+                    stuff["fl"].capitalize()
+                except KeyError:
+                    error = True
+    
     return not error
 
 def create_word(word):
