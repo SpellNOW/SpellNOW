@@ -19,6 +19,9 @@
             <input id="spelling" autocomplete="off" type="text" name="tag" placeholder="Spelling...">
             <input id="check" onclick="spell()" type="submit" value="CHECK">
             <button onclick="repron()" class="reprons">Pronounce</button>
+            <button onclick="spec()" class="reprons">Part of Speech</button>
+            <button onclick="origin()" class="reprons">Language of Origin</button>
+            <button onclick="def()" class="reprons">Definition</button>
             <p><b style="display: none;" id="response"></b></p>
 
             <div id="tags" style="display: none;">
@@ -32,13 +35,13 @@
                 </div>
             </div>
             
-            <p id="speech"></p>
+            <p style="display:none;" id="speech"></p>
             
             <p><b>Language of Origin:</b></p>
-            <div id="origin">
+            <div style="display:none;" id="origin">
             </div>
             <p><b>Definition:</b></p>
-            <div id="def">
+            <div style="display:none;" id="def">
             </div>
             <br>
         </div>
@@ -179,6 +182,9 @@
         else if (document.getElementById("check").value == "NEXT") {
             document.getElementById("response").style.display = "none";
             document.getElementById("tags").style.display = "none";
+            document.getElementById("speech").style.display = "none";
+            document.getElementById("origin").style.display = "none";
+            document.getElementById("def").style.display = "none";
             document.getElementById("spelling").value = "";
             document.getElementById("check").value = "CHECK"
             const nodeList = document.querySelectorAll(".tag");
@@ -222,6 +228,18 @@
             spell();
         }
     });
+
+    function spec() {
+        document.getElementById("speech").style.display = "block";
+    }
+
+    function origin() {
+        document.getElementById("origin").style.display = "block";
+    }
+
+    function def() {
+        document.getElementById("def").style.display = "block";
+    }
 
     document.getElementById("progress").innerHTML = ("<b>Progress: </b>0/" + word_count);
     document.getElementById("correct").innerHTML = ("<b>Correct: </b>0/0");

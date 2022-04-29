@@ -520,14 +520,10 @@ def spell(request):
 
                     if not nogo:
                         fines.append(thingybob.word)
-                        right = request.POST["chooser"]
 
-                        if "Part of Speech" in right:
-                            allspeechs.append(thingybob.speech)
-                        if "Language of Origin" in right:
-                            allorigins.append(thingybob.origin)
-                        if "Definition" in right:
-                            alldefs.append(thingybob.definition)
+                        allspeechs.append(thingybob.speech)
+                        allorigins.append(thingybob.origin)
+                        alldefs.append(thingybob.definition)
                         
                         if (count + 1) == int(request.POST["numwords"]):
                             allprons += thingybob.pronounce

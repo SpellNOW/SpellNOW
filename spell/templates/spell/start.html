@@ -23,20 +23,12 @@
                     <input onchange="finalrep('vehiclea')" checked type="checkbox" id="vehiclea" name="vehicle3" value="Boat">
                     <label id="labela" for="vehiclea">Untagged Words</label>
                     <br>
-                    <p>Included Information:</p>
-                    <input onchange="finalkel('righter1')" checked type="checkbox" id="righter1" name="vehicle1" value="Bike">
-                    <label id="why1" for="righter1">Definition</label><br>
-                    <input onchange="finalkel('righter2')" checked type="checkbox" id="righter2" name="vehicle2" value="Car">
-                    <label id="why2" for="righter2">Part of Speech</label><br>
-                    <input onchange="finalkel('righter3')" checked type="checkbox" id="righter3" name="vehicle3" value="Boat">
-                    <label id="why3" for="righter3">Language of Origin</label><br>
                 </th>
                 <th style="width: 70%;">
                     <form enctype="multipart/form-data" action="{% url 'spell' %}" method="post">
                         {% csrf_token %}
                         <input name="numwords" style="width: 100%; text-align: center; font-size: 300px; font-family: 'Roboto Mono', monospace; border: none; outline: none;" placeholder="Word Count..." value="{{ number }}" type="number">
                         <textarea style="display: none;" name="tags" id="tagsarea">{{ total }}</textarea>
-                        <textarea style="display: none;" name="chooser" id="chooserarea">, Definition, Part of Speech, Language of Origin</textarea>
                         <input class="download" value="Start" type="submit">
                     </form>
                     {% if message %}
@@ -70,18 +62,6 @@
             else {
                 document.getElementById("tagsarea").innerHTML += (", " + right);
             }
-        }
-    }
-    function finalkel (id) {
-        if (!(document.getElementById(id).checked)) {
-            thingy = id.replace('righter', '');
-            right = document.getElementById("why" + thingy).innerHTML;
-            document.getElementById("chooserarea").innerHTML = (document.getElementById("chooserarea").innerHTML).replace((", " + right), '');
-        }
-        else {
-            thingy = id.replace('righter', '');
-            right = document.getElementById("why" + thingy).innerHTML;
-            document.getElementById("chooserarea").innerHTML += (", " + right);
         }
     }
 </script>
