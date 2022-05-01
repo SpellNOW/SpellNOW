@@ -1,4 +1,5 @@
 from django.db import models
+from django.forms import BooleanField
 
 # Create your models here.
 class Word(models.Model):
@@ -7,6 +8,7 @@ class Word(models.Model):
     origin = models.TextField(max_length=600)
     definition = models.TextField(max_length=1000)
     pronounce = models.TextField(max_length=600)
+    tagged = models.BooleanField()
 
 class Tag(models.Model):
     name = models.TextField(max_length=100)

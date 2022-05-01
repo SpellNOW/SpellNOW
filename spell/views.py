@@ -327,6 +327,8 @@ def ins_words_tag(request):
             word = Word.objects.get(word=final)
             tag.words.add(word)
             tag.save()
+            word.tagged = True
+            word.save()
     f.close()
     os.remove("spell/static/spell/insert-tags.csv")
 
@@ -477,6 +479,7 @@ def spell(request):
             thingybob = ""
             nogo = False
             i = 0
+            final_last_total = 0
 
             for i in range(int(request.POST["numwords"])):
                 while True:   
@@ -490,23 +493,22 @@ def spell(request):
                             currently.append(asdf.word)
 
                         while True:
-                            using = random.randint(0, (len(last) - 1))
-                            thingybob = last[using]
-                            currently.remove(thingybob.word)
-                            if (not thingybob.word in fines):
-                                break
-                            elif len(last) == 0:
+                            if not len(currently) == 0:
+                                using = random.randint(0, (len(last) - 1))
+                                thingybob = last[using]
+                                currently.remove(thingybob.word)
+                                if (not thingybob.word in fines):
+                                    break
+                                elif len(currently) == 0:
+                                    nogo = True
+                                    break
+                            else:
                                 nogo = True
                                 break
                     else:
                         options = []
-                        for word in Word.objects.all():
-                            is_tagged = False
-                            for tag in Tag.objects.all():
-                                if word in tag.words.all():
-                                    is_tagged = True
-                            if not is_tagged:
-                                options.append(word)
+                        for asdf in Word.objects.filter(tagged=False):
+                            options.append(asdf)
                         
                         while True:
                             using = random.randint(0, (len(options) - 1))
@@ -535,6 +537,9 @@ def spell(request):
                         else:
                             count += 1
                         
+                        final_last_total += 1
+                        print(final_last_total)
+
                         break
                     else:
                         if count == (len(tags) - 1):
@@ -572,6 +577,8 @@ def finish(request):
             word = Word.objects.get(word=cool[1])
             bad.words.add(word)
             bad.save()
+            word.tagged = True
+            word.save()
             count += 1
 
     gmail_user = 'turboluckyc@gmail.com'
