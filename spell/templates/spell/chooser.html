@@ -18,6 +18,9 @@
                 <th>
                     <a href="/categories"><button class="student"><b>Categories</b></button></a>
                 </th>
+                <th>
+                    <a href="/reports"><button class="reports"><b>Reports</b></button></a>
+                </th>
             </tr>
         </table>
         <br>
@@ -92,12 +95,31 @@
         width: 100%;
         font-family: 'Roboto Mono', monospace;
     }
+    .reports {
+        background-color: white;
+        border: 2px #521d4e solid;
+        border-radius: 3px;
+        color: #521d4e;
+        padding: 20% 30%;
+        text-align: center;
+        text-decoration: none;
+        font-size: 16px;
+        cursor: pointer;
+        transition-duration: 0.4s;
+        font-size: 35px;
+        width: 100%;
+        font-family: 'Roboto Mono', monospace;
+    }
     .admin:hover {
         background-color: #4CAF50;
         color: white;
     }
     .student:hover {
         background-color: #B3C9FE;
+        color: white;
+    }
+    .reports:hover {
+        background-color: #521d4e;
         color: white;
     }
     img {
@@ -109,6 +131,6 @@
         width: 100%;
     }
     th {
-        width: 50%;
+        width: 33%;
     }
 </style>

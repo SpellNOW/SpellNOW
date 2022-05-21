@@ -8,7 +8,10 @@
         <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
     </head>
     <body>
-        <button onclick="neword()" style="display: block;" id="nothing" class="download">Click to Launch Activity</button>
+        <div id="nothing">
+            <p id="not_included"></p>
+            <button onclick="neword()" style="display: block;" class="download">Click to Launch Activity</button>
+        </div>
         <div id="everything" style="display: none;">
             <a href="/start"><button class="back">Back</button></a>
             <img width="25%" src="{% static 'spell/logo.png' %}" alt="URMOM">
@@ -16,7 +19,7 @@
             
             <p style="color: #4d4d4d;" id="progress"></p>
             <p style="color: #2dab26;" id="correct"></p>
-            <input id="spelling" autocomplete="off" type="text" name="tag" placeholder="Spelling...">
+            <input spellcheck="false" id="spelling" autocomplete="off" type="text" name="tag" placeholder="Spelling...">
             <input id="check" onclick="spell()" type="submit" value="CHECK">
             <button onclick="repron()" class="reprons">Pronounce</button>
             <button onclick="spec()" class="reprons">Part of Speech</button>
@@ -26,8 +29,9 @@
 
             <div id="tags" style="display: none;">
                 <input id="tag_value" autocomplete="off" type="text" name="tag" placeholder="New Tag...">
+                <p><b style="display: none;" style="color:red" id="id_response"></b></p>
                 <input onclick="new_tag()" type="submit" value="Create">
-                <br>
+                <br><br>
                 <div id="alltags">
                     {% for tag in tags %}
                         <button onclick="add_word('{{ tag.name }}')" id="{{ tag.name }}" class="tag">{{ tag.name }}</button>
@@ -48,8 +52,14 @@
 
         <form style="display: none;" enctype="multipart/form-data" action="{% url 'finish' %}" method="post">
             {% csrf_token %}
+            <textarea name="words" id="words"></textarea>
             <textarea name="new_tags" id="new_tags"></textarea>
             <textarea name="add_words" id="add_words"></textarea>
+            <textarea name="tags_used" id="tags_used">{{ tags_used }}</textarea>
+            <textarea name="order" id="order">{{ order }}</textarea>
+            <textarea name="correct_array" id="correct_array"></textarea>
+            <textarea name="attempts" id="attempts"></textarea>
+            <textarea name="time" id="time"></textarea>
             <input name="score" id="score">
             <input id="stop" type="submit">
         </form>
@@ -81,19 +91,25 @@
     g_definition = g_definition.replaceAll("&lt;", '<');
     g_definition = g_definition.replaceAll("&gt;", '>');
     var g_prons = "{{ prons|safe }}";
-
+    var correct_array = "";
+    var total_tags = "{{ final_tags }}"
+    const lalith = total_tags.split('&gt;&lt;');
+    
     const words = JSON.parse(g_words);
     const speech = JSON.parse(g_speech);
     const origins = JSON.parse(g_origin);
     const definition = JSON.parse(g_definition);
     const prons = g_prons.split(' || ');
-
+    
     var global_count = 0;
     var correct = 0;
     var progress = 0;
     var word_count = words.length;
     var pron_link = "";
-
+    var watch = 0;
+    var stopwatch;
+    stopwatch = setInterval(function () {if (document.getElementById("nothing").style.display == "none") {watch++;}}, 1000);
+    
     function neword() {
         document.getElementById("nothing").style.display = "none";
         document.getElementById("everything").style.display = "block";
@@ -151,7 +167,7 @@
                 document.getElementById("response").style.color = "#b5ae00";
                 document.getElementById("response").innerHTML = "WARNING: Please input a valid spelling into the input area.";
             }
-            else if (document.getElementById("spelling").value != words[global_count]) {
+            else if (document.getElementById("spelling").value.toLowerCase() != words[global_count]) {
                 document.getElementById("response").style.display = "block";
                 document.getElementById("response").style.color = "red";
                 document.getElementById("response").innerHTML = "INCORRECT: The correct spelling is '" + words[global_count] + "'.";
@@ -161,8 +177,16 @@
                     document.getElementById("check").value = "FINISH";
                 }
                 progress += 1;
+                correct_array += "0, ";
                 document.getElementById("progress").innerHTML = ("<b>Progress: </b>" + progress + "/" + word_count);
                 document.getElementById("correct").innerHTML = ("<b>Correct: </b>" + correct + "/" + progress);
+                document.getElementById("attempts").innerHTML += (document.getElementById("spelling").value.toLowerCase() + ", ");
+                
+                const tester = lalith[global_count].split("&lt;&gt;");
+                for (let i = 0; i < tester.length; i++) {
+                    document.getElementById(tester[i]).style.color = "rgb(255, 255, 255)";
+                    document.getElementById(tester[i]).style.backgroundColor = "rgb(85, 13, 136)";
+                }
             }
             else {
                 document.getElementById("response").style.display = "block";
@@ -173,10 +197,18 @@
                 if (global_count + 1 == word_count) {
                     document.getElementById("check").value = "FINISH";
                 }
+                correct_array += "1, ";
                 correct += 1;
                 progress += 1;
                 document.getElementById("progress").innerHTML = ("<b>Progress: </b>" + progress + "/" + word_count);
                 document.getElementById("correct").innerHTML = ("<b>Correct: </b>" + correct + "/" + progress);
+                document.getElementById("attempts").innerHTML += (document.getElementById("spelling").value.toLowerCase() + ", ");
+
+                const tester = lalith[global_count].split("&lt;&gt;");
+                for (let i = 0; i < tester.length; i++) {
+                    document.getElementById(tester[i]).style.color = "rgb(255, 255, 255)";
+                    document.getElementById(tester[i]).style.backgroundColor = "rgb(85, 13, 136)";
+                }
             }
         }
         else if (document.getElementById("check").value == "NEXT") {
@@ -193,9 +225,16 @@
                 nodeList[i].style.backgroundColor = "rgb(255, 255, 255)";
             }
             global_count += 1;
+            
+            document.getElementById("time").innerHTML += (watch + ", ");
+            watch = 0;
+
             neword();
         }
         else {
+            document.getElementById("time").innerHTML += (watch + ", ");
+
+            document.getElementById("correct_array").innerHTML = correct_array;
             document.getElementById("score").value = (correct + "/" + word_count);
             document.getElementById('stop').click();
         }
@@ -205,27 +244,48 @@
         if (document.getElementById(tag).style.color == "rgb(85, 13, 136)" || document.getElementById(tag).style.color == "") {
             document.getElementById(tag).style.color = "rgb(255, 255, 255)";
             document.getElementById(tag).style.backgroundColor = "rgb(85, 13, 136)";
-            document.getElementById("add_words").innerHTML += tag + "||" + words[global_count] + "[]";
+            var thing = "---" + tag + "||" + words[global_count] + "[]";
+            document.getElementById("add_words").innerHTML = (document.getElementById("add_words").innerHTML).replace(thing, '');
+            const tester = lalith[global_count].split("&lt;&gt;");
+            if (!tester.includes(tag)) {
+                document.getElementById("add_words").innerHTML += tag + "||" + words[global_count] + "[]";
+            }
         }
         else {
             document.getElementById(tag).style.color = "rgb(85, 13, 136)";
             document.getElementById(tag).style.backgroundColor = "rgb(255, 255, 255)";
             var thing = tag + "||" + words[global_count] + "[]";
             document.getElementById("add_words").innerHTML = (document.getElementById("add_words").innerHTML).replace(thing, '');
+            const tester = lalith[global_count].split("&lt;&gt;");
+            if (tester.includes(tag)) {
+                document.getElementById("add_words").innerHTML += ("---" + tag + "||" + words[global_count] + "[]");
+            }
         }
     }
 
     function new_tag() {
         name = document.getElementById("tag_value").value;
-        document.getElementById("tag_value").value = "";
-        other_name = 'add_word("' + name + '")';
-        document.getElementById("alltags").innerHTML += "<button onclick='" + other_name + "' id='" + name +"' class='tag'>" + name +"</button>";
-        document.getElementById("new_tags").innerHTML += (name + "[]");
+        if (!((name.includes("---")) || (name.includes('"')) || (name.includes("'")) || (name.includes("*..*")))) {
+            document.getElementById("tag_value").value = "";
+            other_name = 'add_word("' + name + '")';
+            document.getElementById("alltags").innerHTML += "<button onclick='" + other_name + "' id='" + name +"' class='tag'>" + name +"</button>";
+            document.getElementById("new_tags").innerHTML += (name + "[]");
+            document.getElementById("id_response").style.display = "none";
+        }
+        else {
+            document.getElementById("id_response").style.display = "block";
+            document.getElementById("id_response").innerHTML = "Invalid tag name.";
+        }
     }
 
     document.addEventListener("keyup", function(event) {
         if (event.keyCode === 13) {
-            spell();
+            if (document.activeElement.id == "spelling") {
+                spell();
+            }
+            else {
+                new_tag();
+            }
         }
     });
 
@@ -241,6 +301,24 @@
         document.getElementById("def").style.display = "block";
     }
 
+
+    var usings = (document.getElementById("tags_used").innerHTML).split(", ");
+    var orders = (document.getElementById("order").innerHTML).split(", ");
+
+    for (user of usings) {
+        if (!(orders.includes(user))) {
+            if (document.getElementById("not_included").innerHTML == "") {
+                document.getElementById("not_included").innerHTML += ("Due to word overlap, the following tags are not included: " + user + ", ");
+            }
+            else {
+                document.getElementById("not_included").innerHTML += (user + ", ");
+            }
+        }
+    }
+    var arrayLength = words.length;
+    for (var i = 0; i < arrayLength; i++) {
+        document.getElementById("words").innerHTML += (words[i] + ", ");
+    }
     document.getElementById("progress").innerHTML = ("<b>Progress: </b>0/" + word_count);
     document.getElementById("correct").innerHTML = ("<b>Correct: </b>0/0");
 

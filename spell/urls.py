@@ -19,4 +19,6 @@ urlpatterns = [
     path("start", views.start, name="start"),
     path("spell", views.spell, name="spell"),
     path("finish", views.finish, name="finish"),
+    path("reports", views.reports, name="reports"),
+    path("report/<int:id>", views.report, name="report"),
 ]

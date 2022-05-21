@@ -13,3 +13,12 @@ class Word(models.Model):
 class Tag(models.Model):
     name = models.TextField(max_length=100)
     words = models.ManyToManyField(Word, null=True, blank=True)
+
+class Report(models.Model):
+    tags = models.TextField(max_length=100)
+    correct = models.IntegerField()
+    total = models.IntegerField()
+    percent = models.FloatField()
+    finished = models.DateTimeField(auto_now_add=True)
+    specific = models.BooleanField()
+    iid = models.IntegerField(null=True, blank=True)

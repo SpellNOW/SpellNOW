@@ -2,7 +2,7 @@ from re import L
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from .models import Word, Tag
+from .models import Word, Tag, Report
 import csv
 from django import forms
 from django.core.files.storage import FileSystemStorage
@@ -187,7 +187,7 @@ def confirm(request):
         return HttpResponseRedirect(reverse("chooser"))
 
 def admin_panel(request):
-    if "pin" not in request.session or request.session["pin"] != "CONFIRMED":
+    if (("pin" not in request.session) or (request.session["pin"] != "CONFIRMED")):
         return HttpResponseRedirect(reverse("index"))
     else:
         words = Word.objects.all()
@@ -219,8 +219,7 @@ def upload(request):
 
     if len(nots) > 0:
         fields = ['Words', 'Part of Speech', 'Language of Origin', 'Definition']
-            
-        # writing to csv file 
+        
         with open("spell/static/spell/CustomTemplate.csv", 'w', newline="") as csvfile:
             csvwriter = csv.writer(csvfile) 
             csvwriter.writerow(fields) 
@@ -293,7 +292,7 @@ def upload_sounds(request):
     return HttpResponseRedirect(reverse("admin_panel"))
 
 def categories(request):
-    if "pin" not in request.session or request.session["pin"] != "CONFIRMED":
+    if (("pin" not in request.session) or (request.session["pin"] != "CONFIRMED")):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "spell/categories.html", {
@@ -302,9 +301,15 @@ def categories(request):
 
 def make_tag(request):
     thing = request.POST["tag"]
-    new = Tag(name=thing)
-    new.save()
-    return HttpResponseRedirect(reverse("categories"))
+    if not (("---" in thing) or ('"' in thing) or ("'" in thing) or ("*..*" in thing)):
+        new = Tag(name=thing)
+        new.save()
+        return HttpResponseRedirect(reverse("categories"))
+    else:
+        return render(request, "spell/categories.html", {
+            "tag": Tag.objects.all(),
+            "error": True
+        })
 
 def ins_words_tag(request):
     nots = []
@@ -370,6 +375,10 @@ def del_words_tag(request):
             word = Word.objects.get(word=final)
             tag.words.remove(word)
             tag.save()
+            usage = Tag.objects.filter(words__id=word.pk)
+            if len(usage) == 0:
+                word.tagged = False
+                word.save()
     f.close()
     os.remove("spell/static/spell/delete-tags.csv")
 
@@ -381,7 +390,7 @@ def del_words_tag(request):
         return HttpResponseRedirect(reverse("categories"))
 
 def chooser(request):
-    if "pin" not in request.session or request.session["pin"] != "CONFIRMED":
+    if (("pin" not in request.session) or (request.session["pin"] != "CONFIRMED")):
         return HttpResponseRedirect(reverse("index"))
     else:
         words = Word.objects.all()
@@ -435,6 +444,7 @@ def start(request):
 
 def spell(request):
     if request.method == "POST":
+        order = ""
         thing = request.POST["tags"]
         tags = thing.split(", ")
         tags.remove('')
@@ -480,6 +490,7 @@ def spell(request):
             nogo = False
             i = 0
             final_last_total = 0
+            final_tags = ""
 
             for i in range(int(request.POST["numwords"])):
                 while True:   
@@ -494,14 +505,15 @@ def spell(request):
 
                         while True:
                             if not len(currently) == 0:
-                                using = random.randint(0, (len(last) - 1))
-                                thingybob = last[using]
-                                currently.remove(thingybob.word)
-                                if (not thingybob.word in fines):
+                                using = random.randint(0, (len(currently) - 1))
+                                if (not currently[using] in fines):
+                                    thingybob = Word.objects.get(word=currently[using])
+                                    order += (lll.name + ", ")
                                     break
                                 elif len(currently) == 0:
                                     nogo = True
                                     break
+                                currently.remove(currently[using])
                             else:
                                 nogo = True
                                 break
@@ -515,6 +527,7 @@ def spell(request):
                             thingybob = options[using]
                             options.remove(thingybob)
                             if (not thingybob.word in fines):
+                                order += ("*..*, ")
                                 break
                             elif len(options) == 0:
                                 nogo = True
@@ -539,6 +552,18 @@ def spell(request):
                         
                         final_last_total += 1
                         print(final_last_total)
+                        
+                        usage = Tag.objects.filter(words__id=thingybob.id)
+                        badder = 0
+
+                        for bad in usage:
+                            if badder == (len(usage) - 1):
+                                final_tags += bad.name
+                            else:
+                                final_tags += (bad.name + "<>")
+                        
+                        if not final_last_total == int(request.POST["numwords"]):
+                            final_tags += "><"
 
                         break
                     else:
@@ -553,7 +578,10 @@ def spell(request):
                 "origin": allorigins,
                 "definition": alldefs,
                 "prons": allprons,
-                "tags": Tag.objects.all()
+                "tags": Tag.objects.all(),
+                "tags_used": thing,
+                "order": order,
+                "final_tags": final_tags
             })
 
 def finish(request):
@@ -563,28 +591,132 @@ def finish(request):
     
     words_rep = request.POST["add_words"]
     added_words = words_rep.split("[]")
-    length = (len(added_words) - 1)
-    count = 0
+    added_words.remove("")
 
     for tag in tags:
         new = Tag(name=tag)
         new.save()
     
     for word in added_words:
-        if not count == length:
-            cool = word.split("||")
-            bad = Tag.objects.get(name=cool[0])
+        cool = word.split("||")
+        if (cool[0][0] + cool[0][1] + cool[0][2]) == "---":
+            bad = Tag.objects.get(name=(cool[0].replace("---", "")))
+            word = Word.objects.get(word=cool[1])
+            bad.words.remove(word)
+            bad.save()
+            usage = Tag.objects.filter(words__id=word.pk)
+            if len(usage) == 0:
+                word.tagged = False
+                word.save()
+        else:
+            bad = Tag.objects.get(name=(cool[0].replace("---", "")))
             word = Word.objects.get(word=cool[1])
             bad.words.add(word)
             bad.save()
             word.tagged = True
             word.save()
-            count += 1
 
+    order_in = request.POST["order"]
+    order = order_in.split(", ")
+    order.remove("")
+
+    tags_used = request.POST["tags_used"]
+    total_gags = tags_used.split(", ")
+    total_gags.remove("")
+
+    corrs = request.POST["correct_array"]
+    correct_array = corrs.split(", ")
+    correct_array.remove("")
+
+    glob = request.POST["words"]
+    words = glob.split(", ")
+    words.remove("")
+
+    dumb = request.POST["attempts"]
+    atts = dumb.split(", ")
+    atts.remove("")
+
+    timings = request.POST["time"]
+    time = timings.split(", ")
+    time.remove("")
+
+    cool = 0
+    id_using = 0
+    thingy = (request.POST["score"]).split("/")
+    new = Report(tags=tags_used, correct=thingy[0], total=(thingy[1]), percent=(int((int(thingy[0])/int(thingy[1]))*100)), specific=False)
+    new.save()
+    id_using = new.id
+
+    for righter in total_gags:
+        if not righter == "*..*":
+            nice = 0
+            cool = 0
+            abhi = 0
+            for ishaan in order:
+                if ishaan == righter:
+                    nice += int(correct_array[cool])
+                    abhi += 1
+                cool += 1
+            
+            if abhi != 0:
+                new = Report(tags=righter, correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using)
+                new.save()
+    
+    
+    with open("spell/static/spell/reports/report_" + str(id_using) + ".csv", 'w', newline="") as csvfile:
+        csvwriter = csv.writer(csvfile) 
+        fields = []
+        count = 1
+        good = 0
+
+        for i in range(len(added_words)):
+            added_words[i] = (added_words[i]).split("||")
+
+        for tmp in words:
+            actions = "<ul>"
+            if int(correct_array[count - 1]) == 0:
+                while True:
+                    if not ((len(added_words) == 0) or (len(added_words) == good)):
+                        if added_words[good][1] == words[count - 1]:
+                            if (added_words[good][0][0] + added_words[good][0][1] + added_words[good][0][2]) == "---":
+                                actions += ("'" + words[count - 1] + "' removed from tag '" + added_words[good][0].replace("---", "") +"'<br><br>")
+                            else:
+                                actions += ("'" + words[count - 1] + "' added to tag '" + added_words[good][0].replace("---", "") +"'<br><br>")
+                            good += 1
+                        else:
+                            break
+                    else:
+                        break
+                actions += "</ul>"
+                if not order[count - 1] == "*..*":
+                    fields = [count, order[count - 1], words[count - 1], atts[count - 1], "INCORRECT", actions, (str(int(int(time[count - 1])/60)) + " min. " + str(int(time[count - 1]) - int(int(time[count - 1])/60)) + " sec.")]
+                else:
+                    fields = [count, "Untagged", words[count - 1], atts[count - 1], "INCORRECT", actions, (str(int(int(time[count - 1])/60)) + " min. " + str(int(time[count - 1]) - int(int(time[count - 1])/60)) + " sec.")]
+            else:
+                while True:
+                    if not ((len(added_words) == 0) or (len(added_words) > (good + 1))):
+                        if added_words[good][1] == words[count - 1]:
+                            if (added_words[good][0][0] + added_words[good][0][1] + added_words[good][0][2]) == "---":
+                                actions += ("'" + words[count - 1] + " removed from tag <b>" + added_words[good][0].replace("---", "") +"'<br><br>")
+                            else:
+                                actions += ("'" + words[count - 1] + " added to tag <b>" + added_words[good][0].replace("---", "") +"'<br><br>")
+                            good += 1
+                        else:
+                            break
+                    else:
+                        break
+                actions += "</ul>"
+                if not order[count - 1] == "*..*":
+                    fields = [count, order[count - 1], words[count - 1], atts[count - 1], "CORRECT", actions, (str(int(int(time[count - 1])/60)) + " min. " + str(int(time[count - 1]) - int(int(time[count - 1])/60)) + " sec.")]
+                else:
+                    fields = [count, "Untagged", words[count - 1], atts[count - 1], "CORRECT", actions, (str(int(int(time[count - 1])/60)) + " min. " + str(int(time[count - 1]) - int(int(time[count - 1])/60)) + " sec.")]
+            count += 1
+            csvwriter.writerow(fields)
+    
     gmail_user = 'turboluckyc@gmail.com'
     gmail_password = 'ibwwfiwlmivwwfkd'
     sent_from = "SpellNOW!"
-    to = ['naveensc@gmail.com']
+    to = ['chauhanl@mcvts.net']
     subject = 'Official SpellNOW! Notification!'
     body = 'This is an Official SpellNOW! Notification...\n\nAnjali has recently complete a spelling activity on SpellNOW! with a score of ' + request.POST["score"] +".\n\nThank you."
 
@@ -608,3 +740,40 @@ def finish(request):
     return render(request, "spell/score.html", {
         "score": request.POST["score"]
     })
+
+def reports(request):
+    if (("pin" not in request.session) or (request.session["pin"] != "CONFIRMED")):
+        return HttpResponseRedirect(reverse("index"))
+    else:
+        return render(request, "spell/report.html", {
+            "reports": Report.objects.filter(specific=False)
+        })
+
+def report(request, id):
+    if (("pin" not in request.session) or (request.session["pin"] != "CONFIRMED")):
+        return HttpResponseRedirect(reverse("index"))
+    else:
+        tags = Report.objects.filter(iid=id, specific=True)
+        fnu = Report.objects.get(pk=id)
+        total = []
+        bring = []
+
+        for tag in tags:
+            great = {"brian": tag.tags, "correct": tag.correct, "total": tag.total, "percent": tag.percent}
+            total.append(great)
+        
+        f = open("spell/static/spell/reports/report_" + str(id) + ".csv", "r")
+        reader = csv.reader(f)
+        for row in reader:
+            abhay = {"number": row[0], "tag": row[1], "word": row[2], "attempt": row[3], "result": row[4], "actions": row[5], "time": row[6]}
+            bring.append(abhay)
+        f.close()
+        
+        return render(request, "spell/each.html", {
+            "tags": total,
+            "title": fnu.finished,
+            "correct": fnu.correct,
+            "total": fnu.total,
+            "percent": fnu.percent,
+            "records": bring,
+        })

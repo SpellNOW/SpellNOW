@@ -10,56 +10,22 @@
     <body>
         <a href="/chooser"><button class="back">Back</button></a>
         <img width="25%" src="{% static 'spell/logo.png' %}" alt="URMOM">
-        <br><br><br>
-        <button onclick="fun()" class="add">Add Tag</button>
         <br><br>
-        {% if error %}
-            <p style="color: red;">Invalid Tag Name: The tag contains three dashes (---), a quotation mark ("), a apostrophe ('), or a star followed by two dots followed by a star (*..*).</p>
-        {% endif %}
-        <form action="/make_tag" method="post" id="form" style="display: none;">
-            {% csrf_token %}
-            <input id="tag_value" autocomplete="off" type="text" name="tag" placeholder="Tag...">
-            <input type="submit" value="Create">
-        </form>
-        <button style="display: none;" id="cancel" onclick="not()" class="cancel">Cancel</button>
-        <br><br>
+        <h2>Reports</h2>
         <table class="within-table">
             <tr class="within-tr">
-                <th class="within-th">Tags</th>
+                <th class="within-th">Date Completed</th>
+                <th class="within-th">Correct Attempts</th>
+                <th class="within-th">Total Attempted</th>
+                <th class="within-th">Percent</th>
             </tr>
-            {% for tags in tag %}
+            {% for report in reports %}
                 <tr class="within-tr">
-                    <td class="within-td">
-                        <h2><b>{{ tags.name }}</b></h2>
-                        <a href="/delete_tag/{{ tags.id }}"><button class="delete">Delete Tag</button></a>
-                        <table>
-                            <tr>
-                                <td>
-                                    <h2>Insert Words Under "{{ tags.name }}"</h2>
-                                    <form enctype="multipart/form-data" action="{% url 'ins_words_tag' %}" method="post">
-                                        {% csrf_token %}
-                                        <input onchange="document.getElementById('ins-{{ tags.id }}').click()" required accept=".csv" type="file" name="insert">
-                                        <input style="display: none;" value="{{ tags.id }}" name="id">
-                                        <input id="ins-{{ tags.id }}" type="submit" style="display: none;">
-                                    </form>
-                                </td>
-                                <td>
-                                    <h2>Delete Words Under "{{ tags.name }}"</h2>
-                                    <form enctype="multipart/form-data" action="{% url 'del_words_tag' %}" method="post">
-                                        {% csrf_token %}
-                                        <input style="display: none;" value="{{ tags.id }}" name="id">
-                                        <input onchange="document.getElementById('del-{{ tags.id }}').click()" required accept=".csv" type="file" name="del">
-                                        <input id="del-{{ tags.id }}" type="submit" style="display: none;">
-                                    </form>
-                                </td>
-                            </tr>
-                        </table>
-                        <ol>
-                            {% for word in tags.words.all %}
-                                <li>{{ word.word }}</li>
-                            {% endfor %}
-                        </ol>
-                    </td>
+                    <td class="within-td">{{ report.finished }}</td>
+                    <td class="within-td" style="color: #2dab26"><b>{{ report.correct }}</b></td>
+                    <td class="within-td"><b>{{ report.total }}</b></td>
+                    <td class="within-td"><b>{{ report.percent }}%</b></td>
+                    <td class="within-td"><a href="/report/{{ report.id }}"><button class="learn">Details</button></a></td>
                 </tr>
             {% endfor %}
         </table>
@@ -181,6 +147,28 @@
         background-color:#000000;
         cursor: pointer;
     }
+    .learn {
+        display:inline-block;
+        padding:0.35em 1.2em;
+        border:0.1em solid #149474;
+        margin:0 0.3em 0.3em 0;
+        border-radius:0.12em;
+        box-sizing: border-box;
+        text-decoration:none;
+        font-family:'Roboto',sans-serif;
+        font-weight:300;
+        color:#149474;
+        text-align:center;
+        transition: all 0.2s;
+        background-color: white;
+        font-family: 'Roboto Mono', monospace;
+    }
+    .learn:hover{
+        font-family: 'Roboto Mono', monospace;
+        color:white;
+        background-color:#149474;
+        cursor: pointer;
+    }
     .cancel {
         display:inline-block;
         padding:0.35em 1.2em;
@@ -227,10 +215,7 @@
         background-color: #dddddd;
     }
     h2 {
-        font-weight: 400;
-        font-size: 15px;
-    }
-    p {
+        font-size: 35px;
         font-weight: 700;
     }
     input[type=file]::file-selector-button {
@@ -250,7 +235,7 @@
     }
 
     th {
-        font-size: 35px;
+        font-size: 15px;
     }
     td {
         width: 40%;
