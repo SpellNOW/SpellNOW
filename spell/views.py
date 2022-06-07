@@ -162,18 +162,18 @@ def create_word(word):
         else: 
             final_audio += ("'" + audio[i] + "']")
     
-    new = Word(word=word, speech = final_parts, origin = final_origin, definition = final_right, pronounce = final_audio)
+    new = Word(word=word, speech = final_parts, origin = final_origin, definition = final_right, pronounce = final_audio, tagged = False)
     new.save()
 
 # Create your views here.
 def index(request):
     if "pin" not in request.session or request.session["pin"] == "" or request.session["pin"] == "CONFIRMED":
-        return render(request, "spell/index.html", {
+        return render(request, "spell/index_2.html", {
             "message": ""
         })
     else:
         request.session["pin"] = ""
-        return render(request, "spell/index.html", {
+        return render(request, "spell/index_2.html", {
             "message": "Invalid PIN!"
         })
 
@@ -594,6 +594,7 @@ def finish(request):
     added_words.remove("")
 
     for tag in tags:
+        print(tag)
         new = Tag(name=tag)
         new.save()
     
@@ -673,10 +674,10 @@ def finish(request):
             added_words[i] = (added_words[i]).split("||")
 
         for tmp in words:
-            actions = "<ul>"
+            actions = ""
             if int(correct_array[count - 1]) == 0:
                 while True:
-                    if not ((len(added_words) == 0) or (len(added_words) == good)):
+                    if not ((len(added_words) == 0) or (len(added_words) == (good + 1))):
                         if added_words[good][1] == words[count - 1]:
                             if (added_words[good][0][0] + added_words[good][0][1] + added_words[good][0][2]) == "---":
                                 actions += ("'" + words[count - 1] + "' removed from tag '" + added_words[good][0].replace("---", "") +"'<br><br>")
@@ -687,36 +688,35 @@ def finish(request):
                             break
                     else:
                         break
-                actions += "</ul>"
                 if not order[count - 1] == "*..*":
-                    fields = [count, order[count - 1], words[count - 1], atts[count - 1], "INCORRECT", actions, (str(int(int(time[count - 1])/60)) + " min. " + str(int(time[count - 1]) - int(int(time[count - 1])/60)) + " sec.")]
+                    fields = [count, order[count - 1], words[count - 1], atts[count - 1], "INCORRECT", actions, (str(int(int(time[count - 1])/60)) + " min. " + str(int(time[count - 1]) - int(int(int(time[count - 1])/60)*60)) + " sec.")]
                 else:
-                    fields = [count, "Untagged", words[count - 1], atts[count - 1], "INCORRECT", actions, (str(int(int(time[count - 1])/60)) + " min. " + str(int(time[count - 1]) - int(int(time[count - 1])/60)) + " sec.")]
+                    fields = [count, "Untagged", words[count - 1], atts[count - 1], "INCORRECT", actions, (str(int(int(time[count - 1])/60)) + " min. " + str(int(time[count - 1]) - int(int(int(time[count - 1])/60)*60)) + " sec.")]
             else:
+                actions = ""
                 while True:
-                    if not ((len(added_words) == 0) or (len(added_words) > (good + 1))):
+                    if not ((len(added_words) == 0) or (len(added_words) == (good + 1))):
                         if added_words[good][1] == words[count - 1]:
                             if (added_words[good][0][0] + added_words[good][0][1] + added_words[good][0][2]) == "---":
-                                actions += ("'" + words[count - 1] + " removed from tag <b>" + added_words[good][0].replace("---", "") +"'<br><br>")
+                                actions += ("'" + words[count - 1] + "' removed from tag '" + added_words[good][0].replace("---", "") +"'<br><br>")
                             else:
-                                actions += ("'" + words[count - 1] + " added to tag <b>" + added_words[good][0].replace("---", "") +"'<br><br>")
+                                actions += ("'" + words[count - 1] + "' added to tag '" + added_words[good][0].replace("---", "") +"'<br><br>")
                             good += 1
                         else:
                             break
                     else:
                         break
-                actions += "</ul>"
                 if not order[count - 1] == "*..*":
-                    fields = [count, order[count - 1], words[count - 1], atts[count - 1], "CORRECT", actions, (str(int(int(time[count - 1])/60)) + " min. " + str(int(time[count - 1]) - int(int(time[count - 1])/60)) + " sec.")]
+                    fields = [count, order[count - 1], words[count - 1], atts[count - 1], "CORRECT", actions, (str(int(int(time[count - 1])/60)) + " min. " + str(int(time[count - 1]) - int(int(int(time[count - 1])/60)*60)) + " sec.")]
                 else:
-                    fields = [count, "Untagged", words[count - 1], atts[count - 1], "CORRECT", actions, (str(int(int(time[count - 1])/60)) + " min. " + str(int(time[count - 1]) - int(int(time[count - 1])/60)) + " sec.")]
+                    fields = [count, "Untagged", words[count - 1], atts[count - 1], "CORRECT", actions, (str(int(int(time[count - 1])/60)) + " min. " + str(int(time[count - 1]) - int(int(int(time[count - 1])/60)*60)) + " sec.")]
             count += 1
             csvwriter.writerow(fields)
     
     gmail_user = 'turboluckyc@gmail.com'
     gmail_password = 'ibwwfiwlmivwwfkd'
     sent_from = "SpellNOW!"
-    to = ['chauhanl@mcvts.net']
+    to = ['naveensc@gmail.com']
     subject = 'Official SpellNOW! Notification!'
     body = 'This is an Official SpellNOW! Notification...\n\nAnjali has recently complete a spelling activity on SpellNOW! with a score of ' + request.POST["score"] +".\n\nThank you."
 

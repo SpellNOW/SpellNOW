@@ -15,7 +15,7 @@
                     <li>{{ word }}</li>
                 {% endfor %}
             </ul>
-            <a href="{% static 'spell/CustomTemplate.csv' %}"><button class="download">Download Custom CSV</button></a>
+            <a href="{% static 'spell/CustomTemplate.csv' %}" download><button class="download">Download Custom CSV</button></a>
         {% endif %}
         {% if already %}
             <p>SpellNOW!&trade; found these words already in your list:</p>

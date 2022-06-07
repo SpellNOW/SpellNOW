@@ -265,7 +265,7 @@
 
     function new_tag() {
         name = document.getElementById("tag_value").value;
-        if (!((name.includes("---")) || (name.includes('"')) || (name.includes("'")) || (name.includes("*..*")))) {
+        if (!((name.includes("---")) || (name.includes('"')) || (name.includes("'")) || (name.includes("*..*")) || (name == ""))) {
             document.getElementById("tag_value").value = "";
             other_name = 'add_word("' + name + '")';
             document.getElementById("alltags").innerHTML += "<button onclick='" + other_name + "' id='" + name +"' class='tag'>" + name +"</button>";

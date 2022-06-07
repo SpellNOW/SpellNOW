@@ -18,7 +18,7 @@
         {% endif %}
         <form action="/make_tag" method="post" id="form" style="display: none;">
             {% csrf_token %}
-            <input id="tag_value" autocomplete="off" type="text" name="tag" placeholder="Tag...">
+            <input id="tag_value" autocomplete="off" required type="text" name="tag" placeholder="Tag...">
             <input type="submit" value="Create">
         </form>
         <button style="display: none;" id="cancel" onclick="not()" class="cancel">Cancel</button>

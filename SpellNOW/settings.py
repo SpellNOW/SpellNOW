@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-iy)-sr&$8!%$96ost@g#ch_bg^1o*dn1m%r-39o3l7)e58pb$b
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['54.198.129.193', '127.0.0.1']
 
 
 # Application definition
@@ -76,12 +76,8 @@ WSGI_APPLICATION = 'SpellNOW.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'spellnow',
-        'HOST': '127.0.0.1',
-        'PORT': '49693',
-        'USER': 'root',
-        'PASSWORD': '@Lucky6911',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'mydatabase',
     }
 }
 

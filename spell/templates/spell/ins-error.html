@@ -15,7 +15,7 @@
                     <li>{{ word }}</li>
                 {% endfor %}
             </ul>
-            <a href="{% static 'spell/CreateWords.csv' %}"><button class="download">Download Words CSV</button></a>
+            <a href="{% static 'spell/CreateWords.csv' %}" download><button class="download">Download Words CSV</button></a>
         {% endif %}
         {% if already %}
             <p>SpellNOW!&trade; found these words already tagged:</p>
