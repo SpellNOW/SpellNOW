@@ -1,0 +1,104 @@
+{% load static %}
+<html>
+    <head>
+        <title>SpellNOW!&trade; -- Login</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@700&display=swap" rel="stylesheet">
+    </head>
+    <body>
+        <img width="25%" src="{% static 'spell/logo.png' %}" alt="URMOM">
+        <br><br>
+        <table>
+            <tr>
+                <th>
+                    <button class="admin" onclick="admin_pass(true)"><b>Admin Panel</b></button>
+                </th>
+                <th>
+                    <a href="/start"><button class="student"><b>Student Center</b></button></a>
+                </th>
+            </tr>
+        </table>
+        <br>
+
+        <div style="display: none;" id="admin-form">
+            <form action="{% url 'confirm' %}" method="post">
+                {% csrf_token %}
+                <input id="pin" name="pin" placeholder="PIN..." type="password">
+                <button type="submit">Submit</button>
+            </form>
+            <button onclick="admin_pass(false)">Cancel</button>
+        </div>
+
+        <p style="color: red; font-size: 25px; text-align: center;">
+            <b>{{ message }}</b>
+        </p>
+        <br>
+        <p style="font-size: 10px; text-align: center; font-family: 'Roboto Mono', monospace;"><b>© Copyright Lakshya Chauhan. All Rights Reserved. The SpellNOW!&trade; brand is wholly owned by The Chauhan Technology Company Inc. and is a division of The Chauhan Technology Company Inc.</b></p>
+    </body>
+</html>
+<script>
+    function admin_pass(on) {
+        if (on) {
+            document.getElementById("admin-form").style.display = "block"
+        }
+        else {
+            document.getElementById("pin").value = ""
+            document.getElementById("admin-form").style.display = "none"
+        }
+    }
+</script>
+<style>
+    body {
+        font-family: 'Roboto Mono', monospace;
+    }
+    .admin {
+        background-color: white;
+        border: 2px #4CAF50 solid;
+        border-radius: 3px;
+        color: #4CAF50;
+        padding: 20% 30%;
+        text-align: center;
+        text-decoration: none;
+        font-size: 16px;
+        cursor: pointer;
+        transition-duration: 0.4s;
+        font-size: 35px;
+        width: 100%;
+        font-family: 'Roboto Mono', monospace;
+    }
+    .student {
+        background-color: white;
+        border: 2px #B3C9FE solid;
+        border-radius: 3px;
+        color: #B3C9FE;
+        padding: 20% 30%;
+        text-align: center;
+        text-decoration: none;
+        font-size: 16px;
+        cursor: pointer;
+        transition-duration: 0.4s;
+        font-size: 35px;
+        width: 100%;
+        font-family: 'Roboto Mono', monospace;
+    }
+    .admin:hover {
+        background-color: #4CAF50;
+        color: white;
+    }
+    .student:hover {
+        background-color: #B3C9FE;
+        color: white;
+    }
+    img {
+        margin-left: 37.5%;
+        margin-right: 37.5%;
+        margin-top: 1%;
+    }
+    table {
+        width: 100%;
+    }
+    th {
+        width: 50%;
+    }
+</style>

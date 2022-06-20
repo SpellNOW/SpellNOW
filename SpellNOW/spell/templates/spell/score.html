@@ -1,0 +1,77 @@
+{% load static %}
+<html>
+    <head>
+        <title>SpellNOW!&trade; -- Spelling</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@700&display=swap" rel="stylesheet">
+    </head>
+    <body>
+        <img width="25%" src="{% static 'spell/logo.png' %}" alt="URMOM">
+                
+        <h1>FINISHED!</h1>
+        <h2>{{ score }}</h2>
+        
+        <a href="/start"><button class="admin">Student Center</button></a>
+
+        <br>
+        <p style="font-size: 10px; text-align: center; font-family: 'Roboto Mono', monospace;">© Copyright Lakshya Chauhan. All Rights Reserved. The SpellNOW!&trade; brand is wholly owned by The Chauhan Technology Company Inc. and is a division of The Chauhan Technology Company Inc.</p>
+    </body>
+</html>
+<script>
+    function admin_pass(on) {
+        if (on) {
+            document.getElementById("admin-form").style.display = "block"
+        }
+        else {
+            document.getElementById("pin").value = ""
+            document.getElementById("admin-form").style.display = "none"
+        }
+    }
+</script>
+<style>
+    h1 {
+        color:#0c550e;
+        font-size: 100px;
+        text-align: center;
+    }
+    h2 {
+        color:#0c550e;
+        font-size: 80px;
+        text-align: center;
+    }
+    body {
+        font-family: 'Roboto Mono', monospace;
+    }
+    .admin {
+        font-weight: 700;
+        color: white;
+        padding: 16px 35%;
+        text-align: center;
+        text-decoration: none;
+        font-size: 16px;
+        margin: 4px 2px;
+        transition-duration: 0.4s;
+        cursor: pointer;
+        background-color: white; 
+        color: #00d0ff92; 
+        border: 2px solid #00d0ff92;
+        margin-left: 10%;
+        font-family: 'Roboto Mono', monospace;
+    }
+    .admin:hover {
+        background-color: #00d0ff92;
+        color: white;
+    }
+    img {
+        margin-left: 37.5%;
+        margin-right: 37.5%;
+        margin-top: 1%;
+    }
+    table {
+        width: 100%;
+    }
+    th {
+        width: 50%;
+    }
+</style>
