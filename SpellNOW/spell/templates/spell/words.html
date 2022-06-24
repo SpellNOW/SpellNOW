@@ -15,10 +15,8 @@
         <table>
             <tr>
                 <th style="width: 30%; vertical-align: top;">
-                    <a href="{% static 'spell/WordTemplate.csv' %}" download><button class="download">Template CSV (Existant Words)</button></a>
+                    <a href="{% static 'spell/WordTemplate.csv' %}" download><button class="download">Template CSV</button></a>
                     <br><br>
-                    <a href="{% static 'spell/CustomWords.csv' %}" download><button class="download">Template CSV (Other Words)</button></a>
-                    <br>
                     <h2>Upload Existent Word File</h2>
                     <form enctype="multipart/form-data" action="{% url 'upload' %}" method="post">
                         {% csrf_token %}

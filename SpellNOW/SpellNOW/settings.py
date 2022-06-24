@@ -74,11 +74,15 @@ WSGI_APPLICATION = 'SpellNOW.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'mydatabase',
-    }
+DATABASES = {  
+    'default': {  
+        'ENGINE': 'django.db.backends.mysql',  
+        'NAME': 'SpellNOW',  
+        'USER': 'dbmasteruser',  
+        'PASSWORD': 'lucky1106',  
+        'HOST': 'ls-5d1b4a019cc4d60ff2c5bf9d27ea71f2373885bf.cifnnfubjcpo.us-east-1.rds.amazonaws.com',  
+        'PORT': '3306',
+    }  
 }
 
 

@@ -18,27 +18,80 @@
             <br><br>
         {% endif %}
         {% if words %}
-            <h2>Sounds</h2>
-                <form action="/upload_sounds" enctype="multipart/form-data" method="post">
-                    {% csrf_token %}
-                    {% for word in words %}
-                        <p>Sound for...<b>{{ word }}</b></p>
-                        <input required accept=".mp3" type="file" id="file-{{ word }}" name="file-{{ word }}">
-                    {% endfor %}
-                    <br><br>
-                    <input type="submit" value="Create Words" class="thingy">
-                </form>
+            <h2>Information</h2>
+            <table>
+                <tr>
+                    <th style="width:20%; vertical-align: top;">
+                        <table class = "within-table">
+                            <tr class = "within-tr">
+                                <th style="font-weight: 700; cursor: auto;" class = "within-th"><u>Custom Words</u></th>
+                            </tr>
+                            
+                            {% for word in words %}
+                                <tr onclick="highlight('{{ word }}')" class="within-tr">
+                                    <td id="bold-{{ word }}" class="within-td">{{ word }}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    </th>
+                    <th>
+                        <div style="height: 400px; width:50%;">
+                            <form action="/upload_sounds" enctype="multipart/form-data" method="post">
+                                {% csrf_token %}
+                                {% for word in words %}
+                                    <div style="text-align:left; margin-left: 5%; display:none;" class="sections" id="section-{{ word }}">
+                                        <p>{{ word.capitalize }}</p>
+                                        <input required placeholder="Part of Speech..." type="text" id="speech-{{ word }}" name="speech-{{ word }}"><br><br>
+                                        <input required placeholder="Language of Origin..." type="text" id="origin-{{ word }}" name="origin-{{ word }}"><br><br>
+                                        <input required placeholder="Definition..." type="text" id="definition-{{ word }}" name="definition-{{ word }}"><br><br>
+                                        <p>Sound File (MP3)</p>
+                                        <input required accept=".mp3" type="file" id="file-{{ word }}" name="file-{{ word }}">
+                                        <br><br>
+                                    </div>
+                                {% endfor %}
+                                <input style="display:none;" id="doner" type="submit">
+                            </form>
+                        </div>
+                    </th>
+                </tr>
+            </table>
+            <br>
+            <button onclick="document.getElementById('doner').click()" class="thingy">Create Words</button>
         {% else %}
             <a href="/admin_panel"><button class="admin">Admin Panel</button></a>
         {% endif %}
         <br>
-        <p style="font-size: 10px; text-align: center; font-weight: 700; font-family: 'Roboto Mono', monospace;">© Copyright Lakshya Chauhan. All Rights Reserved. The SpellNOW!&trade; brand is wholly owned by The Chauhan Technology Company Inc. and is a division of The Chauhan Technology Company Inc.</p>}
+        <p style="font-size: 10px; text-align: center; font-weight: 700; font-family: 'Roboto Mono', monospace;">© Copyright Lakshya Chauhan. All Rights Reserved. The SpellNOW!&trade; brand is wholly owned by The Chauhan Technology Company Inc. and is a division of The Chauhan Technology Company Inc.</p>
     </body>
 </html>
 <script>
-    
+    function highlight(word) {
+        const nodeList = document.querySelectorAll(".sections");
+        for (let i = 0; i < nodeList.length; i++) {
+            nodeList[i].style.display = "none";
+        }
+        document.getElementById("section-" + word).style.display = "block"
+
+        const funList = document.querySelectorAll(".within-td");
+        for (let i = 0; i < funList.length; i++) {
+            funList[i].style.fontWeight = "200";
+        }
+        document.getElementById("bold-" + word).style.fontWeight = "700";
+    }
 </script>
+<script src="{% static 'spell/utilities/app.js' %}"></script>
 <style>
+    input[type=text] {
+        width: 70%;
+        padding: 12px 20px;
+        margin: 8px 0;
+        display: inline-block;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        outline: none;
+        font-family: 'Roboto Mono', monospace;
+    }
     .admin {
         font-weight: 700;
         color: white;
@@ -127,6 +180,7 @@
         text-align: left;
         padding: 8px;
         font-weight: 100;
+        cursor: pointer;
     }
 
     .within-tr:nth-child(even) {

@@ -218,7 +218,7 @@ def upload(request):
     os.remove("spell/static/spell/words.csv")
 
     if len(nots) > 0:
-        fields = ['Words', 'Part of Speech', 'Language of Origin', 'Definition']
+        fields = ['Words']
         
         with open("spell/static/spell/CustomTemplate.csv", 'w', newline="") as csvfile:
             csvwriter = csv.writer(csvfile) 
@@ -283,12 +283,13 @@ def upload_sounds(request):
             fs = FileSystemStorage()
             fs.save("spell/static/spell/sounds/" + final + ".mp3", file)
             new_word = row[0].lower()
-            new_speech = row[1].lower()
-            new_origin = "<ol><li>" + row[2].lower() + "</li></ol>"
-            new_def = "<ol><li>" + row[3].lower() + "</li></ol>"
+            new_speech = request.POST["speech-"+final]
+            new_origin = "<ol><li>" + request.POST["origin-"+final] + "</li></ol>"
+            new_def = "<ol><li>" + request.POST["origin-"+final] + "</li></ol>"
 
-            new = Word(word=new_word, speech = new_speech, origin = new_origin, definition = new_def, pronounce = ("*--*" + new_word))
+            new = Word(word=new_word, speech = new_speech, origin = new_origin, definition = new_def, pronounce = ("*--*" + new_word), tagged=False)
             new.save()
+    
     return HttpResponseRedirect(reverse("admin_panel"))
 
 def categories(request):
