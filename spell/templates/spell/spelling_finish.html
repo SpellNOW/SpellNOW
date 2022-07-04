@@ -1,0 +1,35 @@
+{% extends "spell/layout.html" %}
+
+{% block title %}SpellNOW!&trade; -- Finished{% endblock %}
+
+{% block function %}
+  <main id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Spelling Activity</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item">Activities</li>
+          <li class="breadcrumb-item active">Spelling</li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
+
+    
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Finished</h5>
+              <p>You have finished this activity! See below for your score.</p>
+              
+              <h2>{{ score }}</h2>
+              </div>
+            </div>
+          </div>
+        </div>
+    </section>
+  </main><!-- End #main -->
+{% endblock %}

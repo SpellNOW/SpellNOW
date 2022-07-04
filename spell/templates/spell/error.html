@@ -1,0 +1,55 @@
+{% extends "spell/layout.html" %}
+{% load static %}
+
+{% block title %}SpellNOW!&trade; -- Error{% endblock %}
+
+{% block function %}
+  <main id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Spelling Activity</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item">Libraries</li>
+          <li class="breadcrumb-item active">Import</li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
+
+    
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Import Error</h5>
+              {% if nots %}
+                <p>{{ message1|safe }}</p>
+                <ul>
+                    {% for word in nots %}
+                        <li>{{ word }}</li>
+                    {% endfor %}
+                </ul>
+                {% if download %}
+                  <a href="{% static 'spell/CustomTemplate.csv' %}" download><button type="button" class="btn btn-primary">Download Words CSV</button></a>
+                {% endif %}
+              {% endif %}
+              {% if already %}
+                  {% if nots %}
+                    <br><br>
+                  {% endif %}
+                  <p>{{ message2|safe }}</p>
+                  <ul>
+                      {% for word in already %}
+                          <li>{{ word }}</li>
+                      {% endfor %}
+                  </ul>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main><!-- End #main -->
+{% endblock %}

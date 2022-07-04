@@ -1,192 +1,117 @@
+{% extends "spell/layout.html" %}
 {% load static %}
-<html>
-    <head>
-        <title>SpellNOW!&trade; -- Custom Words</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
-    </head>
-    <body>
-        {% if already %}
-            <p>SpellNOW!&trade; found these words already in your list:</p>
-            <ul>
-                {% for thingy in already %}
-                    <li>{{ thingy }}</li>
-                {% endfor %}
-            </ul>
-            <br><br>
-        {% endif %}
-        {% if words %}
-            <h2>Information</h2>
-            <table>
-                <tr>
-                    <th style="width:20%; vertical-align: top;">
-                        <table class = "within-table">
-                            <tr class = "within-tr">
-                                <th style="font-weight: 700; cursor: auto;" class = "within-th"><u>Custom Words</u></th>
-                            </tr>
-                            
-                            {% for word in words %}
-                                <tr onclick="highlight('{{ word }}')" class="within-tr">
-                                    <td id="bold-{{ word }}" class="within-td">{{ word }}</td>
-                                </tr>
+
+{% block title %}SpellNOW!&trade; -- Error{% endblock %}
+
+{% block function %}
+  <main id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Spelling Activity</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item">Libraries</li>
+          <li class="breadcrumb-item active">Import</li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
+
+    
+    <section class="section">
+        {% if error %}
+            <div class="row">
+                <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-body">
+                    <h5 class="card-title">Import Error</h5>
+                    {% if already %}
+                        <p>{{ message2|safe }}</p>
+                        <ul>
+                            {% for word in already %}
+                                <li>{{ word }}</li>
                             {% endfor %}
-                        </table>
-                    </th>
-                    <th>
-                        <div style="height: 400px; width:50%;">
-                            <form action="/upload_sounds" enctype="multipart/form-data" method="post">
-                                {% csrf_token %}
-                                {% for word in words %}
-                                    <div style="text-align:left; margin-left: 5%; display:none;" class="sections" id="section-{{ word }}">
-                                        <p>{{ word.capitalize }}</p>
-                                        <input required placeholder="Part of Speech..." type="text" id="speech-{{ word }}" name="speech-{{ word }}"><br><br>
-                                        <input required placeholder="Language of Origin..." type="text" id="origin-{{ word }}" name="origin-{{ word }}"><br><br>
-                                        <input required placeholder="Definition..." type="text" id="definition-{{ word }}" name="definition-{{ word }}"><br><br>
-                                        <p>Sound File (MP3)</p>
-                                        <input required accept=".mp3" type="file" id="file-{{ word }}" name="file-{{ word }}">
-                                        <br><br>
-                                    </div>
-                                {% endfor %}
-                                <input style="display:none;" id="doner" type="submit">
-                            </form>
-                        </div>
-                    </th>
-                </tr>
-            </table>
-            <br>
-            <button onclick="document.getElementById('doner').click()" class="thingy">Create Words</button>
-        {% else %}
-            <a href="/admin_panel"><button class="admin">Admin Panel</button></a>
+                        </ul>
+                    {% endif %}
+                    </div>
+                </div>
+                </div>
+            </div>
         {% endif %}
-        <br>
-        <p style="font-size: 10px; text-align: center; font-weight: 700; font-family: 'Roboto Mono', monospace;">© Copyright Lakshya Chauhan. All Rights Reserved. The SpellNOW!&trade; brand is wholly owned by The Chauhan Technology Company Inc. and is a division of The Chauhan Technology Company Inc.</p>
-    </body>
-</html>
-<script>
-    function highlight(word) {
-        const nodeList = document.querySelectorAll(".sections");
-        for (let i = 0; i < nodeList.length; i++) {
-            nodeList[i].style.display = "none";
-        }
-        document.getElementById("section-" + word).style.display = "block"
+      <div class="row">
+        <div class="col-lg-6" style="width:25%;">
+            <div class="card overflow-auto" style="height: 600px;">
+                <div class="card-body">
+                <h5 class="card-title">Custom Words</h5>
+                <p>Populate data regarding each word as well as the MP3 pronunciation of each word.</p>
 
-        const funList = document.querySelectorAll(".within-td");
-        for (let i = 0; i < funList.length; i++) {
-            funList[i].style.fontWeight = "200";
-        }
-        document.getElementById("bold-" + word).style.fontWeight = "700";
-    }
-</script>
-<script src="{% static 'spell/utilities/app.js' %}"></script>
-<style>
-    input[type=text] {
-        width: 70%;
-        padding: 12px 20px;
-        margin: 8px 0;
-        display: inline-block;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        box-sizing: border-box;
-        outline: none;
-        font-family: 'Roboto Mono', monospace;
-    }
-    .admin {
-        font-weight: 700;
-        color: white;
-        padding: 16px 35%;
-        text-align: center;
-        text-decoration: none;
-        font-size: 16px;
-        margin: 4px 2px;
-        transition-duration: 0.4s;
-        cursor: pointer;
-        background-color: white; 
-        color: #00d0ff92; 
-        border: 2px solid #00d0ff92;
-        font-family: 'Roboto Mono', monospace;
-    }
-    .admin:hover {
-        background-color: #00d0ff92;
-        color: white;
-    }
-    .thingy {
-        font-weight: 700;
-        color: white;
-        padding: 16px 35%;
-        text-align: center;
-        text-decoration: none;
-        font-size: 16px;
-        margin: 4px 2px;
-        transition-duration: 0.4s;
-        cursor: pointer;
-        background-color: white; 
-        color: #ff56e692; 
-        border: 2px solid #ff56e692;
-        font-family: 'Roboto Mono', monospace;
-    }
-    .thingy:hover {
-        background-color: #ff56e692;
-        color: white;
-    }
-    table {
-        width: 100%;
-    }
-    .download {
-        font-weight: 700;
-        color: white;
-        padding: 16px 35%;
-        text-align: center;
-        text-decoration: none;
-        font-size: 16px;
-        margin: 4px 2px;
-        transition-duration: 0.4s;
-        cursor: pointer;
-        background-color: white; 
-        color: #f44336; 
-        border: 2px solid #f44336;
-        font-family: 'Roboto Mono', monospace;
-    }
-    .download:hover {
-        background-color: #f44336;
-        color: white;
-    }
-    input[type=file]::file-selector-button {
-        font-weight: 700;
-        border: 2px solid #008CBA;;
-        padding: 16px 31%;
-        background-color: white;
-        color: #008CBA;
-        transition: 0.4s;
-        font-family: 'Roboto Mono', monospace;
-    }
 
-    input[type=file]::file-selector-button:hover {
-        background-color: #008CBA;
-        color: white;
-        cursor: pointer;
-    }
+                <!-- Default Table -->
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th scope="col">Words</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for word in words %}
+                        <tr>
+                        <td id="new_word-{{ word }}" onclick="call_tag('{{ word }}')" class="result">{{ word }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                <!-- End Default Table Example -->
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6" style="width:75%;">
+            <form action="/upload_sounds" enctype="multipart/form-data" method="post">
+                {% csrf_token %}
+                {% for word in words %}
+                <div id="wordthing-{{ word }}" style="display: none;" class="card result_card">
+                    <div class="card-header">{{ word }}</div>
+                    <div class="card-body">
+                        <br>
+                        <input required class="form-control" placeholder="Part of Speech..." type="text" id="speech-{{ word }}" name="speech-{{ word }}"><br>
+                        <input required class="form-control" placeholder="Language of Origin..." type="text" id="origin-{{ word }}" name="origin-{{ word }}"><br>
+                        <input required class="form-control" placeholder="Definition..." type="text" id="definition-{{ word }}" name="definition-{{ word }}"><br>
+                        <p>Sound File (MP3)</p>
+                        <input required accept=".mp3" type="file" id="file-{{ word }}" name="file-{{ word }}" class="form-control">
+                    </div>
+                </div>
+                {% endfor %}
+                <div class="d-grid gap-2 mt-3">
+                    <button class="btn btn-primary" type="submit"><b>Create Words</b></button>
+                </div>
+            </form>
+        </div>
+      </div>
+    </section>
+  </main><!-- End #main -->
+  <script>
+    function call_tag(word) {
+      const nodeList = document.querySelectorAll(".result");
+      for (let i = 0; i < nodeList.length; i++) {
+          nodeList[i].style.backgroundColor = "rgb(255, 255, 255)";
+      }
+      document.getElementById("new_word-"+word).style.backgroundColor = "rgb(195, 195, 195)"
 
-    .within-table {
-        font-family: 'Roboto Mono', monospace;
-        border-collapse: collapse;
-        width: 100%;
+      const funList = document.querySelectorAll(".result_card");
+      for (let i = 0; i < nodeList.length; i++) {
+        funList[i].style.display = "none";
+      }
+      document.getElementById("wordthing-"+word).style.display = "block";
     }
-
-    .within-td, .within-th {
-        font-family: 'Roboto Mono', monospace;
-        border: 1px solid #dddddd;
-        text-align: left;
-        padding: 8px;
-        font-weight: 100;
-        cursor: pointer;
+  </script>
+  <style>
+    .result:hover{
+      background-color: #c3c3c3;
+      cursor: pointer;
     }
-
-    .within-tr:nth-child(even) {
-        background-color: #dddddd;
+    .addrem:hover {
+      opacity: 50%;
+      cursor: pointer;
     }
-    p, h2, li {
-        font-family: 'Roboto Mono', monospace;
-    }
-</style>
+  </style>
+{% endblock %}

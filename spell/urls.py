@@ -3,22 +3,38 @@ from django.urls import path, include
 from . import views
 
 urlpatterns = [
+    # Homepage
     path("", views.index, name="index"),
-    path("confirm-admin", views.confirm, name="confirm"),
+
+    # Authorization pages
+    path("login", views.login, name="login"),
+    path("register", views.register, name="register"),
+
+    # Dashboard
     path("admin_panel", views.admin_panel, name="admin_panel"),
-    path("upload", views.upload, name="upload"),
-    path("upload_custom", views.upload_custom, name="upload_custom"),
-    path("upload_sounds", views.upload_sounds, name="upload_sounds"),
-    path("categories", views.categories, name="categories"),
-    path("make_tag", views.make_tag, name="make_tag"),
-    path("ins_words_tag", views.ins_words_tag, name="ins_words_tag"),
-    path("del_words_tag", views.del_words_tag, name="del_words_tag"),
-    path("chooser", views.chooser, name="chooser"),
-    path("delete_words", views.delete_words, name="delete_words"),
+
+    # Libraries
+    path("word_library", views.word_library, name="word_library"),
+    path("tag_library", views.tag_library, name="tag_library"),
+
+    # Word Changes
+    path("update_words", views.update_words, name="update_words"),
+
+    # Tag Changes
     path("delete_tag/<str:id>", views.delete_tag, name="delete_tag"),
+
+    # Import
+    path("word_import", views.word_import, name="word_import"),
+    path("upload_sounds", views.upload_sounds, name="upload_sounds"),
+
+    # Activities
+
+    # Spelling
     path("start", views.start, name="start"),
     path("spell", views.spell, name="spell"),
     path("finish", views.finish, name="finish"),
+
+    # Reports
     path("reports", views.reports, name="reports"),
     path("report/<int:id>", views.report, name="report"),
 ]

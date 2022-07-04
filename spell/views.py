@@ -1,8 +1,13 @@
+from operator import ilshift
 from re import L
+from django.contrib.auth import authenticate, logout
+from django.contrib.auth import login as auth_login
+from django.db import IntegrityError
+from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from .models import Word, Tag, Report
+from .models import Account, Word, Tag, Report
 import csv
 from django import forms
 from django.core.files.storage import FileSystemStorage
@@ -10,8 +15,10 @@ import os
 import requests
 import json
 from os.path import exists
+from django.db.models import Q
 import random
 import smtplib
+from django.contrib.auth.decorators import login_required
 
 class UploadFileForm(forms.Form):
     csv = forms.FileField()
@@ -75,8 +82,8 @@ def create_word(word):
     audio = []
 
     final_parts = ""
-    final_right = "<ol>"
-    final_origin = "<ol>"
+    final_right = ["No definition given."]
+    final_origin = ["No origin given."]
     final_audio = "["
 
     for stuff in info:
@@ -146,131 +153,586 @@ def create_word(word):
         else: 
             final_parts += parts[i]
     
+    final_origin.append(None)
+    final_origin.append(None)
     for i in range(len(origin)):
-        final_origin += ("<li>" + origin[i] + "</li>")
-    
-    final_origin += "</ol>"
+        if not i >= 3:
+            final_origin[i] = origin[i]
 
-    for i in range(len(origin)):
-        final_right += ("<li>" + right[i] + "</li>")
-    
-    final_right += "</ol>"
+    final_right.append(None)
+    final_right.append(None)
+    for i in range(len(right)):
+        if not i >= 3:
+            final_right[i] = right[i]
 
     for i in range(len(audio)):
         if i != (len(audio) - 1):
             final_audio += ("'" + audio[i] + "', ")
         else: 
             final_audio += ("'" + audio[i] + "']")
-    
-    new = Word(word=word, speech = final_parts, origin = final_origin, definition = final_right, pronounce = final_audio, tagged = False)
+       
+    new = Word(word=word, speech = final_parts, origin1 = final_origin[0], origin2 = final_origin[1], origin3 = final_origin[2], definition1 = final_right[0], definition2 = final_right[1], definition3 = final_right[2], ronounce = final_audio, tagged = False)
     new.save()
 
 # Create your views here.
+
+# Homepage
 def index(request):
-    if "pin" not in request.session or request.session["pin"] == "" or request.session["pin"] == "CONFIRMED":
-        return render(request, "spell/index.html", {
-            "message": ""
-        })
-    else:
-        request.session["pin"] = ""
-        return render(request, "spell/index.html", {
-            "message": "Invalid PIN!"
-        })
-
-def confirm(request):
-    pin = request.POST["pin"]
-    if pin != "5823":
-        request.session["pin"] = "UNCONFIRMED"
-        return HttpResponseRedirect(reverse("index"))
-    else:
-        request.session["pin"] = "CONFIRMED"
-        return HttpResponseRedirect(reverse("chooser"))
-
-def admin_panel(request):
-    if (("pin" not in request.session) or (request.session["pin"] != "CONFIRMED")):
-        return HttpResponseRedirect(reverse("index"))
-    else:
-        words = Word.objects.all()
-        return render(request, "spell/words.html", {
-            'thing': words
-        })
-
-def upload(request):
-    nots = []
-    already = []
-    file = request.FILES["csv"]
-    fs = FileSystemStorage()
-    fs.save("spell/static/spell/words.csv", file)
-    f = open("spell/static/spell/words.csv", "r")
-    reader = csv.reader(f)
-    next(reader)
-    for row in reader:
-        new_word = row[0].lower()
-        
-        if not Word.objects.filter(word=new_word):
-            if is_word(new_word):
-                create_word(new_word)
-            else:
-                nots.append(new_word)
-        else:
-            already.append(new_word)
-    f.close()
-    os.remove("spell/static/spell/words.csv")
-
-    if len(nots) > 0:
-        fields = ['Words']
-        
-        with open("spell/static/spell/CustomTemplate.csv", 'w', newline="") as csvfile:
-            csvwriter = csv.writer(csvfile) 
-            csvwriter.writerow(fields) 
-            
-            for thingy in nots:
-                rows = [thingy, "", "", ""]
-                csvwriter.writerow(rows)
-
-    if len(nots) > 0 and not len(already) > 0:
-        return render(request, "spell/unadded.html", {
-            'nots': nots
-        })
-    elif len(already) > 0 and not len(nots) > 0:
-        return render(request, "spell/unadded.html", {
-            'already': already
-        })
-    elif len(already) > 0 and len(nots) > 0:
-        return render(request, "spell/unadded.html", {
-            'nots': nots,
-            'already': already
-        })
-    else:
+    if request.user.is_authenticated:
         return HttpResponseRedirect(reverse("admin_panel"))
+    else:
+        return render(request, "spell/index.html")
 
-def upload_custom(request):
-    if exists("spell/static/spell/custom.csv"):
-        os.remove("spell/static/spell/custom.csv")
-    already = []
-    new_word = []
-    file = request.FILES["custom"]
-    fs = FileSystemStorage()
-    fs.save("spell/static/spell/custom.csv", file)
-    f = open("spell/static/spell/custom.csv", "r")
-    reader = csv.reader(f)
-    next(reader)
-    counter = 0
-    for row in reader:
-        final = row[0].lower()
-        
-        if not Word.objects.filter(word=final):
-            new_word.append(final)
+# Authorization pages
+def login(request):
+    if request.method == "POST":
+        # Attempt to sign user in
+        username = request.POST["username"]
+        password = request.POST["password"]
+        user = authenticate(request, username=username, password=password)
+
+        # Check if authentication successful
+        if user is not None:
+            auth_login(request, user)
+            return HttpResponseRedirect(reverse("admin_panel"))
         else:
-            already.append(final)
-        
-        counter += 1
-    f.close()
-    return render(request, "spell/custom.html", {
-        'words': new_word,
-        'already': already
-    })
+            return render(request, "spell/login.html", {
+                "message": "Invalid username and/or password."
+            })
+    else:
+        return render(request, "spell/login.html")
 
+def register(request):
+    if request.method == "POST":
+        fname = request.POST["fname"]
+        lname = request.POST["lname"]
+        username = request.POST["username"]
+        email = request.POST["email"]
+        password = request.POST["password"]
+
+        # Attempt to create new user
+        try:
+            user = Account.objects.create_user(username, email, password)
+            user.first_name = fname
+            user.last_name = lname
+            user.save()
+        except IntegrityError:
+            return render(request, "spell/register.html", {
+                "message": "Username already taken."
+            })
+        
+        auth_login(request, user)
+        return HttpResponseRedirect(reverse("admin_panel"))
+    else:
+        return render(request, "spell/register.html")
+
+# Dashboard
+@login_required
+def admin_panel(request):
+    return render(request, "spell/dashboard.html")
+
+# Libraries
+@login_required
+def word_library(request):
+    if request.method == "POST":
+        exact = False
+        try:
+            temp = request.POST["exact"]
+            exact = True
+        except:
+            pass
+        
+        word = request.POST["word"]
+        tag_list = request.POST.getlist('*..*tags*..*')
+        which = request.POST["which"]
+
+        if not word == "":
+            if exact:
+                try:
+                    cool = word
+                    fun = Word.objects.get(word=cool)
+                    results = []
+                    results.append(fun)
+
+                    return render(request, "spell/word_library.html", {
+                        "tags": Tag.objects.all(),
+                        "results": results
+                    })
+                except ObjectDoesNotExist:
+                    return render(request, "spell/word_library.html", {
+                        "tags": Tag.objects.all(),
+                        "message": True
+                    })
+            else:
+                if len(tag_list) > 0:
+                    if which == "ALL":
+                        results = []
+                        fun = []
+                        for id in tag_list:
+                            if id == "*..*":
+                                fun.append(Word.objects.filter(tagged=False))
+                            else:
+                                fun.append(Word.objects.filter(word__contains=word, tags__id=int(id)))
+                        
+                        for i in range(len(fun)):
+                            if not i == 0:
+                                fun[0] = set(fun[0]).intersection(set(fun[i]))
+                        
+                        for i in fun[0]:
+                            results.append(i)
+                        
+                        if len(results) > 0:
+                            return render(request, "spell/word_library.html", {
+                                "tags": Tag.objects.all(),
+                                "results": results
+                            })
+                        else:
+                            return render(request, "spell/word_library.html", {
+                                "tags": Tag.objects.all(),
+                                "message": True
+                            })
+                    else:
+                        stuff = []
+                        for id in tag_list:
+                            if id == "*..*":
+                                stuff.append(Word.objects.filter(tagged=False))
+                            else:
+                                stuff.append(Word.objects.filter(word__contains=word, tags__id=int(id)))
+                        
+                            results = []
+                            for thingy in stuff:
+                                for i in thingy:
+                                    results.append(i)
+                            
+                            if len(results) > 0:
+                                return render(request, "spell/word_library.html", {
+                                    "tags": Tag.objects.all(),
+                                    "results": set(results)
+                                })
+                            else:
+                                return render(request, "spell/word_library.html", {
+                                    "tags": Tag.objects.all(),
+                                    "message": True
+                                })
+                        results = []
+                    
+                        fun = []
+                        for i in tag_list:
+                            if not i == "*..*":
+                                fun.append(int(i))
+                        
+                        if "*..*" in tag_list:
+                            results.extend(list((Word.objects.filter((Q(tags__id__in=fun) | Q(tagged=False)) & Q(word__contains=word))).distinct()))
+                        else:
+                            results.extend(list((Word.objects.filter(tags__id__in=fun, word__contains=word)).distinct()))
+                        
+                        if len(results) > 0:
+                            print("HEEEERE")
+                            return render(request, "spell/word_library.html", {
+                                "tags": Tag.objects.all(),
+                                "results": results
+                            })
+                        else:
+                            return render(request, "spell/word_library.html", {
+                                "tags": Tag.objects.all(),
+                                "message": True
+                            })
+                else:
+                    results = Word.objects.filter(word__contains=word)
+                    
+                    if len(results) > 0:
+                        return render(request, "spell/word_library.html", {
+                            "tags": Tag.objects.all(),
+                            "results": results
+                        })
+                    else:
+                        return render(request, "spell/word_library.html", {
+                            "tags": Tag.objects.all(),
+                            "message": True
+                        })
+        else:
+            if len(tag_list) > 0:
+                if which == "ALL":
+                    results = []
+                    fun = []
+                    for id in tag_list:
+                        if id == "*..*":
+                            fun.append(Word.objects.filter(tagged=False))
+                        else:
+                            fun.append(Word.objects.filter(tags__id=int(id)))
+                    
+                    for i in range(len(fun)):
+                        if not i == 0:
+                            fun[0] = set(fun[0]).intersection(set(fun[i]))
+                    
+                    for i in fun[0]:
+                        results.append(i)
+                    
+                    if len(results) > 0:
+                        return render(request, "spell/word_library.html", {
+                            "tags": Tag.objects.all(),
+                            "results": results
+                        })
+                    else:
+                        return render(request, "spell/word_library.html", {
+                            "tags": Tag.objects.all(),
+                            "message": True
+                        })
+                else:
+                    results = []
+                    
+                    fun = []
+                    for i in tag_list:
+                        if not i == "*..*":
+                            fun.append(int(i))
+                    
+                    if "*..*" in tag_list:
+                        results.extend(list((Word.objects.filter(Q(tags__id__in=fun) | Q(tagged=False))).distinct()))
+                    else:
+                        results.extend(list((Word.objects.filter(tags__id__in=fun)).distinct()))
+                    
+                    if len(results) > 0:
+                        return render(request, "spell/word_library.html", {
+                            "tags": Tag.objects.all(),
+                            "results": results
+                        })
+                    else:
+                        return render(request, "spell/word_library.html", {
+                            "tags": Tag.objects.all(),
+                            "message": True
+                        })
+            else:
+                results = Word.objects.all()
+                
+                if len(results) > 0:
+                    return render(request, "spell/word_library.html", {
+                        "tags": Tag.objects.all(),
+                        "results": results
+                    })
+                else:
+                    return render(request, "spell/word_library.html", {
+                        "tags": Tag.objects.all(),
+                        "message": True
+                    })
+    else:
+        return render(request, "spell/word_library.html", {
+            "tags": Tag.objects.all()
+        })
+
+@login_required
+def tag_library(request):
+    if request.method == "POST":
+        try:
+            thing = request.POST["tag"]
+            if not (("---" in thing) or ('"' in thing) or ("'" in thing) or ("*..*" in thing) or (", " in thing)):
+                new = Tag(name=thing)
+                new.save()
+                return render(request, "spell/tag_library.html", {
+                    "tags": Tag.objects.all()
+                })
+            else:
+                return render(request, "spell/tag_library.html", {
+                    "tags": Tag.objects.all(),
+                    "error": True
+                })
+        except:
+            thing = request.POST["rentag"]
+            if not (("---" in thing) or ('"' in thing) or ("'" in thing) or ("*..*" in thing) or (", " in thing)):
+                new = Tag.objects.get(pk=int(request.POST["tagid"]))
+                new.name = thing
+                new.save()
+                return render(request, "spell/tag_library.html", {
+                    "tags": Tag.objects.all()
+                })
+            else:
+                return render(request, "spell/tag_library.html", {
+                    "tags": Tag.objects.all(),
+                    "namerror": int(request.POST["tagid"])
+                })
+    else:
+        return render(request, "spell/tag_library.html", {
+            "tags": Tag.objects.all()
+        })
+
+# Word Changes
+@login_required
+def update_words(request):
+    updates = request.POST["changes"]
+    updates = updates.split("|||")
+    updates.remove("")
+
+    for update in updates:
+        thing = update.split("*..*")
+        question = thing[0].split("-")
+        id = question[2]
+        changer = question[1]
+        time = Word.objects.get(pk=int(id))
+
+        if changer == "def1":
+            time.definition1 = thing[1]
+            time.save()
+        elif changer == "def2":
+            time.definition2 = thing[1]
+            time.save()
+        elif changer == "def3":
+            time.definition3 = thing[1]
+            time.save()
+        elif changer == "spec":
+            time.speech = thing[1]
+            time.save()
+        elif changer == "origin1":
+            time.origin1 = thing[1]
+            time.save()
+        elif changer == "origin2":
+            time.origin2 = thing[1]
+            time.save()
+        elif changer == "origin3":
+            time.origin3 = thing[1]
+            time.save()
+        elif changer == "remtag":
+            bad = Tag.objects.get(pk=int(thing[1]))
+            bad.words.remove(time)
+            bad.save()
+            time.tags.remove(bad)
+            time.save()
+        else:
+            bad = Tag.objects.get(pk=int(thing[1]))
+            bad.words.add(time)
+            bad.save()
+            time.tags.add(bad)
+            time.save()
+    
+    return HttpResponseRedirect(reverse("word_library"))
+
+# Tag Changes
+@login_required
+def delete_tag(request, id):
+    tag = Tag.objects.get(pk=id)
+    tag.delete()
+    return HttpResponseRedirect(reverse("tag_library"))
+
+# Import
+@login_required
+def word_import(request):
+    if request.method == "POST":
+        request_id = request.POST["request-id"]
+
+        if request_id == "new-words":
+            nots = []
+            already = []
+            file = request.FILES["csv"]
+            fs = FileSystemStorage()
+            fs.save("spell/static/spell/words.csv", file)
+            f = open("spell/static/spell/words.csv", "r")
+            reader = csv.reader(f)
+            next(reader)
+            for row in reader:
+                new_word = row[0].lower()
+                
+                if not Word.objects.filter(word=new_word):
+                    if is_word(new_word):
+                        create_word(new_word)
+                    else:
+                        nots.append(new_word)
+                else:
+                    already.append(new_word)
+            f.close()
+            os.remove("spell/static/spell/words.csv")
+
+            if len(nots) > 0:
+                fields = ['Words']
+                
+                with open("spell/static/spell/CustomTemplate.csv", 'w', newline="") as csvfile:
+                    csvwriter = csv.writer(csvfile) 
+                    csvwriter.writerow(fields) 
+                    
+                    for thingy in nots:
+                        rows = [thingy]
+                        csvwriter.writerow(rows)
+
+            if len(nots) > 0 and not len(already) > 0:
+                return render(request, "spell/error.html", {
+                    'nots': nots,
+                    'message1': "SpellNOW!&trade; was unable to add these words to your list:",
+                    "download": True
+                })
+            elif len(already) > 0 and not len(nots) > 0:
+                return render(request, "spell/error.html", {
+                    'already': already,
+                    'message2': "SpellNOW!&trade; found these words already in your list:"
+                })
+            elif len(already) > 0 and len(nots) > 0:
+                return render(request, "spell/error.html", {
+                    'nots': nots,
+                    'already': already,
+                    'message1': "SpellNOW!&trade; was unable to add these words to your list:",
+                    'message2': "SpellNOW!&trade; found these words already in your list:",
+                    "download": True
+                })
+            else:
+                return HttpResponseRedirect(reverse("word_library"))
+        elif request_id == "custom-words":
+            if exists("spell/static/spell/custom.csv"):
+                os.remove("spell/static/spell/custom.csv")
+            already = []
+            new_word = []
+            file = request.FILES["csv"]
+            fs = FileSystemStorage()
+            fs.save("spell/static/spell/custom.csv", file)
+            f = open("spell/static/spell/custom.csv", "r")
+            reader = csv.reader(f)
+            next(reader)
+            counter = 0
+            for row in reader:
+                final = row[0].lower()
+                
+                if not Word.objects.filter(word=final):
+                    new_word.append(final)
+                else:
+                    already.append(final)
+                
+                counter += 1
+            f.close()
+            if len(already) > 0:
+                return render(request, "spell/custom.html", {
+                    'words': new_word,
+                    'already': already,
+                    "error": True,
+                    'message2': "SpellNOW!&trade; found these words already in your list:",
+                })
+            else:
+                return render(request, "spell/custom.html", {
+                    'words': new_word,
+                })
+        elif request_id == "del-words":
+            nots = []
+            file = request.FILES["csv"]
+            fs = FileSystemStorage()
+            fs.save("spell/static/spell/delete-words.csv", file)
+            f = open("spell/static/spell/delete-words.csv", "r")
+            reader = csv.reader(f)
+            next(reader)
+            for row in reader:
+                final = row[0].lower()
+                
+                if not Word.objects.filter(word=final):
+                    nots.append(final)
+                else:
+                    word = Word.objects.get(word=final)
+                    word.delete()
+
+                    if exists("spell/static/spell/sounds/" + final + ".mp3"):
+                        os.remove("spell/static/spell/sounds/" + final + ".mp3")
+            f.close()
+            os.remove("spell/static/spell/delete-words.csv")
+
+            if len(nots) > 0:
+                return render(request, "spell/error.html", {
+                    'nots': nots,
+                    "message1": "SpellNOW!&trade; was unable to delete these words because they do not exist:"
+                })
+            else:
+                return HttpResponseRedirect(reverse("word_library"))
+        elif "add-tag" in request_id:
+                nots = []
+                already = []
+                file = request.FILES["csv"]
+                fs = FileSystemStorage()
+                fs.save("spell/static/spell/insert-tags.csv", file)
+                f = open("spell/static/spell/insert-tags.csv", "r")
+                reader = csv.reader(f)
+                next(reader)
+                tag = Tag.objects.get(pk=(request_id.split("-"))[2])
+                for row in reader:
+                    final = row[0].lower()
+                    
+                    if tag.words.filter(word=final):
+                        already.append(final)
+                    if not Word.objects.filter(word=final):
+                        nots.append(final)
+                    else:
+                        word = Word.objects.get(word=final)
+                        tag.words.add(word)
+                        tag.save()
+                        word.tags.add(tag)
+                        word.tagged = True
+                        word.save()
+                f.close()
+                os.remove("spell/static/spell/insert-tags.csv")
+
+                if len(nots) > 0:
+                    fields = ['Words']
+                        
+                    # writing to csv file 
+                    with open("spell/static/spell/CustomTemplate.csv", 'w', newline="") as csvfile:
+                        csvwriter = csv.writer(csvfile) 
+                        csvwriter.writerow(fields)
+                        
+                        for thingy in nots:
+                            rows = [thingy]
+                            csvwriter.writerow(rows)
+
+                if len(nots) > 0 and len(already) > 0:
+                    return render(request, "spell/error.html", {
+                        'already': already,
+                        'nots': nots,
+                        "message1": "SpellNOW!&trade; was unable to tag these words because they do not exist:",
+                        "message2": "SpellNOW!&trade; was unable to tag these words because they are already tagged:",
+                        "download": True
+                    })
+                elif len(nots) > 0:
+                    return render(request, "spell/error.html", {
+                        'nots': nots,
+                        "message1": "SpellNOW!&trade; was unable to tag these words because they do not exist:",
+                        "download": True
+                    })
+                elif len(already) > 0:
+                    return render(request, "spell/error.html", {
+                        'already': already,
+                        "message2": "SpellNOW!&trade; was unable to tag these words because they are already tagged:",
+                    })
+                else:
+                    return HttpResponseRedirect(reverse("tag_library"))
+        elif "del-tag" in request_id:
+            nots = []
+            file = request.FILES["csv"]
+            fs = FileSystemStorage()
+            fs.save("spell/static/spell/delete-tags.csv", file)
+            f = open("spell/static/spell/delete-tags.csv", "r")
+            reader = csv.reader(f)
+            next(reader)
+            tag = Tag.objects.get(pk=(request_id.split("-"))[2])
+            for row in reader:
+                final = row[0].lower()
+                
+                if not tag.words.filter(word=final):
+                    nots.append(final)
+                else:
+                    word = Word.objects.get(word=final)
+                    tag.words.remove(word)
+                    tag.save()
+                    word.tags.remove(tag)
+                    word.save()
+                    usage = Tag.objects.filter(words__id=word.pk)
+                    if len(usage) == 0:
+                        word.tagged = False
+                        word.save()
+            f.close()
+            os.remove("spell/static/spell/delete-tags.csv")
+
+            if len(nots) > 0:
+                return render(request, "spell/error.html", {
+                    'nots': nots,
+                    "message1": "SpellNOW!&trade; was unable to untag these words because they are not tagged:",
+                })
+            else:
+                return HttpResponseRedirect(reverse("tag_library"))
+    else:
+        return render(request, "spell/import.html", {
+            "tags": Tag.objects.all()
+        })
+
+@login_required
 def upload_sounds(request):
     f = open("spell/static/spell/custom.csv", "r")
     reader = csv.reader(f)
@@ -284,322 +746,133 @@ def upload_sounds(request):
             fs.save("spell/static/spell/sounds/" + final + ".mp3", file)
             new_word = row[0].lower()
             new_speech = request.POST["speech-"+final]
-            new_origin = "<ol><li>" + request.POST["origin-"+final] + "</li></ol>"
-            new_def = "<ol><li>" + request.POST["origin-"+final] + "</li></ol>"
+            new_origin = request.POST["origin-"+final]
+            new_def = request.POST["origin-"+final]
 
-            new = Word(word=new_word, speech = new_speech, origin = new_origin, definition = new_def, pronounce = ("*--*" + new_word), tagged=False)
+            new = Word(word=new_word, speech = new_speech, origin1 = new_origin, origin2 = None, origin3 = None, definition1 = new_def, definition2 = None, definition3 = None, pronounce = ("*--*" + new_word), tagged=False)
             new.save()
     
-    return HttpResponseRedirect(reverse("admin_panel"))
+    return HttpResponseRedirect(reverse("word_library"))
 
-def categories(request):
-    if (("pin" not in request.session) or (request.session["pin"] != "CONFIRMED")):
-        return HttpResponseRedirect(reverse("index"))
-    else:
-        return render(request, "spell/categories.html", {
-            "tag": Tag.objects.all()
-        })
+# Activities
 
-def make_tag(request):
-    thing = request.POST["tag"]
-    if not (("---" in thing) or ('"' in thing) or ("'" in thing) or ("*..*" in thing) or (", " in thing)):
-        new = Tag(name=thing)
-        new.save()
-        return HttpResponseRedirect(reverse("categories"))
-    else:
-        return render(request, "spell/categories.html", {
-            "tag": Tag.objects.all(),
-            "error": True
-        })
-
-def ins_words_tag(request):
-    nots = []
-    already = []
-    file = request.FILES["insert"]
-    fs = FileSystemStorage()
-    fs.save("spell/static/spell/insert-tags.csv", file)
-    f = open("spell/static/spell/insert-tags.csv", "r")
-    reader = csv.reader(f)
-    next(reader)
-    tag = Tag.objects.get(pk=int(request.POST["id"]))
-    for row in reader:
-        final = row[0].lower()
-        
-        if tag.words.filter(word=final):
-            already.append(final)
-        if not Word.objects.filter(word=final):
-            nots.append(final)
-        else:
-            word = Word.objects.get(word=final)
-            tag.words.add(word)
-            tag.save()
-            word.tagged = True
-            word.save()
-    f.close()
-    os.remove("spell/static/spell/insert-tags.csv")
-
-    if len(nots) > 0:
-        fields = ['Words']
-            
-        # writing to csv file 
-        with open("spell/static/spell/CreateWords.csv", 'w', newline="") as csvfile:
-            csvwriter = csv.writer(csvfile) 
-            csvwriter.writerow(fields)
-            
-            for thingy in nots:
-                rows = [thingy]
-                csvwriter.writerow(rows)
-
-    if len(nots) > 0 or len(already) > 0:
-        return render(request, "spell/ins-error.html", {
-            'already': already,
-            'nots': nots,
-        })
-    else:
-        return HttpResponseRedirect(reverse("categories"))
-
-def del_words_tag(request):
-    nots = []
-    file = request.FILES["del"]
-    fs = FileSystemStorage()
-    fs.save("spell/static/spell/delete-tags.csv", file)
-    f = open("spell/static/spell/delete-tags.csv", "r")
-    reader = csv.reader(f)
-    next(reader)
-    tag = Tag.objects.get(pk=int(request.POST["id"]))
-    for row in reader:
-        final = row[0].lower()
-        
-        if not tag.words.filter(word=final):
-            nots.append(final)
-        else:
-            word = Word.objects.get(word=final)
-            tag.words.remove(word)
-            tag.save()
-            usage = Tag.objects.filter(words__id=word.pk)
-            if len(usage) == 0:
-                word.tagged = False
-                word.save()
-    f.close()
-    os.remove("spell/static/spell/delete-tags.csv")
-
-    if len(nots) > 0:
-        return render(request, "spell/del-error.html", {
-            'nots': nots,
-        })
-    else:
-        return HttpResponseRedirect(reverse("categories"))
-
-def chooser(request):
-    if (("pin" not in request.session) or (request.session["pin"] != "CONFIRMED")):
-        return HttpResponseRedirect(reverse("index"))
-    else:
-        words = Word.objects.all()
-        return render(request, "spell/chooser.html")
-
-def delete_words(request):
-    nots = []
-    file = request.FILES["deleter"]
-    fs = FileSystemStorage()
-    fs.save("spell/static/spell/delete-words.csv", file)
-    f = open("spell/static/spell/delete-words.csv", "r")
-    reader = csv.reader(f)
-    next(reader)
-    for row in reader:
-        final = row[0].lower()
-        
-        if not Word.objects.filter(word=final):
-            nots.append(final)
-        else:
-            word = Word.objects.get(word=final)
-            word.delete()
-
-            if exists("spell/static/spell/sounds/" + final + ".mp3"):
-                os.remove("spell/static/spell/sounds/" + final + ".mp3")
-    f.close()
-    os.remove("spell/static/spell/delete-words.csv")
-
-    if len(nots) > 0:
-        return render(request, "spell/del-words-err.html", {
-            'nots': nots,
-        })
-    else:
-        return HttpResponseRedirect(reverse("admin_panel"))
-
-def delete_tag(request, id):
-    tag = Tag.objects.get(pk=id)
-    tag.delete()
-    return HttpResponseRedirect(reverse("categories"))
-
+# Spelling
+@login_required
 def start(request):
-    total = ""
-    for tag in Tag.objects.all():
-        total += (", " + tag.name)
-    total += ", *..*"
-
-    return render(request, "spell/start.html", {
+    return render(request, "spell/spelling_start.html", {
         "tags": Tag.objects.all(),
-        "total": total,
         "number": len(Word.objects.all())
     })
 
+@login_required
 def spell(request):
     if request.method == "POST":
-        order = ""
-        thing = request.POST["tags"]
-        tags = thing.split(", ")
-        tags.remove('')
-        allwords = []
-        
-        tag_count = 0
-        length_tags = len(tags)
-        print("========================Generating Word List========================")
-        for tag in tags:
-            if not tag == "*..*":
-                word_count = 0
-                print("Looking through tag '" + tag + "'..........")
-                right = Tag.objects.get(name=tag)
-                word_length = len(right.words.all())
-                for word in right.words.all():
-                    if not word in allwords:
-                        allwords.append(word)
-                    word_count += 1
-                    print("Looked through word " + str(word_count) + "/" + str(word_length) + "...")
-                tag_count += 1
-                print("Looked through tag '" + tag + "'.........." + str(tag_count) + "/" + str(length_tags))
-            else:
-                word_count = 0
-                print("Looked through untagged words...")
-                word_length = len(Word.objects.all())
-                for word in Word.objects.all():
-                    if word.tagged == False:
-                        if not word in allwords:
-                            allwords.append(word)
-                    word_count += 1
-                    print("Looked through word " + str(word_count) + "/" + str(word_length) + "...")
-                tag_count += 1
-                print("Looked through untagged words.........." + str(tag_count) + "/" + str(length_tags))
-        
-        print("========================Verifying word amount========================")
-        if int(len(allwords)) < int(request.POST["numwords"]) or int(len(tags)) > int(request.POST["numwords"]):
-            total = ""
-            for tag in Tag.objects.all():
-                total += (", " + tag.name)
-            total += ", *..*"
+        tags = request.POST.getlist('*..*tags*..*')
 
+        print("========================Verifying word amount========================")
+        results = []
+        fun = []
+        for i in tags:
+            if not i == "*..*":
+                fun.append(i)
+        
+        if "*..*" in tags:
+            results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(tagged=False))).distinct()))
+        else:
+            results.extend(list((Word.objects.filter(tags__name__in=fun)).distinct()))
+        
+        if int(len(results)) < int(request.POST["numwords"]) or int(len(tags)) > int(request.POST["numwords"]):
             return render(request, "spell/start.html", {
                 "tags": Tag.objects.all(),
-                "total": total,
                 "number": len(Word.objects.all()),
                 "message": "Invalid Word Count"
             })
         else:
-            allspeechs = []
-            allorigins = []
-            alldefs = []
-            allprons = ""
+            gag = []
             fines = []
-            count = 0
-            using = 0
-            thingybob = ""
-            nogo = False
-            i = 0
+            allspeechs = []
+            alldefs = ""
+            allorigins = ""
+            allprons = ""
+            order = ""
             final_last_total = 0
             final_tags = ""
+            hllg = []
+            tags_used = ""
 
             print("========================Choosing words========================")
             for i in range(int(request.POST["numwords"])):
-                while True:   
-                    nogo = False
-                    if not tags[count] == "*..*":
-                        lll = Tag.objects.get(name=tags[count])
-                        last = lll.words.all()
-                        currently = []
-
-                        for asdf in last:
-                            currently.append(asdf.word)
-
-                        while True:
-                            if not len(currently) == 0:
-                                using = random.randint(0, (len(currently) - 1))
-                                if (not currently[using] in fines):
-                                    thingybob = Word.objects.get(word=currently[using])
-                                    order += (lll.name + ", ")
-                                    break
-                                elif len(currently) == 0:
-                                    nogo = True
-                                    break
-                                currently.remove(currently[using])
-                            else:
-                                nogo = True
-                                break
-                    else:
-                        options = []
-                        for asdf in Word.objects.filter(tagged=False):
-                            options.append(asdf)
-                        
-                        while True:
-                            using = random.randint(0, (len(options) - 1))
-                            thingybob = options[using]
-                            options.remove(thingybob)
-                            if (not thingybob.word in fines):
-                                order += ("*..*, ")
-                                break
-                            elif len(options) == 0:
-                                nogo = True
-                                break
-
-                    if not nogo:
-                        fines.append(thingybob.word)
-
-                        allspeechs.append(thingybob.speech)
-                        allorigins.append(thingybob.origin)
-                        alldefs.append(thingybob.definition)
-                        
-                        if (count + 1) == int(request.POST["numwords"]):
-                            allprons += thingybob.pronounce
-                        else:
-                            allprons += (thingybob.pronounce + " || ")
-                        
-                        if count == (len(tags) - 1):
-                            count = 0
-                        else:
-                            count += 1
-                        
-                        final_last_total += 1
-                        print("Got word " + str(final_last_total) + " of " + request.POST["numwords"])
-                        
-                        usage = Tag.objects.filter(words__id=thingybob.id)
-                        badder = 0
-
-                        for bad in usage:
-                            if badder == (len(usage) - 1):
-                                final_tags += bad.name
-                            else:
-                                final_tags += (bad.name + "<>")
-                        
-                        if not final_last_total == int(request.POST["numwords"]):
-                            final_tags += "><"
-
+                randy = 0
+                if not tags[i % len(tags)] == "*..*":
+                    gotcha = len(Word.objects.filter(tags__name=tags[i % len(tags)]).exclude(id__in=gag))
+                    if gotcha < 1:
                         break
+                    randy = random.randint(1, gotcha)
+                    word = (Word.objects.filter(tags__name=tags[i % len(tags)]).exclude(id__in=gag))[randy]
+                else:
+                    gotcha = len(Word.objects.filter(tagged=False).exclude(id__in=gag))
+                    if gotcha < 1:
+                        break
+                    randy = random.randint(1, gotcha)
+                    word = (Word.objects.filter(tagged=False).exclude(id__in=gag))[randy]
+                
+                order += tags[i % len(tags)] + ", "
+                gag.append(int(word.id))
+
+                if not tags[i % len(tags)] in hllg:
+                    hllg.append(tags[i % len(tags)])
+                    tags_used += (tags[i % len(tags)] + ", ")
+
+                fines.append(word.word)
+
+                allspeechs.append(word.speech)
+
+                ori1 = word.origin1 if not word.origin1 == None else "-||-"
+                ori2 = word.origin2 if not word.origin2 == None else "-||-"
+                ori3 = word.origin2 if not word.origin3 == None else "-||-"
+
+                allorigins += (ori1 + '--++--' + ori2 + '--++--' + ori3 + "|=[]=|")
+
+                def1 = word.definition1 if not word.definition1 == None else "-||-"
+                def2 = word.definition2 if not word.definition2 == None else "-||-"
+                def3 = word.definition3 if not word.definition3 == None else "-||-"
+
+                alldefs += (def1 + '--++--' + def2 + '--++--' + def3 + "|=[]=|")
+
+                if (i + 1) == int(request.POST["numwords"]):
+                    allprons += word.pronounce
+                else:
+                    allprons += (word.pronounce + " || ")
+                
+                final_last_total += 1
+                print("Got word " + str(final_last_total) + " of " + request.POST["numwords"])
+                        
+                usage = Tag.objects.filter(words__id=word.id)
+
+                badder = 0
+                for bad in usage:
+                    if badder == (len(usage) - 1):
+                        final_tags += bad.name
                     else:
-                        if count == (len(tags) - 1):
-                            count = 0
-                        else:
-                            count += 1
+                        final_tags += (bad.name + "<>")
+                    badder += 1
+                     
+                if not final_last_total == int(request.POST["numwords"]):
+                    final_tags += "><"
             
-            return render(request, "spell/spell.html", {
+            return render(request, "spell/spelling_spell.html", {
                 "words": fines,
                 "speech": allspeechs,
                 "origin": allorigins,
                 "definition": alldefs,
                 "prons": allprons,
                 "tags": Tag.objects.all(),
-                "tags_used": thing,
                 "order": order,
-                "final_tags": final_tags
+                "final_tags": final_tags,
+                "tags_used": tags_used
             })
 
+@login_required
 def finish(request):
     tags_rep = request.POST["new_tags"]
     tags = tags_rep.split("[]")
@@ -610,7 +883,6 @@ def finish(request):
     added_words.remove("")
 
     for tag in tags:
-        print(tag)
         new = Tag(name=tag)
         new.save()
     
@@ -621,6 +893,8 @@ def finish(request):
             word = Word.objects.get(word=cool[1])
             bad.words.remove(word)
             bad.save()
+            word.tags.remove(bad)
+            word.save()
             usage = Tag.objects.filter(words__id=word.pk)
             if len(usage) == 0:
                 word.tagged = False
@@ -630,6 +904,7 @@ def finish(request):
             word = Word.objects.get(word=cool[1])
             bad.words.add(word)
             bad.save()
+            word.tags.add(bad)
             word.tagged = True
             word.save()
 
@@ -693,7 +968,7 @@ def finish(request):
             actions = ""
             if int(correct_array[count - 1]) == 0:
                 while True:
-                    if not ((len(added_words) == 0) or (len(added_words) == (good + 1))):
+                    if not ((len(added_words) == 0) or (len(added_words) == good)):
                         if added_words[good][1] == words[count - 1]:
                             if (added_words[good][0][0] + added_words[good][0][1] + added_words[good][0][2]) == "---":
                                 actions += ("'" + words[count - 1] + "' removed from tag '" + added_words[good][0].replace("---", "") +"'<br><br>")
@@ -711,7 +986,7 @@ def finish(request):
             else:
                 actions = ""
                 while True:
-                    if not ((len(added_words) == 0) or (len(added_words) == (good + 1))):
+                    if not ((len(added_words) == 0) or (len(added_words) == good)):
                         if added_words[good][1] == words[count - 1]:
                             if (added_words[good][0][0] + added_words[good][0][1] + added_words[good][0][2]) == "---":
                                 actions += ("'" + words[count - 1] + "' removed from tag '" + added_words[good][0].replace("---", "") +"'<br><br>")
@@ -753,43 +1028,41 @@ def finish(request):
     except Exception as ex:
         pass
     
-    return render(request, "spell/score.html", {
+    return render(request, "spell/spelling_finish.html", {
         "score": request.POST["score"]
     })
 
+
+# Reports
+@login_required
 def reports(request):
-    if (("pin" not in request.session) or (request.session["pin"] != "CONFIRMED")):
-        return HttpResponseRedirect(reverse("index"))
-    else:
-        return render(request, "spell/report.html", {
-            "reports": Report.objects.filter(specific=False)
-        })
+    return render(request, "spell/reports.html", {
+        "reports": Report.objects.filter(specific=False).order_by('-finished')
+    })
 
+@login_required
 def report(request, id):
-    if (("pin" not in request.session) or (request.session["pin"] != "CONFIRMED")):
-        return HttpResponseRedirect(reverse("index"))
-    else:
-        tags = Report.objects.filter(iid=id, specific=True)
-        fnu = Report.objects.get(pk=id)
-        total = []
-        bring = []
+    tags = Report.objects.filter(iid=id, specific=True)
+    fnu = Report.objects.get(pk=id)
+    total = []
+    bring = []
 
-        for tag in tags:
-            great = {"brian": tag.tags, "correct": tag.correct, "total": tag.total, "percent": tag.percent}
-            total.append(great)
-        
-        f = open("spell/static/spell/reports/report_" + str(id) + ".csv", "r")
-        reader = csv.reader(f)
-        for row in reader:
-            abhay = {"number": row[0], "tag": row[1], "word": row[2], "attempt": row[3], "result": row[4], "actions": row[5], "time": row[6]}
-            bring.append(abhay)
-        f.close()
-        
-        return render(request, "spell/each.html", {
-            "tags": total,
-            "title": fnu.finished,
-            "correct": fnu.correct,
-            "total": fnu.total,
-            "percent": fnu.percent,
-            "records": bring,
-        })
+    for tag in tags:
+        great = {"brian": tag.tags, "correct": tag.correct, "total": tag.total, "percent": tag.percent}
+        total.append(great)
+    
+    f = open("spell/static/spell/reports/report_" + str(id) + ".csv", "r")
+    reader = csv.reader(f)
+    for row in reader:
+        abhay = {"number": row[0], "tag": row[1], "word": row[2], "attempt": row[3], "result": row[4], "actions": row[5], "time": row[6]}
+        bring.append(abhay)
+    f.close()
+    
+    return render(request, "spell/report.html", {
+        "tags": total,
+        "title": fnu.finished,
+        "correct": fnu.correct,
+        "total": fnu.total,
+        "percent": fnu.percent,
+        "records": bring,
+    })

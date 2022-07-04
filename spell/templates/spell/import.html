@@ -1,0 +1,156 @@
+{% extends "spell/layout.html" %}
+
+{% block title %}SpellNOW!&trade; -- Import{% endblock %}
+
+{% block function %}
+  <main id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Tag Library</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item">Libraries</li>
+          <li class="breadcrumb-item active">Import</li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
+
+    
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Import</h5>
+              <p>Import using the button below, or import words to be tagged in the panel below.</p>
+              
+                <form action="/word_import" enctype="multipart/form-data" method="post">
+                  {% csrf_token %}
+                  <div class="row mb-3">
+                    <label for="inputNumber" class="col-sm-2 col-form-label"><b>New Words</b></label>
+                    <div class="col-sm-10">
+                      <input onchange="document.getElementById('fun-1').click()" class="form-control" type="file" id="csv" name="csv">
+                    </div>
+                  </div>
+                  <input name="request-id" type="text" value="new-words" style="display: none;">
+                  <input type="submit" style="display: none;" id="fun-1">
+                </form>
+                <form action="/word_import" enctype="multipart/form-data" method="post">
+                  {% csrf_token %}
+                  <div class="row mb-3">
+                    <label for="inputNumber" class="col-sm-2 col-form-label"><b>Custom Words</b></label>
+                    <div class="col-sm-10">
+                      <input onchange="document.getElementById('fun-2').click()" class="form-control" type="file" id="formFile" name="csv">
+                    </div>
+                  </div>
+                  <input name="request-id" type="text" value="custom-words" style="display: none;">
+                  <input type="submit" style="display: none;" id="fun-2">
+                </form>
+                <form action="/word_import" enctype="multipart/form-data" method="post">
+                  {% csrf_token %}
+                  <div class="row mb-3">
+                    <label for="inputNumber" class="col-sm-2 col-form-label"><b>Delete Words</b></label>
+                    <div class="col-sm-10">
+                      <input onchange="document.getElementById('fun-3').click()" class="form-control" type="file" id="formFile" name="csv">
+                    </div>
+                  </div>
+                  <input name="request-id" type="text" value="del-words" style="display: none;">
+                  <input type="submit" style="display: none;" id="fun-3">
+                </form>
+              </div>
+            </div>
+          </div>
+        <div class="col-lg-6" style="width:25%;">
+          <div class="card overflow-auto" style="height: 600px;">
+              <div class="card-body">
+                <h5 class="card-title">Tag Words</h5>
+                <p>Import words to be tagged by selecting a tag below.</p>
+
+  
+                <!-- Default Table -->
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Tags</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for tag in tags %}
+                      <tr>
+                        <td id="tagres-{{ tag.id }}" onclick="call_tag('{{ tag.id }}')" name="csv" class="result">{{ tag.name }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+                <!-- End Default Table Example -->
+              </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6" style="width:75%;">
+          {% for tag in tags %}
+            <div id="tag-{{ tag.id }}" style="display: none;" class="card result_card">
+              <div class="card-header">{{ tag.name }}</div>
+              <div class="card-body">
+                <br>
+                <form action="/word_import" enctype="multipart/form-data" method="post">
+                  {% csrf_token %}
+                  <div class="row mb-3">
+                    <label for="inputNumber" class="col-sm-2 col-form-label"><b>Tag Words</b></label>
+                    <div class="col-sm-10">
+                      <input onchange="document.getElementById('add-{{ tag.id }}').click()" class="form-control" type="file" id="formFile" name="csv">
+                    </div>
+                  </div>
+                  <input name="request-id" type="text" value="add-tag-{{ tag.id }}" style="display: none;">
+                  <input type="submit" style="display: none;" id="add-{{ tag.id }}">
+                </form>
+                <form action="/word_import" enctype="multipart/form-data" method="post">
+                  {% csrf_token %}
+                  <div class="row mb-3">
+                    <label for="inputNumber" class="col-sm-2 col-form-label"><b>Untag Words</b></label>
+                    <div class="col-sm-10">
+                      <input onchange="document.getElementById('del-{{ tag.id }}').click()" class="form-control" type="file" id="formFile" name="csv">
+                    </div>
+                  </div>
+                  <input name="request-id" type="text" value="del-tag-{{ tag.id }}" style="display: none;">
+                  <input type="submit" style="display: none;" id="del-{{ tag.id }}">
+                </form>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+    <form style="display: none;" action="/update_words" method="post">
+      {% csrf_token %}
+      <textarea name="changes" id="changes" value=""></textarea>
+      <input type="submit" id="start_change">
+    </form>
+  </main><!-- End #main -->
+  <script>
+    function call_tag(word) {
+      const nodeList = document.querySelectorAll(".result");
+      for (let i = 0; i < nodeList.length; i++) {
+          nodeList[i].style.backgroundColor = "rgb(255, 255, 255)";
+      }
+      document.getElementById("tagres-"+word).style.backgroundColor = "rgb(195, 195, 195)"
+
+      const funList = document.querySelectorAll(".result_card");
+      for (let i = 0; i < nodeList.length; i++) {
+        funList[i].style.display = "none";
+      }
+      document.getElementById("tag-"+word).style.display = "block";
+    }
+  </script>
+  <style>
+    .result:hover{
+      background-color: #c3c3c3;
+      cursor: pointer;
+    }
+    .addrem:hover {
+      opacity: 50%;
+      cursor: pointer;
+    }
+  </style>
+{% endblock %}

@@ -1,0 +1,202 @@
+{% extends "spell/layout.html" %}
+
+{% block title %}SpellNOW!&trade; -- Tag Library{% endblock %}
+
+{% block function %}
+  <main id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Tag Library</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item">Libraries</li>
+          <li class="breadcrumb-item active">Tag Library</li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
+
+    
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">New Tag</h5>
+              <p>Create a new tag by specifying the tag name and click "Create".</p>
+              
+                <form action="/tag_library" method="post">
+                  {% csrf_token %}
+                  <div class="row g-3">
+                    <div class="col-md-4">
+                      <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="floatingInput" name="tag" placeholder="Tag">
+                        <label for="floatingInput">Tag</label>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <button class="btn btn-primary">Create</button>
+                    </div>
+                  </div>
+                  {% if error %}
+                    <div style="display: block;" class="invalid-feedback">Invalid Tag Name: The tag contains three dashes (---), a quotation mark ("), a apostrophe ('), a star followed by two dots followed by a star (*..*), or a comma followed by a space (, ).</div>
+                  {% endif %}
+                </form>
+              </div>
+            </div>
+          </div>
+        <div class="col-lg-6" style="width:25%;">
+          <div class="card overflow-auto" style="height: 600px;">
+              <div class="card-body">
+                <h5 class="card-title">Tag Library</h5>
+  
+                <!-- Default Table -->
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Tags</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for tag in tags %}
+                      <tr>
+                        <td id="tagres-{{ tag.id }}" onclick="call_tag('{{ tag.id }}')"  class="result">{{ tag.name }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+                <!-- End Default Table Example -->
+              </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6" style="width:75%;">
+          {% for tag in tags %}
+            {% if tag.id == namerror %}
+              <div id="tag-{{ tag.id }}" style="display: block;" class="card result_card">
+                <div class="card-header">{{ tag.name }}</div>
+                <div class="card-body">
+                  <br>
+                  <form action="/tag_library" method="post">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                      <div class="col-md-4">
+                        <div class="form-floating mb-3">
+                          <input type="text" class="form-control" id="floatingInput" name="rentag" placeholder="Tag">
+                          <label for="floatingInput">Rename Tag</label>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <button class="btn btn-primary">Rename</button>
+                      </div>
+                    </div>
+                    <div style="display: block;" class="invalid-feedback">Invalid Tag Name: The tag contains three dashes (---), a quotation mark ("), a apostrophe ('), a star followed by two dots followed by a star (*..*), or a comma followed by a space (, ).</div>
+                    <br>
+                    <input style="display:none;" type="text" name="tagid" value="{{ tag.id }}">
+                  </form>
+                  <div class="row g-4">
+                    <a href="/delete_tag/{{ tag.id }}"><button type="button" class="btn btn-danger">Delete Tag</button></a>
+                  </div>
+                </div>
+              </div>
+            {% else %}
+              <div id="tag-{{ tag.id }}" style="display: none;" class="card result_card">
+                <div class="card-header">{{ tag.name }}</div>
+                <div class="card-body">
+                  <br>
+                  <form action="/tag_library" method="post">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                      <div class="col-md-4">
+                        <div class="form-floating mb-3">
+                          <input type="text" class="form-control" id="floatingInput" name="rentag" placeholder="Tag">
+                          <label for="floatingInput">Rename Tag</label>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <button class="btn btn-primary">Rename</button>
+                      </div>
+                      <input style="display:none;" type="text" name="tagid" value="{{ tag.id }}">
+                    </div>
+                  </form>
+                  <div class="row g-4">
+                    <a href="/delete_tag/{{ tag.id }}"><button type="button" class="btn btn-danger">Delete Tag</button></a>
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+    <form style="display: none;" action="/update_words" method="post">
+      {% csrf_token %}
+      <textarea name="changes" id="changes" value=""></textarea>
+      <input type="submit" id="start_change">
+    </form>
+  </main><!-- End #main -->
+  <script>
+    global_clicked = []
+    change = []
+
+    function addrem(action, id, name) {
+      console.log(id)
+      if (action == "add") {
+        tagid = (id.split("-"))[2];
+        wordid = (id.split("-"))[1];
+        replacer = '<span id="' + id + '" class="badge rounded-pill bg-primary">' + document.getElementById(id).innerHTML + '</span>';
+        document.getElementById("notags-" + wordid).innerHTML = (document.getElementById("notags-" + wordid).innerHTML).replace(replacer, "");
+        blah = "'rem'";
+        blag = "'tag-" + wordid + '-' + tagid + "'";
+        brah = "'" + name + "'";
+        document.getElementById("tags-" + wordid).innerHTML += '<span id="' + id + '" class="badge rounded-pill bg-primary">' + name + ' <i onclick="addrem(' + blah + ', ' + blag + ', ' + brah + ')" class="bi bi-dash-circle addrem"></i></span>';
+        change.push("*-addtag-" + wordid + "*..*" + tagid + "|||")
+      }
+      else {
+        tagid = (id.split("-"))[2];
+        wordid = (id.split("-"))[1];
+        replacer = '<span id="' + id + '" class="badge rounded-pill bg-primary">' + document.getElementById(id).innerHTML + '</span>';
+        document.getElementById("tags-" + wordid).innerHTML = (document.getElementById("tags-" + wordid).innerHTML).replace(replacer, "");
+        blah = "'add'";
+        blag = "'tag-" + wordid + '-' + tagid + "'";
+        brah = "'" + name + "'";
+        document.getElementById("notags-" + wordid).innerHTML += '<span id="' + id + '" class="badge rounded-pill bg-primary">' + name + ' <i onclick="addrem(' + blah + ', ' + blag + ', ' + brah + ')" class="bi bi-plus-circle addrem"></i></span>';
+        change.push("*-remtag-" + wordid + "*..*" + tagid + "|||")
+      }
+    }
+
+    function call_tag(word) {
+      const nodeList = document.querySelectorAll(".result");
+      for (let i = 0; i < nodeList.length; i++) {
+          nodeList[i].style.backgroundColor = "rgb(255, 255, 255)";
+      }
+      document.getElementById("tagres-"+word).style.backgroundColor = "rgb(195, 195, 195)"
+
+      const funList = document.querySelectorAll(".result_card");
+      for (let i = 0; i < nodeList.length; i++) {
+        funList[i].style.display = "none";
+      }
+      document.getElementById("tag-"+word).style.display = "block";
+    }
+    function changes(id) {
+      changing = document.getElementById(id).value
+      change.push(id + "*..*" + changing + "|||")
+    }
+    function startsubmit() {
+      for (var i = 0; i < change.length; i++) {
+        document.getElementById("changes").value += change[i];
+      }
+      document.getElementById("start_change").click();
+    }
+  </script>
+  <style>
+    .result:hover{
+      background-color: #c3c3c3;
+      cursor: pointer;
+    }
+    .addrem:hover {
+      opacity: 50%;
+      cursor: pointer;
+    }
+  </style>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "spell/layout.html" %}
+
+{% block title %}SpellNOW!&trade; -- Comfigure Spelling Activity{% endblock %}
+
+{% block function %}
+  <main id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Spelling Activity</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item">Activities</li>
+          <li class="breadcrumb-item active">Spelling</li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
+
+    
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Configure Activity</h5>
+              <p>Specify the tags to be used and the number of words and then hit "Start".</p>
+              
+              <form action="/spell" method="post">
+                {% csrf_token %}
+                <div class="row g-3">
+                  <div class="col-md-4">
+                    <label for="validationDefault04" class="form-label">Included tags:</label>
+                    <select style="width:100%;" class="form-select" id="validationDefault04" multiple name="*..*tags*..*">
+                      {% for tag in tags %}
+                        <option value="{{ tag.name }}">{{ tag.name }}</option>
+                      {% endfor %}
+                        <option value="*..*">Untagged</option>
+                    </select>
+                  </div>
+                  <div class="col-md-4">
+                    <label for="inputNumber" style="width: 100%;" class="col-sm-2 col-form-label">Number of words:</label>
+                    <input type="number" name="numwords" class="form-control" value="{{ number }}">
+                    <br>
+                    <button class="btn btn-primary">Start</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main><!-- End #main -->
+{% endblock %}

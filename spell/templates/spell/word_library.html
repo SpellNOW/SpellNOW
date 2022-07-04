@@ -1,0 +1,335 @@
+{% extends "spell/layout.html" %}
+
+{% block title %}SpellNOW!&trade; -- Word Library{% endblock %}
+
+{% block function %}
+  <main id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Word Library</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item">Libraries</li>
+          <li class="breadcrumb-item active">Word Library</li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
+
+    
+    <section class="section">
+      <div class="col-lg-12">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Search Library</h5>
+            <p>Search your word library for specific words or substrings. You can also filter results by tag.</p>
+
+            <form action="/word_library" method="post">
+              {% csrf_token %}
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="floatingInput" name="word" placeholder="Word">
+                    <label for="floatingInput">Word</label>
+                  </div>
+                  <br>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="TRUE" id="invalidCheck2" name="exact">
+                    <label class="form-check-label" for="invalidCheck2">
+                      Search for exact word
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <label for="validationDefault04" class="form-label">Tags (Ctrl + click)</label>
+                  <select style="width:100%;" class="form-select" id="validationDefault04" multiple name="*..*tags*..*">
+                    {% for tag in tags %}
+                      <option value="{{ tag.id }}">{{ tag.name }}</option>
+                    {% endfor %}
+                      <option value="*..*">Untagged</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="which" id="gridRadios1" value="ALL" checked>
+                    <label class="form-check-label" for="gridRadios1">
+                      Word(s) must contain ALL tags
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="which" id="gridRadios2" value="SOME">
+                    <label class="form-check-label" for="gridRadios2">
+                      Word(s) may contain SOME tags
+                    </label>
+                    <br><br>
+                    <div class="col-12">
+                      <button class="btn btn-primary">Search</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </form>
+
+          </div>
+        </div>
+
+      </div>
+      <div class="row">
+        <div class="col-lg-6" style="width:25%;">
+          {% if results %}
+          <div class="card overflow-auto" style="height: 600px;">
+              <div class="card-body">
+                <h5 class="card-title">Results</h5>
+  
+                <!-- Default Table -->
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Words</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for result in results %}
+                      <tr>
+                        <td id="row-{{ result.id }}" onclick="call_result('{{ result.id }}')"  class="result">{{ result.word }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+                <!-- End Default Table Example -->
+              </div>
+            {% elif message %}
+              <div class="card-body">
+                <h5 class="card-title">Results</h5>
+  
+                <!-- Default Table -->
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th style="color: #e04b4b;" scope="col">No Words Found</th>
+                    </tr>
+                  </thead>
+                </table>
+                <!-- End Default Table Example -->
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="col-lg-6" style="width:75%;">
+          {% if results %}
+            {% for result in results %}
+              <div id="res-{{ result.id }}" style="display: none;" class="card result_card">
+                <div class="card-header">{{ result.word }}</div>
+                <div class="card-body">
+                  <br>
+                  
+                  <div class="row g-4">
+                    {% if result.definition2 is None %}
+                      <b>Defintion: </b><br>
+                      <definition id="def1-{{ result.id }}">{{ result.definition1|safe }}</definition>
+                    {% elif result.definition3 is None %}
+                      <b>Defintion 1: </b><br>
+                      <definition id="def1-{{ result.id }}">{{ result.definition1|safe }}</definition>
+                      <b>Defintion 2: </b><br>
+                      <definition id="def2-{{ result.id }}">{{ result.definition2|safe }}</definition>
+                    {% else %}
+                      <b>Defintion 1: </b><br>
+                      <definition id="def1-{{ result.id }}">{{ result.definition1|safe }}</definition>
+                      <b>Defintion 2: </b><br>
+                      <definition id="def2-{{ result.id }}">{{ result.definition2|safe }}</definition>
+                      <b>Defintion 3: </b><br>
+                      <definition id="def3-{{ result.id }}">{{ result.definition3|safe }}</definition>
+                    {% endif %}
+                  </div>
+                  
+                  <b>Part of Speech: </b><speech id="spec-{{ result.id }}">{{ result.speech|safe }}</speech>
+                  
+                  {% if result.origin2 is None %}
+                    <b>Origin: </b><br>
+                    <origin id="origin1-{{ result.id }}">{{ result.origin1|safe }}</origin>
+                  {% elif result.origin3 is None %}
+                    <b>Origin 1: </b><br>
+                    <origin id="origin1-{{ result.id }}">{{ result.origin1|safe }}</origin>
+                    <b>Origin 2: </b><br>
+                    <origin id="origin2-{{ result.id }}">{{ result.origin2|safe }}</origin>
+                  {% else %}
+                    <b>Origin 1: </b><br>
+                    <origin id="origin1-{{ result.id }}">{{ result.origin1|safe }}</origin>
+                    <b>Origin 2: </b><br>
+                    <origin id="origin2-{{ result.id }}">{{ result.origin2|safe }}</origin>
+                    <b>Origin 3: </b><br>
+                    <origin id="origin3-{{ result.id }}">{{ result.origin3|safe }}</origin>
+                  {% endif %}
+                  
+                    {% if result.tags %}
+                    <b>Tags: </b><br>
+                    <div style="border: 1px solid #c3c3c3; border-radius: 5px; padding: 5px;">
+                      <div id="tags-{{ result.id }}">
+                        {% for tag in result.tags.all %}
+                          <span id="tag-{{ result.id }}-{{ tag.id }}" class="badge rounded-pill bg-primary">{{ tag.name }} <i onclick="addrem('rem', 'tag-{{ result.id }}-{{ tag.id }}', '{{ tag.name }}')" class="bi bi-dash-circle addrem"></i></span>
+                        {% endfor %}
+                      </div>
+                      <br><br>
+                      <div id="notags-{{ result.id }}" style="border: 1px solid #c3c3c3; border-radius: 5px; padding: 5px;">
+                        {% for tag in tags %}
+                            {% if tag not in result.tags.all %}
+                              <span id="tag-{{ result.id }}-{{ tag.id }}" class="badge rounded-pill bg-primary">{{ tag.name }} <i onclick="addrem('add', 'tag-{{ result.id }}-{{ tag.id }}', '{{ tag.name }}')" class="bi bi-plus-circle addrem"></i></span>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+            <div class="d-grid gap-2 mt-3">
+              <button class="btn btn-primary" onclick="startsubmit()" type="button"><b>Save Information</b></button>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+    <form style="display: none;" action="/update_words" method="post">
+      {% csrf_token %}
+      <textarea name="changes" id="changes" value=""></textarea>
+      <input type="submit" id="start_change">
+    </form>
+  </main><!-- End #main -->
+  <script>
+    global_clicked = []
+    change = []
+
+    function addrem(action, id, name) {
+      console.log(id)
+      if (action == "add") {
+        tagid = (id.split("-"))[2];
+        wordid = (id.split("-"))[1];
+        replacer = '<span id="' + id + '" class="badge rounded-pill bg-primary">' + document.getElementById(id).innerHTML + '</span>';
+        document.getElementById("notags-" + wordid).innerHTML = (document.getElementById("notags-" + wordid).innerHTML).replace(replacer, "");
+        blah = "'rem'";
+        blag = "'tag-" + wordid + '-' + tagid + "'";
+        brah = "'" + name + "'";
+        document.getElementById("tags-" + wordid).innerHTML += '<span id="' + id + '" class="badge rounded-pill bg-primary">' + name + ' <i onclick="addrem(' + blah + ', ' + blag + ', ' + brah + ')" class="bi bi-dash-circle addrem"></i></span>';
+        change.push("*-addtag-" + wordid + "*..*" + tagid + "|||")
+      }
+      else {
+        tagid = (id.split("-"))[2];
+        wordid = (id.split("-"))[1];
+        replacer = '<span id="' + id + '" class="badge rounded-pill bg-primary">' + document.getElementById(id).innerHTML + '</span>';
+        document.getElementById("tags-" + wordid).innerHTML = (document.getElementById("tags-" + wordid).innerHTML).replace(replacer, "");
+        blah = "'add'";
+        blag = "'tag-" + wordid + '-' + tagid + "'";
+        brah = "'" + name + "'";
+        document.getElementById("notags-" + wordid).innerHTML += '<span id="' + id + '" class="badge rounded-pill bg-primary">' + name + ' <i onclick="addrem(' + blah + ', ' + blag + ', ' + brah + ')" class="bi bi-plus-circle addrem"></i></span>';
+        change.push("*-remtag-" + wordid + "*..*" + tagid + "|||")
+      }
+    }
+
+    function call_result(word) {
+      const nodeList = document.querySelectorAll(".result");
+      for (let i = 0; i < nodeList.length; i++) {
+          nodeList[i].style.backgroundColor = "rgb(255, 255, 255)";
+      }
+      document.getElementById("row-"+word).style.backgroundColor = "rgb(195, 195, 195)"
+
+      const funList = document.querySelectorAll(".result_card");
+      for (let i = 0; i < nodeList.length; i++) {
+        funList[i].style.display = "none";
+      }
+      document.getElementById("res-"+word).style.display = "block";
+      
+      if (!(global_clicked.includes(word))) {
+        using1 = document.getElementById("def1-"+word).innerHTML;
+        try {
+          using2 = document.getElementById("def2-"+word).innerHTML;
+        }
+        catch(err) {
+          using2 = "";
+        }
+        try {
+          using3 = document.getElementById("def3-"+word).innerHTML;
+        }
+        catch(err) {
+          using3 = "";
+        }
+        right = [using1, using2, using3]
+        
+        try {
+          document.getElementById("def1-"+word).innerHTML = "";
+          document.getElementById("def2-"+word).innerHTML = "";
+          document.getElementById("def3-"+word).innerHTML = "";
+        }
+        catch(err) {}
+        
+        omg1 = "'valueholder-def1" + word + "'"
+        omg2 = "'valueholder-def2" + word + "'"
+        omg3 = "'valueholder-def3" + word + "'"
+        try {
+          document.getElementById("def1-"+word).innerHTML = '<textarea id=' + omg1 + ' onchange="changes(' + omg1 + ')" class="form-control">' + right[0] + '</textarea><br>';
+          document.getElementById("def2-"+word).innerHTML = '<textarea id=' + omg2 + ' onchange="changes(' + omg2 + ')" class="form-control">' + right[1] + '</textarea><br>';
+          document.getElementById("def3-"+word).innerHTML = '<textarea id=' + omg3 + ' onchange="changes(' + omg3 + ')" class="form-control">' + right[2] + '</textarea><br>';
+        }
+        catch(err) {}
+        
+        omg = "'valueholder-spec" + word + "'"
+        speech = document.getElementById("spec-"+word).innerHTML;
+        document.getElementById("spec-"+word).innerHTML = '<textarea id=' + omg + ' onchange="changes(' + omg + ')" class="form-control">' + speech + '</textarea><br>';
+
+        using1 = document.getElementById("origin1-"+word).innerHTML;
+        try {
+          using2 = document.getElementById("origin2-"+word).innerHTML;
+        }
+        catch(err) {
+          using2 = "";
+        }
+        try {
+          using3 = document.getElementById("origin3-"+word).innerHTML;
+        }
+        catch(err) {
+          using3 = "";
+        }
+        right = [using1, using2, using3]
+        
+        try {
+          document.getElementById("origin1-"+word).innerHTML = "";
+          document.getElementById("origin2-"+word).innerHTML = "";
+          document.getElementById("origin3-"+word).innerHTML = "";
+        }
+        catch(err) {}
+        
+        omg1 = "'valueholder-origin1-" + word + "'"
+        omg2 = "'valueholder-origin2-" + word + "'"
+        omg3 = "'valueholder-origin3-" + word + "'"
+        try {
+          document.getElementById("origin1-"+word).innerHTML = '<textarea id=' + omg1 + ' onchange="changes(' + omg1 + ')" class="form-control">' + right[0] + '</textarea><br>';
+          document.getElementById("origin2-"+word).innerHTML = '<textarea id=' + omg2 + ' onchange="changes(' + omg2 + ')" class="form-control">' + right[1] + '</textarea><br>';
+          document.getElementById("origin3-"+word).innerHTML = '<textarea id=' + omg3 + ' onchange="changes(' + omg3 + ')" class="form-control">' + right[2] + '</textarea><br>';
+        }
+        catch(err) {}
+
+        global_clicked.push(word);
+      }
+    }
+    function changes(id) {
+      changing = document.getElementById(id).value
+      change.push(id + "*..*" + changing + "|||")
+    }
+    function startsubmit() {
+      for (var i = 0; i < change.length; i++) {
+        document.getElementById("changes").value += change[i];
+      }
+      document.getElementById("start_change").click();
+    }
+  </script>
+  <style>
+    .result:hover{
+      background-color: #c3c3c3;
+      cursor: pointer;
+    }
+    .addrem:hover {
+      opacity: 50%;
+      cursor: pointer;
+    }
+  </style>
+{% endblock %}
