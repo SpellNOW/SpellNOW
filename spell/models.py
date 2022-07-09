@@ -18,6 +18,7 @@ class Word(models.Model):
     pronounce = models.TextField(max_length=600)
     tagged = models.BooleanField()
     tags = models.ManyToManyField("Tag", null=True, blank=True)
+    roots = models.ManyToManyField("Root", null=True, blank=True)
 
 class Tag(models.Model):
     name = models.TextField(max_length=100)
@@ -31,3 +32,6 @@ class Report(models.Model):
     finished = models.DateTimeField(auto_now_add=True)
     specific = models.BooleanField()
     iid = models.IntegerField(null=True, blank=True)
+
+class Root(models.Model):
+    name = models.TextField(max_length=100) 

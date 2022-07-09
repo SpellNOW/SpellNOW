@@ -9,6 +9,7 @@ urlpatterns = [
     # Authorization pages
     path("login", views.login, name="login"),
     path("register", views.register, name="register"),
+    path("logout", views.logout, name="logout"),
 
     # Dashboard
     path("admin_panel", views.admin_panel, name="admin_panel"),

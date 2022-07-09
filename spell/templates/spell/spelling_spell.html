@@ -297,8 +297,9 @@
         name = document.getElementById("tag_value").value;
         if (!((name.includes("---")) || (name.includes('"')) || (name.includes("'")) || (name.includes("*..*")) || (name.includes(", ")) || (name == ""))) {
             document.getElementById("tag_value").value = "";
-            other_name = 'add_word("' + name + '")';
-            document.getElementById("alltags").innerHTML += '<button style="color:rgb(13, 110, 253); background-color: rgb(255, 255, 255);" onclick="' + other_name + '" id="{{ tag.name }}" type="button" class="btn btn-primary rounded-pill tag">' + name + '</button>'
+            other_name = "add_word('" + name + "')";
+            document.getElementById("alltags").innerHTML += '<button style="color:rgb(13, 110, 253); background-color: rgb(255, 255, 255);" onclick="' + other_name + '" id="' + name + '" type="button" class="btn btn-primary rounded-pill tag">' + name + '</button>'
+            document.getElementById("new_tags").innerHTML += (name + "[]")
             document.getElementById("id_response").style.display = "none";
         }
         else {

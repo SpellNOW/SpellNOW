@@ -1,13 +1,12 @@
 from operator import ilshift
 from re import L
-from django.contrib.auth import authenticate, logout
-from django.contrib.auth import login as auth_login
+from django.contrib.auth import authenticate, logout as auth_logout, login as auth_login
 from django.db import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from .models import Account, Word, Tag, Report
+from .models import Account, Word, Tag, Report, Root
 import csv
 from django import forms
 from django.core.files.storage import FileSystemStorage
@@ -19,160 +18,313 @@ from django.db.models import Q
 import random
 import smtplib
 from django.contrib.auth.decorators import login_required
+from string import ascii_lowercase
 
-class UploadFileForm(forms.Form):
-    csv = forms.FileField()
+def get_freq(test_str):
+	freqs = {char: 0 for char in ascii_lowercase}
+	for char in test_str:
+		freqs[char] += 1
+	return freqs
 
-def is_word(word):
-    r = requests.get('https://dictionaryapi.com/api/v3/references/collegiate/json/' + word + '?key=e115f2c9-c50e-4fc0-9711-f5264280ecff')
-    info = r.json()
+def similar(str1, str2):
+  K = 2
+  freqs_1 = get_freq(str1)
+  freqs_2 = get_freq(str2)
+  res = True
+  for char in ascii_lowercase:
+      if abs(freqs_1[char] - freqs_2[char]) > K:
+          res = False
+          break
+  return res
 
-    error = False
+def is_word(word, type):
+    if type == "webster":
+        r = requests.get('https://dictionaryapi.com/api/v3/references/collegiate/json/' + word + '?key=e115f2c9-c50e-4fc0-9711-f5264280ecff')
+        info = r.json()
 
-    try:
-        check = info[0]
+        error = False
+
         try:
-            check = info[0]["meta"]["id"]
-        except TypeError:
+            check = info[0]
+            try:
+                check = info[0]["meta"]["id"]
+            except TypeError:
+                error = True
+        except KeyError:
             error = True
-    except IndexError:
-        error = True
 
-    there = False
+        there = False
 
-    if not error:
+        if not error:
+            for stuff in info:
+                if (stuff["hwi"]["hw"].replace("*", "")).lower() == word:
+                    there = True
+
+        if not there:
+            error = True
+
+        cool = False
+
+        if not error:
+            for stuff in info:
+                try:
+                    check = stuff["hwi"]["prs"]
+                    cool = True
+                except KeyError:
+                    pass
+
+        if not cool:
+            error = True
+        
+        if not error:
+            for stuff in info:
+                if (stuff["hwi"]["hw"].replace("*", "")).lower() == word:
+                    try:
+                        stuff["fl"].capitalize()
+                    except KeyError:
+                        error = True
+        
+        return not error
+    else:
+        r = requests.get('https://api.dictionaryapi.dev/api/v2/entries/en/' + word)
+        info = r.json()
+
+        error = False
+
+        try:
+            check = info[0]
+            try:
+                check = info[0]["word"]
+            except TypeError:
+                error = True
+        except KeyError:
+            error = True
+
+        there = False
+
+        if not error:
+            for stuff in info:
+                if (stuff["word"]).lower() == word:
+                    there = True
+
+        if not there:
+            error = True
+
+        cool = False
+
+        if not error:
+            for stuff in info:
+                try:
+                    check = stuff["phonetics"]
+                    for blah in check:
+                        try:
+                            why = blah["audio"]
+                            cool = True
+                        except:
+                            pass
+                except KeyError:
+                    pass
+
+        if not cool:
+            error = True
+        
+        if not error:
+            for stuff in info:
+                if (stuff["word"]).lower() == word:
+                    try:
+                        stuff["meanings"][0]["partOfSpeech"].capitalize()
+                    except KeyError:
+                        error = True
+        
+        return not error
+
+def create_word(word, type):
+    if type == "webster":
+        r = requests.get('https://dictionaryapi.com/api/v3/references/collegiate/json/' + word + '?key=e115f2c9-c50e-4fc0-9711-f5264280ecff')
+        info = r.json()
+
+        replacers = []
+        parts = []
+        right = []
+        origin = []
+        audio = []
+
+        final_parts = ""
+        final_right = ["No definition given."]
+        final_origin = ["No origin given."]
+        final_audio = "["
+
         for stuff in info:
             if (stuff["hwi"]["hw"].replace("*", "")).lower() == word:
-                there = True
+                parts.append(stuff["fl"].capitalize())
+            parts = list(set(parts))
 
-    if not there:
-        error = True
+        for stuff in info:
+            for thing in stuff["shortdef"]:
+                if (stuff["hwi"]["hw"].replace("*", "")).lower() == word:
+                    right.append(thing.capitalize())
 
-    cool = False
-
-    if not error:
         for stuff in info:
             try:
-                check = stuff["hwi"]["prs"]
-                cool = True
+                stop = stuff["et"][0][1]
+                it = False
+                ayush = ""
+                count = 0
+                for i in range(len(stop)):
+                    if it:
+                        ayush += stop[i]
+                    
+                    if stop[i] == '{' and it == False:
+                        it = True
+                        ayush += "{"
+
+                    if stop[i] == '}':
+                        if count == 0:
+                            count = 1
+                        else:
+                            count = 0
+                            it = False
+                            replacers.append(ayush)
+                            ayush = ""
+
+                for russia in replacers:
+                    stop = stop.replace(russia, "")
+                    
+                if (stuff["hwi"]["hw"].replace("*", "")).lower() == word:
+                    origin.append(stop)
             except KeyError:
                 pass
 
-    if not cool:
-        error = True
-    
-    if not error:
         for stuff in info:
-            if (stuff["hwi"]["hw"].replace("*", "")).lower() == word:
-                try:
-                    stuff["fl"].capitalize()
-                except KeyError:
-                    error = True
-    
-    return not error
+            try:
+                check = stuff["hwi"]["prs"]
+                for thing in check:
+                    id = thing["sound"]["audio"]
 
-def create_word(word):
-    r = requests.get('https://dictionaryapi.com/api/v3/references/collegiate/json/' + word + '?key=e115f2c9-c50e-4fc0-9711-f5264280ecff')
-    info = r.json()
-
-    replacers = []
-    parts = []
-    right = []
-    origin = []
-    audio = []
-
-    final_parts = ""
-    final_right = ["No definition given."]
-    final_origin = ["No origin given."]
-    final_audio = "["
-
-    for stuff in info:
-        if (stuff["hwi"]["hw"].replace("*", "")).lower() == word:
-            parts.append(stuff["fl"].capitalize())
-        parts = list(set(parts))
-
-    for stuff in info:
-        for thing in stuff["shortdef"]:
-            if (stuff["hwi"]["hw"].replace("*", "")).lower() == word:
-                right.append(thing.capitalize())
-
-    for stuff in info:
-        try:
-            stop = stuff["et"][0][1]
-            it = False
-            ayush = ""
-            count = 0
-            for i in range(len(stop)):
-                if it:
-                    ayush += stop[i]
-                
-                if stop[i] == '{' and it == False:
-                    it = True
-                    ayush += "{"
-
-                if stop[i] == '}':
-                    if count == 0:
-                        count = 1
+                    if id[0] + id[1] + id[2] == "bix":
+                        great = "bix"
+                    elif id[0] + id[1] == "gg":
+                        great = "gg"
+                    elif not id[0].isalpha():
+                        great = "number"
                     else:
-                        count = 0
-                        it = False
-                        replacers.append(ayush)
-                        ayush = ""
+                        great = id[0]
+                    
+                    if (stuff["hwi"]["hw"].replace("*", "")).lower() == word:
+                        audio.append("https://media.merriam-webster.com/audio/prons/en/us/mp3/" + great + "/" + id + ".mp3")
+            except KeyError:
+                pass
 
-            for russia in replacers:
-                stop = stop.replace(russia, "")
-                
-            if (stuff["hwi"]["hw"].replace("*", "")).lower() == word:
-                origin.append(stop)
-        except KeyError:
-            pass
+        for i in range(len(parts)):
+            if i != (len(parts) - 1):
+                final_parts += (parts[i] + ", ")
+            else: 
+                final_parts += parts[i]
+        
+        final_origin.append(None)
+        final_origin.append(None)
+        for i in range(len(origin)):
+            if not i >= 3:
+                final_origin[i] = origin[i]
 
-    for stuff in info:
-        try:
-            check = stuff["hwi"]["prs"]
-            for thing in check:
-                id = thing["sound"]["audio"]
+        final_right.append(None)
+        final_right.append(None)
+        for i in range(len(right)):
+            if not i >= 3:
+                final_right[i] = right[i]
 
-                if id[0] + id[1] + id[2] == "bix":
-                    great = "bix"
-                elif id[0] + id[1] == "gg":
-                    great = "gg"
-                elif not id[0].isalpha():
-                    great = "number"
-                else:
-                    great = id[0]
-                
-                if (stuff["hwi"]["hw"].replace("*", "")).lower() == word:
-                    audio.append("https://media.merriam-webster.com/audio/prons/en/us/mp3/" + great + "/" + id + ".mp3")
-        except KeyError:
-            pass
+        for i in range(len(audio)):
+            if i != (len(audio) - 1):
+                final_audio += ("'" + audio[i] + "', ")
+            else: 
+                final_audio += ("'" + audio[i] + "']")
+        
+        new = Word(word=word, speech = final_parts, origin1 = final_origin[0], origin2 = final_origin[1], origin3 = final_origin[2], definition1 = final_right[0], definition2 = final_right[1], definition3 = final_right[2], pronounce = final_audio, tagged = False)
+        new.save()
+    else:
+        r = requests.get('https://api.dictionaryapi.dev/api/v2/entries/en/' + word)
+        info = r.json()
 
-    for i in range(len(parts)):
-        if i != (len(parts) - 1):
-            final_parts += (parts[i] + ", ")
-        else: 
-            final_parts += parts[i]
-    
-    final_origin.append(None)
-    final_origin.append(None)
-    for i in range(len(origin)):
-        if not i >= 3:
-            final_origin[i] = origin[i]
+        replacers = []
+        parts = []
+        right = []
+        origin = []
+        audio = []
 
-    final_right.append(None)
-    final_right.append(None)
-    for i in range(len(right)):
-        if not i >= 3:
-            final_right[i] = right[i]
+        final_parts = ""
+        final_right = ["No definition given."]
+        final_origin = ["No origin given."]
+        final_audio = "["
 
-    for i in range(len(audio)):
-        if i != (len(audio) - 1):
-            final_audio += ("'" + audio[i] + "', ")
-        else: 
-            final_audio += ("'" + audio[i] + "']")
-       
-    new = Word(word=word, speech = final_parts, origin1 = final_origin[0], origin2 = final_origin[1], origin3 = final_origin[2], definition1 = final_right[0], definition2 = final_right[1], definition3 = final_right[2], ronounce = final_audio, tagged = False)
-    new.save()
+        for stuff in info:
+            if (stuff["word"]).lower() == word:
+                for thingyby in stuff["meanings"]:
+                    parts.append(thingyby["partOfSpeech"].capitalize())
+            parts = list(set(parts))
+
+        for stuff in info:
+            for thing in stuff["meanings"]:
+                for definition in thing["definitions"]:
+                    if (stuff["word"]).lower() == word:
+                        right.append((definition["definition"]).capitalize())
+
+        for stuff in info:
+            try:
+                stop = stuff["origin"]
+                god = stop.split(" ")
+                built = []
+
+                for diety in god:
+                    if not similar(diety, word):
+                        built.append(diety)
+            
+                stop = ""
+                for russia in built:
+                    stop += (russia + " ")
+                    
+                if (stuff["word"]).lower() == word:
+                    origin.append(stop)
+            except KeyError:
+                pass
+
+        for stuff in info:
+            try:
+                check = stuff["phonetics"]
+                for blah in check:
+                    try:
+                        why = blah["audio"]
+                        audio.append(why)
+                    except:
+                        pass
+            except KeyError:
+                pass
+
+        for i in range(len(parts)):
+            if i != (len(parts) - 1):
+                final_parts += (parts[i] + ", ")
+            else: 
+                final_parts += parts[i]
+        
+        final_origin.append(None)
+        final_origin.append(None)
+        for i in range(len(origin)):
+            if not i >= 3:
+                final_origin[i] = origin[i]
+
+        final_right.append(None)
+        final_right.append(None)
+        for i in range(len(right)):
+            if not i >= 3:
+                final_right[i] = right[i]
+
+        for i in range(len(audio)):
+            if i != (len(audio) - 1):
+                final_audio += ("'" + audio[i] + "', ")
+            else: 
+                final_audio += ("'" + audio[i] + "']")
+
+        new = Word(word=word, speech = final_parts, origin1 = final_origin[0], origin2 = final_origin[1], origin3 = final_origin[2], definition1 = final_right[0], definition2 = final_right[1], definition3 = final_right[2], pronounce = final_audio, tagged = False)
+        new.save()
 
 # Create your views here.
 
@@ -226,13 +378,18 @@ def register(request):
     else:
         return render(request, "spell/register.html")
 
+@login_required(login_url='/login')
+def logout(request):
+    auth_logout(request)
+    return HttpResponseRedirect(reverse("index"))
+
 # Dashboard
-@login_required
+@login_required(login_url='/login')
 def admin_panel(request):
     return render(request, "spell/dashboard.html")
 
 # Libraries
-@login_required
+@login_required(login_url='/login')
 def word_library(request):
     if request.method == "POST":
         exact = False
@@ -419,7 +576,7 @@ def word_library(request):
             "tags": Tag.objects.all()
         })
 
-@login_required
+@login_required(login_url='/login')
 def tag_library(request):
     if request.method == "POST":
         try:
@@ -455,7 +612,7 @@ def tag_library(request):
         })
 
 # Word Changes
-@login_required
+@login_required(login_url='/login')
 def update_words(request):
     updates = request.POST["changes"]
     updates = updates.split("|||")
@@ -505,14 +662,14 @@ def update_words(request):
     return HttpResponseRedirect(reverse("word_library"))
 
 # Tag Changes
-@login_required
+@login_required(login_url='/login')
 def delete_tag(request, id):
     tag = Tag.objects.get(pk=id)
     tag.delete()
     return HttpResponseRedirect(reverse("tag_library"))
 
 # Import
-@login_required
+@login_required(login_url='/login')
 def word_import(request):
     if request.method == "POST":
         request_id = request.POST["request-id"]
@@ -530,8 +687,10 @@ def word_import(request):
                 new_word = row[0].lower()
                 
                 if not Word.objects.filter(word=new_word):
-                    if is_word(new_word):
-                        create_word(new_word)
+                    if is_word(new_word, "webster"):
+                        create_word(new_word, "webster")
+                    elif is_word(new_word, "dev"):
+                        create_word(new_word, "dev")
                     else:
                         nots.append(new_word)
                 else:
@@ -732,7 +891,7 @@ def word_import(request):
             "tags": Tag.objects.all()
         })
 
-@login_required
+@login_required(login_url='/login')
 def upload_sounds(request):
     f = open("spell/static/spell/custom.csv", "r")
     reader = csv.reader(f)
@@ -757,14 +916,14 @@ def upload_sounds(request):
 # Activities
 
 # Spelling
-@login_required
+@login_required(login_url='/login')
 def start(request):
     return render(request, "spell/spelling_start.html", {
         "tags": Tag.objects.all(),
         "number": len(Word.objects.all())
     })
 
-@login_required
+@login_required(login_url='/login')
 def spell(request):
     if request.method == "POST":
         tags = request.POST.getlist('*..*tags*..*')
@@ -799,29 +958,23 @@ def spell(request):
             final_tags = ""
             hllg = []
             tags_used = ""
+            random.shuffle(results)
+            results = results[:(int(request.POST["numwords"]))]
 
-            print("========================Choosing words========================")
-            for i in range(int(request.POST["numwords"])):
-                randy = 0
-                if not tags[i % len(tags)] == "*..*":
-                    gotcha = len(Word.objects.filter(tags__name=tags[i % len(tags)]).exclude(id__in=gag))
-                    if gotcha < 1:
+            i = 0
+            print("========================Getting Words========================")
+            for word in results:
+                tag = ""
+                for cooly in set(word.tags.all()):
+                    if cooly.name in fun:
+                        tag = cooly.name
                         break
-                    randy = random.randint(1, gotcha)
-                    word = (Word.objects.filter(tags__name=tags[i % len(tags)]).exclude(id__in=gag))[randy]
-                else:
-                    gotcha = len(Word.objects.filter(tagged=False).exclude(id__in=gag))
-                    if gotcha < 1:
-                        break
-                    randy = random.randint(1, gotcha)
-                    word = (Word.objects.filter(tagged=False).exclude(id__in=gag))[randy]
                 
-                order += tags[i % len(tags)] + ", "
-                gag.append(int(word.id))
+                order += tag + ", "
 
-                if not tags[i % len(tags)] in hllg:
-                    hllg.append(tags[i % len(tags)])
-                    tags_used += (tags[i % len(tags)] + ", ")
+                if not tag in hllg:
+                    hllg.append(tag)
+                    tags_used += (tag + ", ")
 
                 fines.append(word.word)
 
@@ -859,6 +1012,8 @@ def spell(request):
                      
                 if not final_last_total == int(request.POST["numwords"]):
                     final_tags += "><"
+                
+                i += 1
             
             return render(request, "spell/spelling_spell.html", {
                 "words": fines,
@@ -872,7 +1027,7 @@ def spell(request):
                 "tags_used": tags_used
             })
 
-@login_required
+@login_required(login_url='/login')
 def finish(request):
     tags_rep = request.POST["new_tags"]
     tags = tags_rep.split("[]")
@@ -1034,13 +1189,13 @@ def finish(request):
 
 
 # Reports
-@login_required
+@login_required(login_url='/login')
 def reports(request):
     return render(request, "spell/reports.html", {
         "reports": Report.objects.filter(specific=False).order_by('-finished')
     })
 
-@login_required
+@login_required(login_url='/login')
 def report(request, id):
     tags = Report.objects.filter(iid=id, specific=True)
     fnu = Report.objects.get(pk=id)
