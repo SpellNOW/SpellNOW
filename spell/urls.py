@@ -17,12 +17,17 @@ urlpatterns = [
     # Libraries
     path("word_library", views.word_library, name="word_library"),
     path("tag_library", views.tag_library, name="tag_library"),
+    path("root_library", views.root_library, name="root_library"),
 
     # Word Changes
     path("update_words", views.update_words, name="update_words"),
 
     # Tag Changes
     path("delete_tag/<str:id>", views.delete_tag, name="delete_tag"),
+
+    # Root Changes
+    path("update_root", views.update_root, name="update_root"),
+    path("delete_root/<str:id>", views.delete_root, name="delete_root"),
 
     # Import
     path("word_import", views.word_import, name="word_import"),

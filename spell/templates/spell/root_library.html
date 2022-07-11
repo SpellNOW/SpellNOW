@@ -1,0 +1,127 @@
+{% extends "spell/layout.html" %}
+
+{% block title %}SpellNOW!&trade; -- Root Library{% endblock %}
+
+{% block function %}
+  <main id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Root Library</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item">Libraries</li>
+          <li class="breadcrumb-item active">Root Library</li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
+
+    
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">New Root</h5>
+              <p>Create a new root by specifying it below and click "Create".</p>
+              
+                <form action="/root_library" method="post">
+                  {% csrf_token %}
+                  <div class="row g-3">
+                    <div class="col-md-4">
+                      <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="floatingInput" name="root" placeholder="Root">
+                        <label for="floatingInput">Root</label>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <button class="btn btn-primary">Create</button>
+                    </div>
+                  </div>
+                  {% if error %}
+                    <div style="display: block;" class="invalid-feedback">Invalid Root Name: The root contains three dashes (---), a quotation mark ("), a apostrophe ('), a star followed by two dots followed by a star (*..*), or a comma followed by a space (, ).</div>
+                  {% endif %}
+                </form>
+            </div>
+          </div>
+        </div>
+        <section class="section">
+          <div class="row">
+            <div class="col-lg-12">
+    
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Root Library</h5>
+                  <p>The following table displays all your roots and their respective information.</p>
+    
+                  <!-- Table with stripped rows -->
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Root</th>
+                        <th scope="col">Defintion</th>
+                        <th scope="col">Origin</th>
+                        <th scope="col">Pre/Suf</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for root in roots %}
+                        <tr>
+                          <th id="god" scope="row"></th>
+                          <td>{{ root.name }}</td>
+                          <form action="/update_root" method="post">
+                            {% csrf_token %}
+                            <input name="id" style="display: none;" value="{{ root.id }}">
+                            <td><textarea name="def" rows="1" class="form-control">{{ root.definition }}</textarea></td>
+                            <td><textarea name="origin" rows="1" class="form-control">{{ root.origin }}</textarea></td>
+                            <td>
+                              {% if root.pp == None %}
+                                <select id="presuf" name="presuf" class="form-select" aria-label="Default select example">
+                                  <option value="pre">Prefix</option>
+                                  <option value="stem">Stem</option>
+                                  <option value="suf">Suffix</option>
+                                </select>
+                              {% elif root.pp == "pre" %}
+                                <select id="presuf" name="presuf" class="form-select" aria-label="Default select example">
+                                  <option selected value="pre">Prefix</option>
+                                  <option value="stem">Stem</option>
+                                  <option value="suf">Suffix</option>
+                                </select>
+                              {% elif root.pp == "stem" %}
+                                <select id="presuf" name="presuf" class="form-select" aria-label="Default select example">
+                                  <option value="pre">Prefix</option>
+                                  <option selected value="stem">Stem</option>
+                                  <option value="suf">Suffix</option>
+                                </select>
+                              {% else %}
+                                <select id="presuf" name="presuf" class="form-select" aria-label="Default select example">
+                                  <option value="pre">Prefix</option>
+                                  <option value="stem">Stem</option>
+                                  <option selected value="suf">Suffix</option>
+                                </select>
+                              {% endif %}
+                            </td>
+                            <td><button type="submit" class="btn btn-primary">Save</button></td>
+                          </form>
+                          <td><a href="/delete_root/{{ root.id }}"><button class="btn btn-danger">Delete</button></a></td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                  <!-- End Table with stripped rows -->
+    
+                </div>
+              </div>
+    
+            </div>
+          </div>
+        </section>
+  </main><!-- End #main -->
+  <script>
+    const nodeList = document.querySelectorAll("#god");
+    for (let i = 0; i < nodeList.length; i++) {
+      nodeList[i].innerHTML = (i + 1).toString();
+    }
+  </script>
+{% endblock %}

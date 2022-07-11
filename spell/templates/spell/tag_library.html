@@ -129,42 +129,8 @@
         </div>
       </div>
     </section>
-    <form style="display: none;" action="/update_words" method="post">
-      {% csrf_token %}
-      <textarea name="changes" id="changes" value=""></textarea>
-      <input type="submit" id="start_change">
-    </form>
   </main><!-- End #main -->
   <script>
-    global_clicked = []
-    change = []
-
-    function addrem(action, id, name) {
-      console.log(id)
-      if (action == "add") {
-        tagid = (id.split("-"))[2];
-        wordid = (id.split("-"))[1];
-        replacer = '<span id="' + id + '" class="badge rounded-pill bg-primary">' + document.getElementById(id).innerHTML + '</span>';
-        document.getElementById("notags-" + wordid).innerHTML = (document.getElementById("notags-" + wordid).innerHTML).replace(replacer, "");
-        blah = "'rem'";
-        blag = "'tag-" + wordid + '-' + tagid + "'";
-        brah = "'" + name + "'";
-        document.getElementById("tags-" + wordid).innerHTML += '<span id="' + id + '" class="badge rounded-pill bg-primary">' + name + ' <i onclick="addrem(' + blah + ', ' + blag + ', ' + brah + ')" class="bi bi-dash-circle addrem"></i></span>';
-        change.push("*-addtag-" + wordid + "*..*" + tagid + "|||")
-      }
-      else {
-        tagid = (id.split("-"))[2];
-        wordid = (id.split("-"))[1];
-        replacer = '<span id="' + id + '" class="badge rounded-pill bg-primary">' + document.getElementById(id).innerHTML + '</span>';
-        document.getElementById("tags-" + wordid).innerHTML = (document.getElementById("tags-" + wordid).innerHTML).replace(replacer, "");
-        blah = "'add'";
-        blag = "'tag-" + wordid + '-' + tagid + "'";
-        brah = "'" + name + "'";
-        document.getElementById("notags-" + wordid).innerHTML += '<span id="' + id + '" class="badge rounded-pill bg-primary">' + name + ' <i onclick="addrem(' + blah + ', ' + blag + ', ' + brah + ')" class="bi bi-plus-circle addrem"></i></span>';
-        change.push("*-remtag-" + wordid + "*..*" + tagid + "|||")
-      }
-    }
-
     function call_tag(word) {
       const nodeList = document.querySelectorAll(".result");
       for (let i = 0; i < nodeList.length; i++) {
@@ -177,16 +143,6 @@
         funList[i].style.display = "none";
       }
       document.getElementById("tag-"+word).style.display = "block";
-    }
-    function changes(id) {
-      changing = document.getElementById(id).value
-      change.push(id + "*..*" + changing + "|||")
-    }
-    function startsubmit() {
-      for (var i = 0; i < change.length; i++) {
-        document.getElementById("changes").value += change[i];
-      }
-      document.getElementById("start_change").click();
     }
   </script>
   <style>

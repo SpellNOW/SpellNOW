@@ -34,4 +34,7 @@ class Report(models.Model):
     iid = models.IntegerField(null=True, blank=True)
 
 class Root(models.Model):
-    name = models.TextField(max_length=100) 
+    name = models.TextField(max_length=100)
+    definition = models.TextField(max_length=1000, null=True, blank=True)
+    origin = models.TextField(max_length=1000, null=True, blank=True)
+    pp = models.CharField(max_length=4, null=True, blank=True)

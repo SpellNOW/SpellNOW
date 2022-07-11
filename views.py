@@ -17,7 +17,7 @@ from os.path import exists
 from django.db.models import Q
 import random
 import smtplib
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from string import ascii_lowercase
 
 def is_word(word):
@@ -237,13 +237,9 @@ def logout(request):
 # Dashboard
 @login_required(login_url='/login')
 def admin_panel(request):
-    return render(request, "spell/dashboard.html", {
-        "bar": "",
-        "active": "home"
-    })
+    return render(request, "spell/dashboard.html")
 
 # Libraries
-@user_passes_test(lambda u: u.is_staff)
 @login_required(login_url='/login')
 def word_library(request):
     if request.method == "POST":
@@ -267,15 +263,11 @@ def word_library(request):
                     results.append(fun)
 
                     return render(request, "spell/word_library.html", {
-                        "bar": "libraries",
-                        "active": "words",
                         "tags": Tag.objects.all(),
                         "results": results
                     })
-                except:
+                except ObjectDoesNotExist:
                     return render(request, "spell/word_library.html", {
-                        "bar": "libraries",
-                        "active": "words",
                         "tags": Tag.objects.all(),
                         "message": True
                     })
@@ -299,15 +291,11 @@ def word_library(request):
                         
                         if len(results) > 0:
                             return render(request, "spell/word_library.html", {
-                                "bar": "libraries",
-                                "active": "words",
                                 "tags": Tag.objects.all(),
                                 "results": results
                             })
                         else:
                             return render(request, "spell/word_library.html", {
-                                "bar": "libraries",
-                                "active": "words",
                                 "tags": Tag.objects.all(),
                                 "message": True
                             })
@@ -326,15 +314,11 @@ def word_library(request):
                             
                             if len(results) > 0:
                                 return render(request, "spell/word_library.html", {
-                                    "bar": "libraries",
-                                    "active": "words",
                                     "tags": Tag.objects.all(),
                                     "results": set(results)
                                 })
                             else:
                                 return render(request, "spell/word_library.html", {
-                                    "bar": "libraries",
-                                    "active": "words",
                                     "tags": Tag.objects.all(),
                                     "message": True
                                 })
@@ -351,16 +335,13 @@ def word_library(request):
                             results.extend(list((Word.objects.filter(tags__id__in=fun, word__contains=word)).distinct()))
                         
                         if len(results) > 0:
+                            print("HEEEERE")
                             return render(request, "spell/word_library.html", {
-                                "bar": "libraries",
-                                "active": "words",
                                 "tags": Tag.objects.all(),
                                 "results": results
                             })
                         else:
                             return render(request, "spell/word_library.html", {
-                                "bar": "libraries",
-                                "active": "words",
                                 "tags": Tag.objects.all(),
                                 "message": True
                             })
@@ -369,15 +350,11 @@ def word_library(request):
                     
                     if len(results) > 0:
                         return render(request, "spell/word_library.html", {
-                                "bar": "libraries",
-                                "active": "words",
                             "tags": Tag.objects.all(),
                             "results": results
                         })
                     else:
                         return render(request, "spell/word_library.html", {
-                            "bar": "libraries",
-                            "active": "words",
                             "tags": Tag.objects.all(),
                             "message": True
                         })
@@ -401,15 +378,11 @@ def word_library(request):
                     
                     if len(results) > 0:
                         return render(request, "spell/word_library.html", {
-                            "bar": "libraries",
-                            "active": "words",
                             "tags": Tag.objects.all(),
                             "results": results
                         })
                     else:
                         return render(request, "spell/word_library.html", {
-                            "bar": "libraries",
-                            "active": "words",
                             "tags": Tag.objects.all(),
                             "message": True
                         })
@@ -428,15 +401,11 @@ def word_library(request):
                     
                     if len(results) > 0:
                         return render(request, "spell/word_library.html", {
-                            "bar": "libraries",
-                            "active": "words",
                             "tags": Tag.objects.all(),
                             "results": results
                         })
                     else:
                         return render(request, "spell/word_library.html", {
-                            "bar": "libraries",
-                            "active": "words",
                             "tags": Tag.objects.all(),
                             "message": True
                         })
@@ -445,26 +414,19 @@ def word_library(request):
                 
                 if len(results) > 0:
                     return render(request, "spell/word_library.html", {
-                        "bar": "libraries",
-                        "active": "words",
                         "tags": Tag.objects.all(),
                         "results": results
                     })
                 else:
                     return render(request, "spell/word_library.html", {
-                        "bar": "libraries",
-                        "active": "words",
                         "tags": Tag.objects.all(),
                         "message": True
                     })
     else:
         return render(request, "spell/word_library.html", {
-            "bar": "libraries",
-            "active": "words",
             "tags": Tag.objects.all()
         })
 
-@user_passes_test(lambda u: u.is_staff)
 @login_required(login_url='/login')
 def tag_library(request):
     if request.method == "POST":
@@ -474,14 +436,10 @@ def tag_library(request):
                 new = Tag(name=thing)
                 new.save()
                 return render(request, "spell/tag_library.html", {
-                    "bar": "libraries",
-                    "active": "tags",
                     "tags": Tag.objects.all()
                 })
             else:
                 return render(request, "spell/tag_library.html", {
-                    "bar": "libraries",
-                    "active": "tags",
                     "tags": Tag.objects.all(),
                     "error": True
                 })
@@ -492,72 +450,19 @@ def tag_library(request):
                 new.name = thing
                 new.save()
                 return render(request, "spell/tag_library.html", {
-                    "bar": "libraries",
-                    "active": "tags",
                     "tags": Tag.objects.all()
                 })
             else:
                 return render(request, "spell/tag_library.html", {
-                    "bar": "libraries",
-                    "active": "tags",
                     "tags": Tag.objects.all(),
                     "namerror": int(request.POST["tagid"])
                 })
     else:
         return render(request, "spell/tag_library.html", {
-            "bar": "libraries",
-            "active": "tags",
             "tags": Tag.objects.all()
         })
 
-@user_passes_test(lambda u: u.is_staff)
-@login_required(login_url='/login')
-def root_library(request):
-    if request.method == "POST":
-        try:
-            thing = request.POST["root"]
-            if not (("---" in thing) or ('"' in thing) or ("'" in thing) or ("*..*" in thing) or (", " in thing)):
-                new = Root(name=thing)
-                new.save()
-                return render(request, "spell/root_library.html", {
-                    "bar": "libraries",
-                    "active": "roots",
-                    "roots": Root.objects.all()
-                })
-            else:
-                return render(request, "spell/root_library.html", {
-                    "bar": "libraries",
-                    "active": "roots",
-                    "roots": Root.objects.all(),
-                    "error": True
-                })
-        except:
-            thing = request.POST["renroot"]
-            if not (("---" in thing) or ('"' in thing) or ("'" in thing) or ("*..*" in thing) or (", " in thing)):
-                new = Root.objects.get(pk=int(request.POST["rootid"]))
-                new.name = thing
-                new.save()
-                return render(request, "spell/root_library.html", {
-                    "bar": "libraries",
-                    "active": "roots",
-                    "roots": Root.objects.all()
-                })
-            else:
-                return render(request, "spell/root_library.html", {
-                    "bar": "libraries",
-                    "active": "roots",
-                    "roots": Root.objects.all(),
-                    "namerror": int(request.POST["rootid"])
-                })
-    else:
-        return render(request, "spell/root_library.html", {
-            "bar": "libraries",
-            "active": "roots",
-            "roots": Root.objects.all()
-        })
-
 # Word Changes
-@user_passes_test(lambda u: u.is_staff)
 @login_required(login_url='/login')
 def update_words(request):
     updates = request.POST["changes"]
@@ -608,40 +513,13 @@ def update_words(request):
     return HttpResponseRedirect(reverse("word_library"))
 
 # Tag Changes
-@user_passes_test(lambda u: u.is_staff)
 @login_required(login_url='/login')
 def delete_tag(request, id):
     tag = Tag.objects.get(pk=id)
     tag.delete()
     return HttpResponseRedirect(reverse("tag_library"))
 
-# Root Changes
-@user_passes_test(lambda u: u.is_staff)
-@login_required(login_url='/login')
-def update_root(request):
-    root = Root.objects.get(pk=int(request.POST["id"]))
-    
-    if request.POST["def"] != "None":
-        root.definition = request.POST["def"]
-        root.save()
-    
-    if request.POST["origin"] != "None":
-        root.origin = request.POST["origin"]
-        root.save()
-    
-    root.pp = request.POST["presuf"]
-    root.save()
-    return HttpResponseRedirect(reverse("root_library"))
-
-@user_passes_test(lambda u: u.is_staff)
-@login_required(login_url='/login')
-def delete_root(request, id):
-    root = Root.objects.get(pk=id)
-    root.delete()
-    return HttpResponseRedirect(reverse("root_library"))
-
 # Import
-@user_passes_test(lambda u: u.is_staff)
 @login_required(login_url='/login')
 def word_import(request):
     if request.method == "POST":
@@ -684,23 +562,17 @@ def word_import(request):
 
             if len(nots) > 0 and not len(already) > 0:
                 return render(request, "spell/error.html", {
-                    "bar": "libraries",
-                    "active": "import",
                     'nots': nots,
                     'message1': "SpellNOW!&trade; was unable to add these words to your list:",
                     "download": True
                 })
             elif len(already) > 0 and not len(nots) > 0:
                 return render(request, "spell/error.html", {
-                    "bar": "libraries",
-                    "active": "import",
                     'already': already,
                     'message2': "SpellNOW!&trade; found these words already in your list:"
                 })
             elif len(already) > 0 and len(nots) > 0:
                 return render(request, "spell/error.html", {
-                    "bar": "libraries",
-                    "active": "import",
                     'nots': nots,
                     'already': already,
                     'message1': "SpellNOW!&trade; was unable to add these words to your list:",
@@ -733,8 +605,6 @@ def word_import(request):
             f.close()
             if len(already) > 0:
                 return render(request, "spell/custom.html", {
-                    "bar": "libraries",
-                    "active": "import",
                     'words': new_word,
                     'already': already,
                     "error": True,
@@ -742,8 +612,6 @@ def word_import(request):
                 })
             else:
                 return render(request, "spell/custom.html", {
-                    "bar": "libraries",
-                    "active": "import",
                     'words': new_word,
                 })
         elif request_id == "del-words":
@@ -772,8 +640,6 @@ def word_import(request):
 
             if len(nots) > 0:
                 return render(request, "spell/error.html", {
-                    "bar": "libraries",
-                    "active": "import",
                     'nots': nots,
                     "message1": "SpellNOW!&trade; was unable to delete these words because they do not exist:"
                 })
@@ -822,8 +688,6 @@ def word_import(request):
 
             if len(nots) > 0 and len(already) > 0:
                 return render(request, "spell/error.html", {
-                    "bar": "libraries",
-                    "active": "import",
                     'already': already,
                     'nots': nots,
                     "message1": "SpellNOW!&trade; was unable to tag these words because they do not exist:",
@@ -832,16 +696,12 @@ def word_import(request):
                 })
             elif len(nots) > 0:
                 return render(request, "spell/error.html", {
-                    "bar": "libraries",
-                    "active": "import",
                     'nots': nots,
                     "message1": "SpellNOW!&trade; was unable to tag these words because they do not exist:",
                     "download": True
                 })
             elif len(already) > 0:
                 return render(request, "spell/error.html", {
-                    "bar": "libraries",
-                    "active": "import",
                     'already': already,
                     "message2": "SpellNOW!&trade; was unable to tag these words because they are already tagged:",
                 })
@@ -878,8 +738,6 @@ def word_import(request):
 
             if len(nots) > 0:
                 return render(request, "spell/error.html", {
-                    "bar": "libraries",
-                    "active": "import",
                     'nots': nots,
                     "message1": "SpellNOW!&trade; was unable to untag these words because they are not tagged:",
                 })
@@ -887,12 +745,9 @@ def word_import(request):
                 return HttpResponseRedirect(reverse("tag_library"))
     else:
         return render(request, "spell/import.html", {
-            "bar": "libraries",
-            "active": "import",
             "tags": Tag.objects.all()
         })
 
-@user_passes_test(lambda u: u.is_staff)
 @login_required(login_url='/login')
 def upload_sounds(request):
     f = open("spell/static/spell/custom.csv", "r")
@@ -921,8 +776,6 @@ def upload_sounds(request):
 @login_required(login_url='/login')
 def start(request):
     return render(request, "spell/spelling_start.html", {
-        "bar": "activities",
-        "active": "spelling",
         "tags": Tag.objects.all(),
         "number": len(Word.objects.all())
     })
@@ -946,8 +799,6 @@ def spell(request):
         
         if int(len(results)) < int(request.POST["numwords"]) or int(len(tags)) > int(request.POST["numwords"]):
             return render(request, "spell/spelling_start.html", {
-                "bar": "activities",
-                "active": "spelling",
                 "tags": Tag.objects.all(),
                 "number": len(Word.objects.all()),
                 "message": "Invalid Word Count"
@@ -1190,17 +1041,14 @@ def finish(request):
         pass
     
     return render(request, "spell/spelling_finish.html", {
-        "bar": "activities",
-        "active": "spelling",
         "score": request.POST["score"]
     })
+
 
 # Reports
 @login_required(login_url='/login')
 def reports(request):
     return render(request, "spell/reports.html", {
-        "bar": "",
-        "active": "reports",
         "reports": Report.objects.filter(specific=False).order_by('-finished')
     })
 
@@ -1223,8 +1071,6 @@ def report(request, id):
     f.close()
     
     return render(request, "spell/report.html", {
-        "bar": "",
-        "active": "reports",
         "tags": total,
         "title": fnu.finished,
         "correct": fnu.correct,
