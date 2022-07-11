@@ -115,33 +115,35 @@
           <span>Home</span>
         </a>
       </li><!-- End Dashboard Nav -->
+      
+      {% if user.is_staff %}
+        <li class="nav-item">
+          <a id="libraries" class="nav-link collapsed" data-bs-target="#libraries-components-nav" data-bs-toggle="collapse" href="#">
+            <i class="bi bi-menu-button-wide"></i><span>Libraries</span><i class="bi bi-chevron-down ms-auto"></i>
+          </a>
+          <ul id="libraries-components-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+            <li>
+              <a id="words" href="/word_library">
+                <i class="bi bi-circle"></i><span>Words</span>
+              </a>
+            </li>
+            <li>
+              <a id="tags" href="/tag_library">
+                <i class="bi bi-circle"></i><span>Tags</span>
+              </a>
+            </li>
+            <li>
+              <a id="roots" href="/root_library">
+                <i class="bi bi-circle"></i><span>Roots</span>
+              </a>
 
-      <li class="nav-item">
-        <a id="libraries" class="nav-link collapsed" data-bs-target="#libraries-components-nav" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-menu-button-wide"></i><span>Libraries</span><i class="bi bi-chevron-down ms-auto"></i>
-        </a>
-        <ul id="libraries-components-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-          <li>
-            <a id="words" href="/word_library">
-              <i class="bi bi-circle"></i><span>Words</span>
-            </a>
-          </li>
-          <li>
-            <a id="tags" href="/tag_library">
-              <i class="bi bi-circle"></i><span>Tags</span>
-            </a>
-          </li>
-          <li>
-            <a id="roots" href="/root_library">
-              <i class="bi bi-circle"></i><span>Roots</span>
-            </a>
-
-            <a id="import" href="/word_import">
-              <i class="bi bi-circle"></i><span>Import</span>
-            </a>
-          </li>
-        </ul>
-      </li><!-- End Components Nav -->
+              <a id="import" href="/word_import">
+                <i class="bi bi-circle"></i><span>Import</span>
+              </a>
+            </li>
+          </ul>
+        </li><!-- End Components Nav -->
+      {% endif %}
 
       <li class="nav-item">
         <a id="activities" class="nav-link collapsed" data-bs-target="#activities-components-nav" data-bs-toggle="collapse" href="#">
