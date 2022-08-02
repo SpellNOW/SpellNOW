@@ -1,0 +1,559 @@
+{% extends "spell/layout.html" %}
+
+{% block title %}SpellNOW!&trade; -- Profile{% endblock %}
+
+{% block function %}
+  <main id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Profile</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item active">Profile</li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
+
+    
+    <section class="section profile">
+      <div class="row">
+
+        <div class="col-xl-8">
+
+          <div class="card">
+            <div class="card-body pt-3">
+              <!-- Bordered Tabs -->
+              <ul class="nav nav-tabs nav-tabs-bordered">
+
+                {% if problems %}
+                  <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-overview">Overview</button>
+                  </li>
+
+                  <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#profile-edit">Edit Profile</button>
+                  </li>
+
+                  <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-settings">Settings</button>
+                  </li>
+  
+                  <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-change-password">Change Password</button>
+                  </li>
+                {% elif combucer %}
+                  <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-overview">Overview</button>
+                  </li>
+
+                  <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-edit">Edit Profile</button>
+                  </li>
+
+                  <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-settings">Settings</button>
+                  </li>
+
+                  <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#profile-change-password">Change Password</button>
+                  </li>
+                {% else %}
+                  <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#profile-overview">Overview</button>
+                  </li>
+
+                  <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-edit">Edit Profile</button>
+                  </li>
+
+                  <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-settings">Settings</button>
+                  </li>
+  
+                  <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-change-password">Change Password</button>
+                  </li>
+                {% endif %}
+
+              </ul>
+              <div class="tab-content pt-2">
+                
+                {% if problems %}
+                  <div class="tab-pane fade profile-overview" id="profile-overview">
+                    <h5 class="card-title">Profile Details</h5>
+
+                    <div class="row">
+                      <div class="col-lg-3 col-md-4 label ">First Name</div>
+                      <div class="col-lg-9 col-md-8">{{ request.user.first_name }}</div>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-lg-3 col-md-4 label ">Last Name</div>
+                      <div class="col-lg-9 col-md-8">{{ request.user.last_name }}</div>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-lg-3 col-md-4 label ">Username</div>
+                      <div class="col-lg-9 col-md-8">{{ request.user.username }}</div>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-lg-3 col-md-4 label">Email</div>
+                      <div class="col-lg-9 col-md-8">{{ request.user.email }}</div>
+                    </div>
+
+                  </div>
+
+                  <div class="tab-pane fade active show profile-edit pt-3" id="profile-edit">
+
+                    <!-- Profile Edit Form -->
+                    <form action="/changedetails" method="post">
+                      {% csrf_token %}
+                      <div class="row mb-3">
+                        <label for="fullName" class="col-md-4 col-lg-3 col-form-label">First Name</label>
+                        <div class="col-md-8 col-lg-9">
+                          <input name="fname" type="text" class="form-control" id="fullName" value="{{ request.user.first_name }}">
+                        </div>
+                      </div>
+  
+                      <div class="row mb-3">
+                        <label for="fullName" class="col-md-4 col-lg-3 col-form-label">Last Name</label>
+                        <div class="col-md-8 col-lg-9">
+                          <input name="lname" type="text" class="form-control" id="fullName" value="{{ request.user.last_name }}">
+                        </div>
+                      </div>
+                      
+                      <div class="row mb-3">
+                        <label for="fullName" class="col-md-4 col-lg-3 col-form-label">Username</label>
+                        <div class="col-md-8 col-lg-9">
+                          <input name="username" type="text" class="form-control" id="fullName" value="{{ request.user.username }}">
+                          <div class="input-group has-validation">
+                            <div class="invalid-feedback" style="display: block">The username <b>{{ bandit }}</b> has already been taken!</div>
+                          </div>
+                        </div>
+                      </div>
+  
+                      <div class="row mb-3">
+                        <label for="fullName" class="col-md-4 col-lg-3 col-form-label">Email</label>
+                        <div class="col-md-8 col-lg-9">
+                          <input name="email" type="email" class="form-control" id="fullName" value="{{ request.user.email }}">
+                        </div>
+                      </div>
+  
+                      <div class="text-center">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                      </div>
+                    </form><!-- End Profile Edit Form -->
+  
+                  </div>
+                  <div class="tab-pane fade pt-3" id="profile-settings">
+
+                    <!-- Settings Form -->
+                    <form action="/changenotifs" method="post">
+                      {% csrf_token %}
+  
+                      <div class="row mb-3">
+                        <label for="fullName" class="col-md-4 col-lg-3 col-form-label">Email Notifications</label>
+                        <div class="col-md-8 col-lg-9">
+                          {% if question.changenotifs %}
+                            <div class="form-check">
+                              <input name="changenotifs" class="form-check-input" type="checkbox" id="changesMade" checked value="checked">
+                              <label class="form-check-label" for="changesMade">
+                                Changes made to your account
+                              </label>
+                            </div>
+                          {% else %}
+                            <div class="form-check">
+                              <input name="changenotifs" class="form-check-input" type="checkbox" id="changesMade" value="checked">
+                              <label class="form-check-label" for="changesMade">
+                                Changes made to your account
+                              </label>
+                            </div>
+                          {% endif %}
+                          {% if question.newsletter %}
+                            <div class="form-check">
+                              <input name="newsletter" class="form-check-input" type="checkbox" id="newProducts" checked value="checked">
+                              <label class="form-check-label" for="newProducts">
+                                SpellNOW&trade; monthly newsletter
+                              </label>
+                            </div>
+                          {% else %}
+                            <div class="form-check">
+                              <input name="newsletter" class="form-check-input" type="checkbox" id="newProducts" value="checked">
+                              <label class="form-check-label" for="newProducts">
+                                SpellNOW&trade; monthly newsletter
+                              </label>
+                            </div>
+                          {% endif %}
+                          <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="securityNotify" checked disabled>
+                            <label class="form-check-label" for="securityNotify">
+                              Security alerts
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+  
+                      <div class="text-center">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                      </div>
+                    </form><!-- End settings Form -->
+  
+                  </div>
+  
+                  <div class="tab-pane fade pt-3" id="profile-change-password">
+                    <!-- Change Password Form -->
+                    <form action="/changepassword" method="post">
+                      {% csrf_token %}
+                      <div class="row mb-3">
+                        <label for="currentPassword" class="col-md-4 col-lg-3 col-form-label">Current Password</label>
+                        <div class="col-md-8 col-lg-9">
+                          <input name="current" required name="password" type="password" class="form-control" id="currentPassword">
+                        </div>
+                      </div>
+  
+                      <div class="row mb-3">
+                        <label for="newPassword" class="col-md-4 col-lg-3 col-form-label">New Password</label>
+                        <div class="col-md-8 col-lg-9">
+                          <input name="new" required name="newpassword" type="password" class="form-control" id="newPassword">
+                        </div>
+                      </div>
+  
+                      <div class="row mb-3">
+                        <label for="renewPassword" class="col-md-4 col-lg-3 col-form-label">Re-enter New Password</label>
+                        <div class="col-md-8 col-lg-9">
+                          <input name="fun" required name="renewpassword" type="password" class="form-control" id="renewPassword">
+                        </div>
+                      </div>
+  
+                      <div class="text-center">
+                        <button type="submit" class="btn btn-primary">Change Password</button>
+                      </div>
+                    </form><!-- End Change Password Form -->
+  
+                  </div>
+                {% elif combucer %}
+                  <div class="tab-pane fade profile-overview" id="profile-overview">
+                    <h5 class="card-title">Profile Details</h5>
+
+                    <div class="row">
+                      <div class="col-lg-3 col-md-4 label ">First Name</div>
+                      <div class="col-lg-9 col-md-8">{{ request.user.first_name }}</div>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-lg-3 col-md-4 label ">Last Name</div>
+                      <div class="col-lg-9 col-md-8">{{ request.user.last_name }}</div>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-lg-3 col-md-4 label ">Username</div>
+                      <div class="col-lg-9 col-md-8">{{ request.user.username }}</div>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-lg-3 col-md-4 label">Email</div>
+                      <div class="col-lg-9 col-md-8">{{ request.user.email }}</div>
+                    </div>
+
+                  </div>
+
+                  <div class="tab-pane fade profile-edit pt-3" id="profile-edit">
+
+                    <!-- Profile Edit Form -->
+                    <form action="/changedetails" method="post">
+                      {% csrf_token %}
+                      <div class="row mb-3">
+                        <label for="fullName" class="col-md-4 col-lg-3 col-form-label">First Name</label>
+                        <div class="col-md-8 col-lg-9">
+                          <input name="fname" type="text" class="form-control" id="fullName" value="{{ request.user.first_name }}">
+                        </div>
+                      </div>
+
+                      <div class="row mb-3">
+                        <label for="fullName" class="col-md-4 col-lg-3 col-form-label">Last Name</label>
+                        <div class="col-md-8 col-lg-9">
+                          <input name="lname" type="text" class="form-control" id="fullName" value="{{ request.user.last_name }}">
+                        </div>
+                      </div>
+                      
+                      <div class="row mb-3">
+                        <label for="fullName" class="col-md-4 col-lg-3 col-form-label">Username</label>
+                        <div class="col-md-8 col-lg-9">
+                          <input name="username" type="text" class="form-control" id="fullName" value="{{ request.user.username }}">
+                        </div>
+                      </div>
+
+                      <div class="row mb-3">
+                        <label for="fullName" class="col-md-4 col-lg-3 col-form-label">Email</label>
+                        <div class="col-md-8 col-lg-9">
+                          <input name="email" type="email" class="form-control" id="fullName" value="{{ request.user.email }}">
+                        </div>
+                      </div>
+
+                      <div class="text-center">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                      </div>
+                    </form><!-- End Profile Edit Form -->
+
+                  </div>
+                  <div class="tab-pane fade pt-3" id="profile-settings">
+
+                    <!-- Settings Form -->
+                    <form action="/changenotifs" method="post">
+                      {% csrf_token %}
+
+                      <div class="row mb-3">
+                        <label for="fullName" class="col-md-4 col-lg-3 col-form-label">Email Notifications</label>
+                        <div class="col-md-8 col-lg-9">
+                          {% if question.changenotifs %}
+                            <div class="form-check">
+                              <input name="changenotifs" class="form-check-input" type="checkbox" id="changesMade" checked value="checked">
+                              <label class="form-check-label" for="changesMade">
+                                Changes made to your account
+                              </label>
+                            </div>
+                          {% else %}
+                            <div class="form-check">
+                              <input name="changenotifs" class="form-check-input" type="checkbox" id="changesMade" value="checked">
+                              <label class="form-check-label" for="changesMade">
+                                Changes made to your account
+                              </label>
+                            </div>
+                          {% endif %}
+                          {% if question.newsletter %}
+                            <div class="form-check">
+                              <input name="newsletter" class="form-check-input" type="checkbox" id="newProducts" checked value="checked">
+                              <label class="form-check-label" for="newProducts">
+                                SpellNOW&trade; monthly newsletter
+                              </label>
+                            </div>
+                          {% else %}
+                            <div class="form-check">
+                              <input name="newsletter" class="form-check-input" type="checkbox" id="newProducts" value="checked">
+                              <label class="form-check-label" for="newProducts">
+                                SpellNOW&trade; monthly newsletter
+                              </label>
+                            </div>
+                          {% endif %}
+                          <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="securityNotify" checked disabled>
+                            <label class="form-check-label" for="securityNotify">
+                              Security alerts
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="text-center">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                      </div>
+                    </form><!-- End settings Form -->
+
+                  </div>
+
+                  <div class="tab-pane active show fade pt-3" id="profile-change-password">
+                    <!-- Change Password Form -->
+                    <form action="/changepassword" method="post">
+                      {% csrf_token %}
+                      <div class="row mb-3">
+                        <label for="currentPassword" class="col-md-4 col-lg-3 col-form-label">Current Password</label>
+                        <div class="col-md-8 col-lg-9">
+                          <input name="current" required name="password" type="password" class="form-control" id="currentPassword">
+                          {% if grepper %}
+                            <div class="input-group has-validation">
+                              <div class="invalid-feedback" style="display: block">Invalid password!</div>
+                            </div>
+                          {% endif %}
+                        </div>
+                      </div>
+
+                      <div class="row mb-3">
+                        <label for="newPassword" class="col-md-4 col-lg-3 col-form-label">New Password</label>
+                        <div class="col-md-8 col-lg-9">
+                          <input name="new" required name="newpassword" type="password" class="form-control" id="newPassword">
+                        </div>
+                      </div>
+
+                      <div class="row mb-3">
+                        <label for="renewPassword" class="col-md-4 col-lg-3 col-form-label">Re-enter New Password</label>
+                        <div class="col-md-8 col-lg-9">
+                          <input name="fun" required name="renewpassword" type="password" class="form-control" id="renewPassword">
+                          {% if rentry %}
+                            <div class="input-group has-validation">
+                              <div class="invalid-feedback" style="display: block">Passwords don't match!</div>
+                            </div>
+                          {% endif %}
+                        </div>
+                      </div>
+
+                      <div class="text-center">
+                        <button type="submit" class="btn btn-primary">Change Password</button>
+                      </div>
+                    </form><!-- End Change Password Form -->
+
+                  </div>
+                {% else %}
+                  <div class="tab-pane active show fade profile-overview" id="profile-overview">
+                    <h5 class="card-title">Profile Details</h5>
+
+                    <div class="row">
+                      <div class="col-lg-3 col-md-4 label ">First Name</div>
+                      <div class="col-lg-9 col-md-8">{{ request.user.first_name }}</div>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-lg-3 col-md-4 label ">Last Name</div>
+                      <div class="col-lg-9 col-md-8">{{ request.user.last_name }}</div>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-lg-3 col-md-4 label ">Username</div>
+                      <div class="col-lg-9 col-md-8">{{ request.user.username }}</div>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-lg-3 col-md-4 label">Email</div>
+                      <div class="col-lg-9 col-md-8">{{ request.user.email }}</div>
+                    </div>
+
+                  </div>
+
+                  <div class="tab-pane fade profile-edit pt-3" id="profile-edit">
+
+                    <!-- Profile Edit Form -->
+                    <form action="/changedetails" method="post">
+                      {% csrf_token %}
+                      <div class="row mb-3">
+                        <label for="fullName" class="col-md-4 col-lg-3 col-form-label">First Name</label>
+                        <div class="col-md-8 col-lg-9">
+                          <input name="fname" type="text" class="form-control" id="fullName" value="{{ request.user.first_name }}">
+                        </div>
+                      </div>
+
+                      <div class="row mb-3">
+                        <label for="fullName" class="col-md-4 col-lg-3 col-form-label">Last Name</label>
+                        <div class="col-md-8 col-lg-9">
+                          <input name="lname" type="text" class="form-control" id="fullName" value="{{ request.user.last_name }}">
+                        </div>
+                      </div>
+                      
+                      <div class="row mb-3">
+                        <label for="fullName" class="col-md-4 col-lg-3 col-form-label">Username</label>
+                        <div class="col-md-8 col-lg-9">
+                          <input name="username" type="text" class="form-control" id="fullName" value="{{ request.user.username }}">
+                        </div>
+                      </div>
+
+                      <div class="row mb-3">
+                        <label for="fullName" class="col-md-4 col-lg-3 col-form-label">Email</label>
+                        <div class="col-md-8 col-lg-9">
+                          <input name="email" type="email" class="form-control" id="fullName" value="{{ request.user.email }}">
+                        </div>
+                      </div>
+
+                      <div class="text-center">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                      </div>
+                    </form><!-- End Profile Edit Form -->
+
+                  </div>
+                  <div class="tab-pane fade pt-3" id="profile-settings">
+
+                    <!-- Settings Form -->
+                    <form action="/changenotifs" method="post">
+                      {% csrf_token %}
+  
+                      <div class="row mb-3">
+                        <label for="fullName" class="col-md-4 col-lg-3 col-form-label">Email Notifications</label>
+                        <div class="col-md-8 col-lg-9">
+                          {% if question.changenotifs %}
+                            <div class="form-check">
+                              <input name="changenotifs" class="form-check-input" type="checkbox" id="changesMade" checked value="checked">
+                              <label class="form-check-label" for="changesMade">
+                                Changes made to your account
+                              </label>
+                            </div>
+                          {% else %}
+                            <div class="form-check">
+                              <input name="changenotifs" class="form-check-input" type="checkbox" id="changesMade" value="checked">
+                              <label class="form-check-label" for="changesMade">
+                                Changes made to your account
+                              </label>
+                            </div>
+                          {% endif %}
+                          {% if question.newsletter %}
+                            <div class="form-check">
+                              <input name="newsletter" class="form-check-input" type="checkbox" id="newProducts" checked value="checked">
+                              <label class="form-check-label" for="newProducts">
+                                SpellNOW&trade; monthly newsletter
+                              </label>
+                            </div>
+                          {% else %}
+                            <div class="form-check">
+                              <input name="newsletter" class="form-check-input" type="checkbox" id="newProducts" value="checked">
+                              <label class="form-check-label" for="newProducts">
+                                SpellNOW&trade; monthly newsletter
+                              </label>
+                            </div>
+                          {% endif %}
+                          <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="securityNotify" checked disabled>
+                            <label class="form-check-label" for="securityNotify">
+                              Security alerts
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+  
+                      <div class="text-center">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                      </div>
+                    </form><!-- End settings Form -->
+  
+                  </div>
+  
+                  <div class="tab-pane fade pt-3" id="profile-change-password">
+                    <!-- Change Password Form -->
+                    <form action="/changepassword" method="post">
+                      {% csrf_token %}
+                      <div class="row mb-3">
+                        <label for="currentPassword" class="col-md-4 col-lg-3 col-form-label">Current Password</label>
+                        <div class="col-md-8 col-lg-9">
+                          <input name="current" required name="password" type="password" class="form-control" id="currentPassword">
+                        </div>
+                      </div>
+  
+                      <div class="row mb-3">
+                        <label for="newPassword" class="col-md-4 col-lg-3 col-form-label">New Password</label>
+                        <div class="col-md-8 col-lg-9">
+                          <input name="new" required name="newpassword" type="password" class="form-control" id="newPassword">
+                        </div>
+                      </div>
+  
+                      <div class="row mb-3">
+                        <label for="renewPassword" class="col-md-4 col-lg-3 col-form-label">Re-enter New Password</label>
+                        <div class="col-md-8 col-lg-9">
+                          <input name="fun" required name="renewpassword" type="password" class="form-control" id="renewPassword">
+                        </div>
+                      </div>
+  
+                      <div class="text-center">
+                        <button type="submit" class="btn btn-primary">Change Password</button>
+                      </div>
+                    </form><!-- End Change Password Form -->
+  
+                  </div>
+                {% endif %}
+
+              </div><!-- End Bordered Tabs -->
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  </main><!-- End #main -->
+{% endblock %}

@@ -126,13 +126,19 @@
                   
                   <div class="row g-4">
                     {% if result.definition2 is None %}
-                      <b>Defintion: </b><br>
+                      <b>Defintion 1: </b><br>
                       <definition id="def1-{{ result.id }}">{{ result.definition1|safe }}</definition>
+                      <b>Defintion 2: </b><br>
+                      <definition id="def2-{{ result.id }}">None</definition>
+                      <b>Defintion 3: </b><br>
+                      <definition id="def3-{{ result.id }}">None</definition>
                     {% elif result.definition3 is None %}
                       <b>Defintion 1: </b><br>
                       <definition id="def1-{{ result.id }}">{{ result.definition1|safe }}</definition>
                       <b>Defintion 2: </b><br>
                       <definition id="def2-{{ result.id }}">{{ result.definition2|safe }}</definition>
+                      <b>Defintion 3: </b><br>
+                      <definition id="def3-{{ result.id }}">None</definition>
                     {% else %}
                       <b>Defintion 1: </b><br>
                       <definition id="def1-{{ result.id }}">{{ result.definition1|safe }}</definition>
@@ -146,13 +152,19 @@
                   <b>Part of Speech: </b><speech id="spec-{{ result.id }}">{{ result.speech|safe }}</speech>
                   
                   {% if result.origin2 is None %}
-                    <b>Origin: </b><br>
+                    <b>Origin 1: </b><br>
                     <origin id="origin1-{{ result.id }}">{{ result.origin1|safe }}</origin>
+                    <b>Origin 2: </b><br>
+                    <origin id="origin2-{{ result.id }}">None</origin>
+                    <b>Origin 3: </b><br>
+                    <origin id="origin3-{{ result.id }}">None</origin>
                   {% elif result.origin3 is None %}
                     <b>Origin 1: </b><br>
                     <origin id="origin1-{{ result.id }}">{{ result.origin1|safe }}</origin>
                     <b>Origin 2: </b><br>
                     <origin id="origin2-{{ result.id }}">{{ result.origin2|safe }}</origin>
+                    <b>Origin 3: </b><br>
+                    <origin id="origin3-{{ result.id }}">None</origin>
                   {% else %}
                     <b>Origin 1: </b><br>
                     <origin id="origin1-{{ result.id }}">{{ result.origin1|safe }}</origin>
@@ -162,24 +174,39 @@
                     <origin id="origin3-{{ result.id }}">{{ result.origin3|safe }}</origin>
                   {% endif %}
                   
-                    {% if result.tags %}
                     <b>Tags: </b><br>
                     <div style="border: 1px solid #c3c3c3; border-radius: 5px; padding: 5px;">
                       <div id="tags-{{ result.id }}">
                         {% for tag in result.tags.all %}
-                          <span id="tag-{{ result.id }}-{{ tag.id }}" class="badge rounded-pill bg-primary">{{ tag.name }} <i onclick="addrem('rem', 'tag-{{ result.id }}-{{ tag.id }}', '{{ tag.name }}')" class="bi bi-dash-circle addrem"></i></span>
+                          <span id="tag-{{ result.id }}-{{ tag.id }}" class="badge rounded-pill bg-primary">{{ tag.name }} <i onclick="addremtag('rem', 'tag-{{ result.id }}-{{ tag.id }}', '{{ tag.name }}')" class="bi bi-dash-circle addrem"></i></span>
                         {% endfor %}
                       </div>
                       <br><br>
                       <div id="notags-{{ result.id }}" style="border: 1px solid #c3c3c3; border-radius: 5px; padding: 5px;">
                         {% for tag in tags %}
                             {% if tag not in result.tags.all %}
-                              <span id="tag-{{ result.id }}-{{ tag.id }}" class="badge rounded-pill bg-primary">{{ tag.name }} <i onclick="addrem('add', 'tag-{{ result.id }}-{{ tag.id }}', '{{ tag.name }}')" class="bi bi-plus-circle addrem"></i></span>
+                              <span id="tag-{{ result.id }}-{{ tag.id }}" class="badge rounded-pill bg-primary">{{ tag.name }} <i onclick="addremtag('add', 'tag-{{ result.id }}-{{ tag.id }}', '{{ tag.name }}')" class="bi bi-plus-circle addrem"></i></span>
                             {% endif %}
                         {% endfor %}
+                      </div>
                     </div>
+                    <br><br>
+                    <b>Roots: </b><br>
+                    <div style="border: 1px solid #c3c3c3; border-radius: 5px; padding: 5px;">
+                      <div id="roots-{{ result.id }}">
+                        {% for root in result.roots.all %}
+                          <span id="root-{{ result.id }}-{{ root.id }}" class="badge rounded-pill bg-info">{{ root.name }} <i onclick="addremroot('rem', 'root-{{ result.id }}-{{ root.id }}', '{{ root.name }}')" class="bi bi-dash-circle addrem"></i></span>
+                        {% endfor %}
+                      </div>
+                      <br><br>
+                      <div id="noroots-{{ result.id }}" style="border: 1px solid #c3c3c3; border-radius: 5px; padding: 5px;">
+                        {% for root in roots %}
+                            {% if root not in result.roots.all %}
+                              <span id="root-{{ result.id }}-{{ root.id }}" class="badge rounded-pill bg-info">{{ root.name }} <i onclick="addremroot('add', 'root-{{ result.id }}-{{ root.id }}', '{{ root.name }}')" class="bi bi-plus-circle addrem"></i></span>
+                            {% endif %}
+                        {% endfor %}
+                      </div>
                     </div>
-                  {% endif %}
                 </div>
               </div>
             {% endfor %}
@@ -200,8 +227,7 @@
     global_clicked = []
     change = []
 
-    function addrem(action, id, name) {
-      console.log(id)
+    function addremtag(action, id, name) {
       if (action == "add") {
         tagid = (id.split("-"))[2];
         wordid = (id.split("-"))[1];
@@ -210,7 +236,7 @@
         blah = "'rem'";
         blag = "'tag-" + wordid + '-' + tagid + "'";
         brah = "'" + name + "'";
-        document.getElementById("tags-" + wordid).innerHTML += '<span id="' + id + '" class="badge rounded-pill bg-primary">' + name + ' <i onclick="addrem(' + blah + ', ' + blag + ', ' + brah + ')" class="bi bi-dash-circle addrem"></i></span>';
+        document.getElementById("tags-" + wordid).innerHTML += '<span id="' + id + '" class="badge rounded-pill bg-primary">' + name + ' <i onclick="addremtag(' + blah + ', ' + blag + ', ' + brah + ')" class="bi bi-dash-circle addrem"></i></span>';
         change.push("*-addtag-" + wordid + "*..*" + tagid + "|||")
       }
       else {
@@ -221,8 +247,33 @@
         blah = "'add'";
         blag = "'tag-" + wordid + '-' + tagid + "'";
         brah = "'" + name + "'";
-        document.getElementById("notags-" + wordid).innerHTML += '<span id="' + id + '" class="badge rounded-pill bg-primary">' + name + ' <i onclick="addrem(' + blah + ', ' + blag + ', ' + brah + ')" class="bi bi-plus-circle addrem"></i></span>';
+        document.getElementById("notags-" + wordid).innerHTML += '<span id="' + id + '" class="badge rounded-pill bg-primary">' + name + ' <i onclick="addremtag(' + blah + ', ' + blag + ', ' + brah + ')" class="bi bi-plus-circle addrem"></i></span>';
         change.push("*-remtag-" + wordid + "*..*" + tagid + "|||")
+      }
+    }
+
+    function addremroot(action, id, name) {
+      if (action == "add") {
+        rootid = (id.split("-"))[2];
+        wordid = (id.split("-"))[1];
+        replacer = '<span id="' + id + '" class="badge rounded-pill bg-info">' + document.getElementById(id).innerHTML + '</span>';
+        document.getElementById("noroots-" + wordid).innerHTML = (document.getElementById("noroots-" + wordid).innerHTML).replace(replacer, "");
+        blah = "'rem'";
+        blag = "'root-" + wordid + '-' + rootid + "'";
+        brah = "'" + name + "'";
+        document.getElementById("roots-" + wordid).innerHTML += '<span id="' + id + '" class="badge rounded-pill bg-info">' + name + ' <i onclick="addremroot(' + blah + ', ' + blag + ', ' + brah + ')" class="bi bi-dash-circle addrem"></i></span>';
+        change.push("*-addroot-" + wordid + "*..*" + rootid + "|||")
+      }
+      else {
+        rootid = (id.split("-"))[2];
+        wordid = (id.split("-"))[1];
+        replacer = '<span id="' + id + '" class="badge rounded-pill bg-info">' + document.getElementById(id).innerHTML + '</span>';
+        document.getElementById("roots-" + wordid).innerHTML = (document.getElementById("roots-" + wordid).innerHTML).replace(replacer, "");
+        blah = "'add'";
+        blag = "'root-" + wordid + '-' + rootid + "'";
+        brah = "'" + name + "'";
+        document.getElementById("noroots-" + wordid).innerHTML += '<span id="' + id + '" class="badge rounded-pill bg-info">' + name + ' <i onclick="addremroot(' + blah + ', ' + blag + ', ' + brah + ')" class="bi bi-plus-circle addrem"></i></span>';
+        change.push("*-remroot-" + wordid + "*..*" + rootid + "|||")
       }
     }
 
@@ -241,72 +292,65 @@
       
       if (!(global_clicked.includes(word))) {
         using1 = document.getElementById("def1-"+word).innerHTML;
-        try {
-          using2 = document.getElementById("def2-"+word).innerHTML;
-        }
-        catch(err) {
-          using2 = "";
-        }
-        try {
-          using3 = document.getElementById("def3-"+word).innerHTML;
-        }
-        catch(err) {
-          using3 = "";
-        }
+        using2 = document.getElementById("def2-"+word).innerHTML;
+        using3 = document.getElementById("def3-"+word).innerHTML;
         right = [using1, using2, using3]
         
-        try {
-          document.getElementById("def1-"+word).innerHTML = "";
-          document.getElementById("def2-"+word).innerHTML = "";
-          document.getElementById("def3-"+word).innerHTML = "";
-        }
-        catch(err) {}
+        document.getElementById("def1-"+word).innerHTML = "";
+        document.getElementById("def2-"+word).innerHTML = "";
+        document.getElementById("def3-"+word).innerHTML = "";
         
         omg1 = "'valueholder-def1" + word + "'"
         omg2 = "'valueholder-def2" + word + "'"
         omg3 = "'valueholder-def3" + word + "'"
-        try {
-          document.getElementById("def1-"+word).innerHTML = '<textarea id=' + omg1 + ' onchange="changes(' + omg1 + ')" class="form-control">' + right[0] + '</textarea><br>';
+        document.getElementById("def1-"+word).innerHTML = '<textarea id=' + omg1 + ' onchange="changes(' + omg1 + ')" class="form-control">' + right[0] + '</textarea><br>';
+        
+        if (right[1] != "None") {
           document.getElementById("def2-"+word).innerHTML = '<textarea id=' + omg2 + ' onchange="changes(' + omg2 + ')" class="form-control">' + right[1] + '</textarea><br>';
+        }
+        else {
+          document.getElementById("def2-"+word).innerHTML = '<textarea id=' + omg2 + ' onchange="changes(' + omg2 + ')" placeholder="None" class="form-control"></textarea><br>';
+        }
+
+        if (right[2] != "None") {
           document.getElementById("def3-"+word).innerHTML = '<textarea id=' + omg3 + ' onchange="changes(' + omg3 + ')" class="form-control">' + right[2] + '</textarea><br>';
         }
-        catch(err) {}
-        
+        else {
+          document.getElementById("def3-"+word).innerHTML = '<textarea id=' + omg3 + ' onchange="changes(' + omg3 + ')" placeholder="None" class="form-control"></textarea><br>';
+        }
+
         omg = "'valueholder-spec" + word + "'"
         speech = document.getElementById("spec-"+word).innerHTML;
         document.getElementById("spec-"+word).innerHTML = '<textarea id=' + omg + ' onchange="changes(' + omg + ')" class="form-control">' + speech + '</textarea><br>';
 
         using1 = document.getElementById("origin1-"+word).innerHTML;
-        try {
-          using2 = document.getElementById("origin2-"+word).innerHTML;
-        }
-        catch(err) {
-          using2 = "";
-        }
-        try {
-          using3 = document.getElementById("origin3-"+word).innerHTML;
-        }
-        catch(err) {
-          using3 = "";
-        }
+        using2 = document.getElementById("origin2-"+word).innerHTML;
+        using3 = document.getElementById("origin3-"+word).innerHTML;
         right = [using1, using2, using3]
         
-        try {
-          document.getElementById("origin1-"+word).innerHTML = "";
-          document.getElementById("origin2-"+word).innerHTML = "";
-          document.getElementById("origin3-"+word).innerHTML = "";
-        }
-        catch(err) {}
+        document.getElementById("origin1-"+word).innerHTML = "";
+        document.getElementById("origin2-"+word).innerHTML = "";
+        document.getElementById("origin3-"+word).innerHTML = "";
         
         omg1 = "'valueholder-origin1-" + word + "'"
         omg2 = "'valueholder-origin2-" + word + "'"
         omg3 = "'valueholder-origin3-" + word + "'"
-        try {
-          document.getElementById("origin1-"+word).innerHTML = '<textarea id=' + omg1 + ' onchange="changes(' + omg1 + ')" class="form-control">' + right[0] + '</textarea><br>';
+        
+        document.getElementById("origin1-"+word).innerHTML = '<textarea id=' + omg1 + ' onchange="changes(' + omg1 + ')" class="form-control">' + right[0] + '</textarea><br>';
+        
+        if (right[1] != "None") {
           document.getElementById("origin2-"+word).innerHTML = '<textarea id=' + omg2 + ' onchange="changes(' + omg2 + ')" class="form-control">' + right[1] + '</textarea><br>';
+        }
+        else {
+          document.getElementById("origin2-"+word).innerHTML = '<textarea id=' + omg2 + ' onchange="changes(' + omg2 + ')" placeholder="None" class="form-control"></textarea><br>';
+        }
+
+        if (right[2] != "None") {
           document.getElementById("origin3-"+word).innerHTML = '<textarea id=' + omg3 + ' onchange="changes(' + omg3 + ')" class="form-control">' + right[2] + '</textarea><br>';
         }
-        catch(err) {}
+        else {
+          document.getElementById("origin3-"+word).innerHTML = '<textarea id=' + omg3 + ' onchange="changes(' + omg3 + ')" placeholder="None" class="form-control"></textarea><br>';
+        }
 
         global_clicked.push(word);
       }

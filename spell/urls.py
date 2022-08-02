@@ -5,6 +5,9 @@ from . import views
 urlpatterns = [
     # Homepage
     path("", views.index, name="index"),
+    path("contact", views.contact, name="contact"),
+    path("contactus", views.contactus, name="contactus"),
+    path("contactrender", views.contactrender, name="contactrender"),
 
     # Authorization pages
     path("login", views.login, name="login"),
@@ -43,4 +46,26 @@ urlpatterns = [
     # Reports
     path("reports", views.reports, name="reports"),
     path("report/<int:id>", views.report, name="report"),
+
+    # Error
+    path("error_404", views.error_404, name="error_404"),
+
+    # Profile
+    path("profile", views.profile, name="profile"),
+
+    # Change Details
+
+    path("changedetails", views.changedetails, name="changedetails"),
+    path("changenotifs", views.changenotifs, name="changenotifs"),
+    path("changepassword", views.changepassword, name="changepassword"),
+    path("informvalidation", views.informvalidation, name="informvalidation"),
+    path("validatemail/<int:userit>-<int:lockit1>-<int:lockit2>", views.validatemail, name="validatemail"),
+
+
+    # -------------DO NOT USE BELOW THIS LINE----------------- #
+    # Subscribe
+    path("subscribe", views.subscribe, name="subscribe"),
+
+    # Payment
+    path("payment/<str:sessionid>", views.payment, name="payment"),
 ]

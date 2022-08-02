@@ -61,7 +61,7 @@
               </div>
             </div>
           </div>
-        <div class="col-lg-6" style="width:25%;">
+        <div class="col-lg-6" style="width:20%;">
           <div class="card overflow-auto" style="height: 600px;">
               <div class="card-body">
                 <h5 class="card-title">Tag Words</h5>
@@ -88,7 +88,34 @@
           </div>
         </div>
 
-        <div class="col-lg-6" style="width:75%;">
+        <div class="col-lg-6" style="width:20%;">
+          <div class="card overflow-auto" style="height: 600px;">
+              <div class="card-body">
+                <h5 class="card-title">Add Roots</h5>
+                <p>Import words to a certain root by selecting a root below.</p>
+
+  
+                <!-- Default Table -->
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Roots</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for root in roots %}
+                      <tr>
+                        <td id="rootres-{{ root.id }}" onclick="call_root('{{ root.id }}')" name="csv" class="result">{{ root.name }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+                <!-- End Default Table Example -->
+              </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6" style="width:60%;">
           {% for tag in tags %}
             <div id="tag-{{ tag.id }}" style="display: none;" class="card result_card">
               <div class="card-header">{{ tag.name }}</div>
@@ -99,7 +126,7 @@
                   <div class="row mb-3">
                     <label for="inputNumber" class="col-sm-2 col-form-label"><b>Tag Words</b></label>
                     <div class="col-sm-10">
-                      <input onchange="document.getElementById('add-{{ tag.id }}').click()" class="form-control" type="file" id="formFile" name="csv">
+                      <input onchange="document.getElementById('addtag-{{ tag.id }}').click()" class="form-control" type="file" id="formFile" name="csv">
                     </div>
                   </div>
                   <input name="request-id" type="text" value="add-tag-{{ tag.id }}" style="display: none;">
@@ -110,11 +137,42 @@
                   <div class="row mb-3">
                     <label for="inputNumber" class="col-sm-2 col-form-label"><b>Untag Words</b></label>
                     <div class="col-sm-10">
-                      <input onchange="document.getElementById('del-{{ tag.id }}').click()" class="form-control" type="file" id="formFile" name="csv">
+                      <input onchange="document.getElementById('deltag-{{ tag.id }}').click()" class="form-control" type="file" id="formFile" name="csv">
                     </div>
                   </div>
                   <input name="request-id" type="text" value="del-tag-{{ tag.id }}" style="display: none;">
-                  <input type="submit" style="display: none;" id="del-{{ tag.id }}">
+                  <input type="submit" style="display: none;" id="deltag-{{ tag.id }}">
+                </form>
+              </div>
+            </div>
+          {% endfor %}
+
+          {% for root in roots %}
+            <div id="root-{{ root.id }}" style="display: none;" class="card result_card">
+              <div class="card-header">{{ root.name }}</div>
+              <div class="card-body">
+                <br>
+                <form action="/word_import" enctype="multipart/form-data" method="post">
+                  {% csrf_token %}
+                  <div class="row mb-3">
+                    <label for="inputNumber" class="col-sm-2 col-form-label"><b>Add Roots</b></label>
+                    <div class="col-sm-10">
+                      <input onchange="document.getElementById('addroot-{{ root.id }}').click()" class="form-control" type="file" id="formFile" name="csv">
+                    </div>
+                  </div>
+                  <input name="request-id" type="text" value="add-root-{{ root.id }}" style="display: none;">
+                  <input type="submit" style="display: none;" id="addroot-{{ root.id }}">
+                </form>
+                <form action="/word_import" enctype="multipart/form-data" method="post">
+                  {% csrf_token %}
+                  <div class="row mb-3">
+                    <label for="inputNumber" class="col-sm-2 col-form-label"><b>Delete Roots</b></label>
+                    <div class="col-sm-10">
+                      <input onchange="document.getElementById('delroot-{{ root.id }}').click()" class="form-control" type="file" id="formFile" name="csv">
+                    </div>
+                  </div>
+                  <input name="request-id" type="text" value="del-root-{{ root.id }}" style="display: none;">
+                  <input type="submit" style="display: none;" id="delroot-{{ root.id }}">
                 </form>
               </div>
             </div>
@@ -141,6 +199,20 @@
         funList[i].style.display = "none";
       }
       document.getElementById("tag-"+word).style.display = "block";
+    }
+
+    function call_root(word) {
+      const nodeList = document.querySelectorAll(".result");
+      for (let i = 0; i < nodeList.length; i++) {
+          nodeList[i].style.backgroundColor = "rgb(255, 255, 255)";
+      }
+      document.getElementById("rootres-"+word).style.backgroundColor = "rgb(195, 195, 195)"
+
+      const funList = document.querySelectorAll(".result_card");
+      for (let i = 0; i < nodeList.length; i++) {
+        funList[i].style.display = "none";
+      }
+      document.getElementById("root-"+word).style.display = "block";
     }
   </script>
   <style>

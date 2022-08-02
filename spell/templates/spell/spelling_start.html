@@ -1,6 +1,6 @@
 {% extends "spell/layout.html" %}
 
-{% block title %}SpellNOW!&trade; -- Comfigure Spelling Activity{% endblock %}
+{% block title %}SpellNOW!&trade; -- Configure Spelling Activity{% endblock %}
 
 {% block function %}
   <main id="main" class="main">
@@ -38,8 +38,20 @@
                     </select>
                   </div>
                   <div class="col-md-4">
+                    <label for="allrots" class="form-label">Included roots:</label>
+                    <select style="width:100%;" class="form-select" id="allrots" multiple name="*..*root*..*">
+                      {% for root in roots %}
+                        <option value="|--|{{ root.name }}">{{ root.name }}</option>
+                      {% endfor %}
+                        <option value="|--|*..*">No Roots</option>
+                    </select>
+                  </div>
+                  <div class="col-md-4">
                     <label for="inputNumber" style="width: 100%;" class="col-sm-2 col-form-label">Number of words:</label>
                     <input type="number" name="numwords" class="form-control" value="{{ number }}">
+                    {% if message %}
+                      <div style="display: block;" class="invalid-feedback">{{ message }}</div>
+                    {% endif %}
                     <br>
                     <button class="btn btn-primary">Start</button>
                   </div>

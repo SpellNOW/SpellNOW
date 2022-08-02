@@ -16,7 +16,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+handler404 = 'spell.views.error_404'
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path("", include("spell.urls"))
+    path("", include("spell.urls")),
+    path('captcha', include("captcha.urls"))
 ]

@@ -4,7 +4,13 @@ from django.contrib.auth.models import User
 
 # Create your models here.
 class Account(User):
-    pass
+    subscribed = models.BooleanField()
+    locked = models.BooleanField()
+    daysleft = models.IntegerField()
+    trigger = models.BooleanField()
+    customer_id = models.TextField(max_length=300, null=True, blank=True)
+    changenotifs = models.BooleanField()
+    newsletter = models.BooleanField()
 
 class Word(models.Model):
     word = models.TextField(max_length=100)
@@ -17,24 +23,40 @@ class Word(models.Model):
     definition3 = models.TextField(max_length=1000)
     pronounce = models.TextField(max_length=600)
     tagged = models.BooleanField()
-    tags = models.ManyToManyField("Tag", null=True, blank=True)
-    roots = models.ManyToManyField("Root", null=True, blank=True)
+    rooted = models.BooleanField()
+    tags = models.ManyToManyField("Tag", blank=True)
+    roots = models.ManyToManyField("Root", blank=True)
 
 class Tag(models.Model):
     name = models.TextField(max_length=100)
-    words = models.ManyToManyField(Word, null=True, blank=True)
 
 class Report(models.Model):
-    tags = models.TextField(max_length=100)
+    used = models.TextField(max_length=100)
     correct = models.IntegerField()
     total = models.IntegerField()
     percent = models.FloatField()
     finished = models.DateTimeField(auto_now_add=True)
     specific = models.BooleanField()
     iid = models.IntegerField(null=True, blank=True)
+    user = models.ForeignKey(Account, on_delete=models.CASCADE, null=True, blank=True)
+
+class ReportDetail(models.Model):
+    count = models.IntegerField()
+    identification = models.TextField(max_length=600)
+    word = models.TextField(max_length=100)
+    attempt = models.TextField()
+    result = models.TextField(max_length=10)
+    time = models.TextField(max_length=600)
+    iid = models.IntegerField()
 
 class Root(models.Model):
     name = models.TextField(max_length=100)
     definition = models.TextField(max_length=1000, null=True, blank=True)
     origin = models.TextField(max_length=1000, null=True, blank=True)
     pp = models.CharField(max_length=4, null=True, blank=True)
+
+class EmailValidate(models.Model):
+    userid = models.IntegerField()
+    email = models.TextField(max_length=300)
+    lock1 = models.IntegerField()
+    lock2 = models.IntegerField()

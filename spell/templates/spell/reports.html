@@ -25,16 +25,16 @@
               <table class="table datatable">
                 <thead>
                     <tr>
-                        <th class="col">Date Completed</th>
-                        <th class="col">Correct Attempts</th>
-                        <th class="col">Total Attempted</th>
-                        <th class="col">Percent</th>
+                      <th scope="col">Date Completed</th>
+                      <th scope="col">Correct Attempts</th>
+                      <th scope="col">Total Attempted</th>
+                      <th scope="col">Percent</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for report in reports %}
                         <tr>
-                            <td>{{ report.finished }}</td>
+                            <td scope="row">{{ report.finished }} EST</td>
                             <td style="color: #2dab26"><b>{{ report.correct }}</b></td>
                             <td><b>{{ report.total }}</b></td>
                             <td><b>{{ report.percent }}%</b></td>

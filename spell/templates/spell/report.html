@@ -11,7 +11,7 @@
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="/">Home</a></li>
           <li class="breadcrumb-item">Reports</li>
-          <li class="breadcrumb-item active">{{ title }}</li>
+          <li class="breadcrumb-item active">{{ title }} EST</li>
         </ol>
       </nav>
     </div><!-- End Page Title -->
@@ -22,23 +22,23 @@
         <div class="col-lg-12">
           <div class="card">
             <div class="card-body">
-              <h5 class="card-title">{{ title }}</h5>
+              <h5 class="card-title">{{ title }} EST</h5>
               <table class="table datatable">
                 <thead>
                     <tr>
-                        <th class="col">Tag</th>
+                        <th class="col">Identification</th>
                         <th class="col">Correct Words</th>
                         <th class="col">Total Words</th>
                         <th class="col">Percent</th>
                     </tr>
                 </thead>
                 <tbody>
-                  {% for tag in tags %}
+                  {% for use in used %}
                     <tr>
-                        <td>{{ tag.brian }}</td>
-                        <td style="color: #2dab26"><b>{{ tag.correct }}</b></td>
-                        <td><b>{{ tag.total }}</b></td>
-                        <td><b>{{ tag.percent }}%</b></td>
+                        <td>{{ use.used }}</td>
+                        <td style="color: #2dab26"><b>{{ use.correct }}</b></td>
+                        <td><b>{{ use.total }}</b></td>
+                        <td><b>{{ use.percent }}%</b></td>
                     </tr>
                   {% endfor %}
                   <tr class="within-tr">
@@ -55,11 +55,10 @@
                 <thead>
                   <tr>
                     <th class="col">Progress</th>
-                    <th class="col">Tag</th>
+                    <th class="col">Identification</th>
                     <th class="col">Word</th>
                     <th class="col">Attempt</th>
                     <th class="col">Result</th>
-                    <th class="col">Actions</th>
                     <th class="col">Time</th>
                   </tr>
                 </thead>
@@ -67,22 +66,20 @@
                 {% for record in records %}
                     {% if record.result|safe == "CORRECT" %}
                         <tr style="background-color: #68d959; border: 1px solid #366330;" >
-                            <td><b>{{ record.number|safe }}</b></td>
-                            <td><b>{{ record.tag|safe }}</b></td>
+                            <td><b>{{ record.count|safe }}</b></td>
+                            <td><b>{{ record.identification|safe }}</b></td>
                             <td><b>{{ record.word|safe }}</b></td>
                             <td><b>{{ record.attempt|safe }}</b></td>
                             <td><b>{{ record.result|safe }}</b></td>
-                            <td><b>{{ record.actions|safe }}</b></td>
                             <td><b>{{ record.time|safe }}</b></td>
                         </tr>
                     {% else %}
                         <tr style="background-color: #fc5a5a; border: 1px solid #613a3a;" >
-                            <td><b>{{ record.number|safe }}</b></td>
-                            <td><b>{{ record.tag|safe }}</b></td>
+                            <td><b>{{ record.count|safe }}</b></td>
+                            <td><b>{{ record.identification|safe }}</b></td>
                             <td><b>{{ record.word|safe }}</b></td>
                             <td><b>{{ record.attempt|safe }}</b></td>
                             <td><b>{{ record.result|safe }}</b></td>
-                            <td><b>{{ record.actions|safe }}</b></td>
                             <td><b>{{ record.time|safe }}</b></td>
                         </tr>
                     {% endif %}

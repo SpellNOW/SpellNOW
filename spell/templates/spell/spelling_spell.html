@@ -30,54 +30,81 @@
               </div>
               
               <div id="everything" style="display:none;">
-                <p style="color: #4d4d4d;" id="progress"></p>
-                <p style="color: #2dab26;" id="correct"></p>
-                <div class="row g-3">
-                  <div class="col-md-4">
-                    <div class="form-floating mb-3">
-                      <input type="text" class="form-control" id="spelling" spellcheck="false" autocomplete="off" name="tag" placeholder="Spelling...">
-                      <label for="spelling">Spelling</label>
+                <div style="width:100%" class="row g-3">
+                    <div style="width:50%;" class="col-md-4">
+                        <p style="color: #4d4d4d;" id="progress"></p>
+                        <p style="color: #2dab26;" id="correct"></p>
+                        <div style="width: 100%;" class="row g-3">
+                          <div style="width:80%;" class="col-md-4">
+                            <div class="form-floating mb-3">
+                              <input type="text" class="form-control" id="spelling" spellcheck="false" autocomplete="off" name="tag" placeholder="Spelling...">
+                              <label for="spelling">Spelling</label>
+                            </div>
+                          </div>
+                          <div style="width:20%;" class="col-md-4">
+                            <button type="button" class="btn btn-primary" id="check" onclick="spell()">CHECK</button>
+                          </div>
+                        </div>
+                        <p><b style="display: none;" id="response"></b></p>
+                        <button onclick="repron()" type="button" class="btn btn-secondary">Pronounce</button>
+                        <button onclick="spec()" type="button" class="btn btn-secondary">Part of Speech</button>
+                        <button onclick="origin()" type="button" class="btn btn-secondary">Language of Origin</button>
+                        <button onclick="def()" type="button" class="btn btn-secondary">Definition</button>
+                        <br><br>
+                        <p style="display:none;" id="speech"></p>
+                        <p><b>Language of Origin:</b></p>
+                        <div style="display:none;" id="origin">
+                        </div>
+                        <br>
+                        <p><b>Definition:</b></p>
+                        <div style="display:none;" id="def">
+                        </div>
                     </div>
-                  </div>
-                  <div class="col-md-4">
-                    <button type="button" class="btn btn-primary" id="check" onclick="spell()">CHECK</button>
-                  </div>
+                    {% if user.is_staff %}
+                        <div style="width:25%; display: none;" id="tags" class="col-md-4">
+                            <div style="width: 100%;" class="row g-3">
+                                <div style="width: 50%;" class="col-md-4">
+                                    <div class="form-floating mb-3">
+                                        <input style="font-size: 10px;" type="text" class="form-control" id="tag_value" spellcheck="false" autocomplete="off" name="tag" placeholder="New Tag...">
+                                        <label for="tag_value">New Tag</label>
+                                    </div>
+                                </div>
+                                <div style="width: 50%;" class="col-md-4">
+                                    <button onclick="new_tag()" type="button" class="btn btn-primary" value="Create">Create</button>
+                                </div>
+                            </div>
+                            <p><b style="display: none;" style="color:red" id="id_response">Invalid Tag Name: The tag contains three dashes (---), a quotation mark ("), a apostrophe ('), a star followed by two dots followed by a star (*..*), or a comma followed by a space (, ).</b></p>
+                            <div style="width: 100%;" class="row g-3">
+                                <div style="width: 100%;" class="col-md-4">
+                                    <div class="form-floating mb-3">
+                                        <input type="text" class="form-control" id="search_tags" spellcheck="false" autocomplete="off" name="search" placeholder="Search...">
+                                        <label for="search_tags">Search Tags</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="alltags">
+                                {% for tag in tags %}
+                                    <button style="color:rgb(13, 110, 253); background-color: rgb(255, 255, 255);" onclick="add_word('{{ tag.name }}')" id="{{ tag.name }}" type="button" class="btn btn-primary rounded-pill tag">{{ tag.name }}</button>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div style="width:25%; display: none;" id="roots" class="col-md-4">
+                            <div style="width: 100%;" class="row g-3">
+                                <div style="width: 100%;" class="col-md-4">
+                                    <div class="form-floating mb-3">
+                                        <input type="text" class="form-control" id="search_roots" spellcheck="false" autocomplete="off" name="search" placeholder="Search...">
+                                        <label for="search_roots">Search Roots</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="allroots">
+                                {% for root in roots %}
+                                    <button style="color:rgb(37, 207, 242); background-color: rgb(255, 255, 255);" onclick="add_word_root('|--|{{ root.name }}')" id="|--|{{ root.name }}" type="button" class="btn btn-info rounded-pill tag">{{ root.name }}</button>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
-                <p><b style="display: none;" id="response"></b></p>
-                <button onclick="repron()" type="button" class="btn btn-secondary">Pronounce</button>
-                <button onclick="spec()" type="button" class="btn btn-secondary">Part of Speech</button>
-                <button onclick="origin()" type="button" class="btn btn-secondary">Language of Origin</button>
-                <button onclick="def()" type="button" class="btn btn-secondary">Definition</button>
-                <br><br>
-                <div id="tags" style="display: none;">
-                  <div class="row g-3">
-                    <div class="col-md-4">
-                      <div class="form-floating mb-3">
-                        <input type="text" class="form-control" id="tag_value" spellcheck="false" autocomplete="off" name="tag" placeholder="New Tag...">
-                        <label for="spelling">New Tag</label>
-                      </div>
-                    </div>
-                    <div class="col-md-4">
-                      <button onclick="new_tag()" type="button" class="btn btn-primary" value="Create">Create</button>
-                    </div>
-                  </div>
-                  <p><b style="display: none;" style="color:red" id="id_response">Invalid Tag Name: The tag contains three dashes (---), a quotation mark ("), a apostrophe ('), a star followed by two dots followed by a star (*..*), or a comma followed by a space (, ).</b></p>
-                  <div id="alltags">
-                      {% for tag in tags %}
-                          <button style="color:rgb(13, 110, 253); background-color: rgb(255, 255, 255);" onclick="add_word('{{ tag.name }}')" id="{{ tag.name }}" type="button" class="btn btn-primary rounded-pill tag">{{ tag.name }}</button>
-                      {% endfor %}
-                  </div>
-                </div>
-                <br><br>
-                <p style="display:none;" id="speech"></p>
-                <p><b>Language of Origin:</b></p>
-                <div style="display:none;" id="origin">
-                </div>
-                <br>
-                <p><b>Definition:</b></p>
-                <div style="display:none;" id="def">
-                </div>
-                <br>
               </div>
             </div>
           </div>
@@ -86,14 +113,17 @@
       <form style="display: none;" enctype="multipart/form-data" action="{% url 'finish' %}" method="post">
         {% csrf_token %}
         <textarea name="words" id="words"></textarea>
-        <textarea name="new_tags" id="new_tags"></textarea>
-        <textarea name="add_words" id="add_words"></textarea>
-        <textarea name="tags_used" id="tags_used">{{ tags_used }}</textarea>
+        <textarea name="ids_used" id="ids_used">{{ ids_used }}</textarea>
         <textarea name="order" id="order">{{ order }}</textarea>
         <textarea name="correct_array" id="correct_array"></textarea>
         <textarea name="attempts" id="attempts"></textarea>
         <textarea name="time" id="time"></textarea>
         <input name="score" id="score">
+        {% if user.is_staff %}
+            <textarea name="new_tags" id="new_tags"></textarea>
+            <textarea name="add_words" id="add_words"></textarea>
+            <textarea name="add_words_roots" id="add_words_roots"></textarea>
+        {% endif %}
         <input id="stop" type="submit">
     </form>
     </section>
@@ -107,8 +137,6 @@
     var g_definition = "{{ definition }}";
     var g_prons = "{{ prons|safe }}";
     var correct_array = "";
-    var total_tags = "{{ final_tags }}"
-    const lalith = total_tags.split('&gt;&lt;');
     const words = JSON.parse(g_words);
     const speech = JSON.parse(g_speech);
     const origins = g_origin.split("|=[]=|");
@@ -116,7 +144,7 @@
     const definition = g_definition.split("|=[]=|");
     definition.pop();
     const prons = g_prons.split(' || ');
-    
+
     var global_count = 0;
     var correct = 0;
     var progress = 0;
@@ -201,7 +229,11 @@
                 document.getElementById("response").style.display = "block";
                 document.getElementById("response").style.color = "red";
                 document.getElementById("response").innerHTML = "INCORRECT: The correct spelling is '" + words[global_count] + "'.";
-                document.getElementById("tags").style.display = "block";
+                try {
+                    document.getElementById("tags").style.display = "block";
+                    document.getElementById("roots").style.display = "block";
+                }
+                catch(err) {}
                 document.getElementById("check").innerHTML = "NEXT";
                 if (global_count + 1 == word_count) {
                     document.getElementById("check").innerHTML = "FINISH";
@@ -212,17 +244,30 @@
                 document.getElementById("correct").innerHTML = ("<b>Correct: </b>" + correct + "/" + progress);
                 document.getElementById("attempts").innerHTML += (document.getElementById("spelling").value.toLowerCase() + ", ");
                 
-                const tester = lalith[global_count].split("&lt;&gt;");
-                for (let i = 0; i < tester.length; i++) {
-                    document.getElementById(tester[i]).style.color = "rgb(255, 255, 255)";
-                    document.getElementById(tester[i]).style.backgroundColor = "rgb(13, 110, 253)";
+                try {
+                    const tester = lalith[global_count].split("&lt;&gt;");
+                    for (let i = 0; i < tester.length; i++) {
+                        document.getElementById(tester[i]).style.color = "rgb(255, 255, 255)";
+                        document.getElementById(tester[i]).style.backgroundColor = "rgb(13, 110, 253)";
+                    }
+
+                    const bob = rahil[global_count].split("&lt;&gt;");
+                    for (let i = 0; i < bob.length; i++) {
+                        document.getElementById("|--|" + bob[i]).style.color = "rgb(255, 255, 255)";
+                        document.getElementById("|--|" + bob[i]).style.backgroundColor = "rgb(37, 207, 242)";
+                    }
                 }
+                catch(err) {}
             }
             else {
                 document.getElementById("response").style.display = "block";
                 document.getElementById("response").style.color = "green";
                 document.getElementById("response").innerHTML = "CORRECT!";
-                document.getElementById("tags").style.display = "block";
+                try {
+                    document.getElementById("tags").style.display = "block";
+                    document.getElementById("roots").style.display = "block";
+                }
+                catch(err) {}
                 document.getElementById("check").innerHTML = "NEXT";
                 if (global_count + 1 == word_count) {
                     document.getElementById("check").innerHTML = "FINISH";
@@ -234,26 +279,49 @@
                 document.getElementById("correct").innerHTML = ("<b>Correct: </b>" + correct + "/" + progress);
                 document.getElementById("attempts").innerHTML += (document.getElementById("spelling").value.toLowerCase() + ", ");
 
-                const tester = lalith[global_count].split("&lt;&gt;");
-                for (let i = 0; i < tester.length; i++) {
-                    document.getElementById(tester[i]).style.color = "rgb(255, 255, 255)";
-                    document.getElementById(tester[i]).style.backgroundColor = "rgb(13, 110, 253)";
+                try {
+                    const tester = lalith[global_count].split("&lt;&gt;");
+                    for (let i = 0; i < tester.length; i++) {
+                        document.getElementById(tester[i]).style.color = "rgb(255, 255, 255)";
+                        document.getElementById(tester[i]).style.backgroundColor = "rgb(13, 110, 253)";
+                    }
+
+                    const bob = rahil[global_count].split("&lt;&gt;");
+                    for (let i = 0; i < tester.length; i++) {
+                        document.getElementById("|--|" + bob[i]).style.color = "rgb(255, 255, 255)";
+                        document.getElementById("|--|" + bob[i]).style.backgroundColor = "rgb(37, 207, 242)";
+                    }
                 }
+                catch(err) {}
             }
         }
         else if (document.getElementById("check").innerHTML == "NEXT") {
             document.getElementById("response").style.display = "none";
-            document.getElementById("tags").style.display = "none";
+            try {
+                document.getElementById("tags").style.display = "none";
+                document.getElementById("roots").style.display = "none";
+            }
+            catch(err) {}
             document.getElementById("speech").style.display = "none";
             document.getElementById("origin").style.display = "none";
             document.getElementById("def").style.display = "none";
             document.getElementById("spelling").value = "";
             document.getElementById("check").innerHTML = "CHECK"
-            const nodeList = document.querySelectorAll(".tag");
-            for (let i = 0; i < nodeList.length; i++) {
-                nodeList[i].style.color = "rgb(13, 110, 253)";
-                nodeList[i].style.backgroundColor = "rgb(255, 255, 255)";
-            }
+
+            try {
+                document.getElementById("alltags").innerHTML = ""
+                document.getElementById("allroots").innerHTML = ""
+                for(var i = 0; i < alltags.length; i++) {
+                    document.getElementById("alltags").innerHTML += '<button style="color:rgb(13, 110, 253); background-color: rgb(255, 255, 255);" onclick="add_word(\'' + alltags[i] + '\')" id="' + alltags[i] + '" type="button" class="btn btn-primary rounded-pill tag">' + alltags[i] + '</button>'
+                }
+                for(var i = 0; i < allroots.length; i++) {
+                    document.getElementById("allroots").innerHTML += '<button style="color:rgb(37, 207, 242); background-color: rgb(255, 255, 255);" onclick="add_word_root(\'|--|' + allroots[i] + '\')" id="' + allroots[i] + '" type="button" class="btn btn-info rounded-pill tag">' + allroots[i] + '</button>'
+                }
+                document.getElementById("search_tags").value = ""
+                document.getElementById("search_roots").value = ""
+                }
+            catch(err) {}
+
             global_count += 1;
             
             document.getElementById("time").innerHTML += (watch + ", ");
@@ -267,43 +335,6 @@
             document.getElementById("correct_array").innerHTML = correct_array;
             document.getElementById("score").value = (correct + "/" + word_count);
             document.getElementById('stop').click();
-        }
-    }
-
-    function add_word(tag) {
-        if (document.getElementById(tag).style.color == "rgb(13, 110, 253)" || document.getElementById(tag).style.color == "") {
-            document.getElementById(tag).style.color = "rgb(255, 255, 255)";
-            document.getElementById(tag).style.backgroundColor = "rgb(13, 110, 253)";
-            var thing = "---" + tag + "||" + words[global_count] + "[]";
-            document.getElementById("add_words").innerHTML = (document.getElementById("add_words").innerHTML).replace(thing, '');
-            const tester = lalith[global_count].split("&lt;&gt;");
-            if (!tester.includes(tag)) {
-                document.getElementById("add_words").innerHTML += tag + "||" + words[global_count] + "[]";
-            }
-        }
-        else {
-            document.getElementById(tag).style.color = "rgb(13, 110, 253)";
-            document.getElementById(tag).style.backgroundColor = "rgb(255, 255, 255)";
-            var thing = tag + "||" + words[global_count] + "[]";
-            document.getElementById("add_words").innerHTML = (document.getElementById("add_words").innerHTML).replace(thing, '');
-            const tester = lalith[global_count].split("&lt;&gt;");
-            if (tester.includes(tag)) {
-                document.getElementById("add_words").innerHTML += ("---" + tag + "||" + words[global_count] + "[]");
-            }
-        }
-    }
-
-    function new_tag() {
-        name = document.getElementById("tag_value").value;
-        if (!((name.includes("---")) || (name.includes('"')) || (name.includes("'")) || (name.includes("*..*")) || (name.includes(", ")) || (name == ""))) {
-            document.getElementById("tag_value").value = "";
-            other_name = "add_word('" + name + "')";
-            document.getElementById("alltags").innerHTML += '<button style="color:rgb(13, 110, 253); background-color: rgb(255, 255, 255);" onclick="' + other_name + '" id="' + name + '" type="button" class="btn btn-primary rounded-pill tag">' + name + '</button>'
-            document.getElementById("new_tags").innerHTML += (name + "[]")
-            document.getElementById("id_response").style.display = "none";
-        }
-        else {
-            document.getElementById("id_response").style.display = "block";
         }
     }
 
@@ -330,26 +361,132 @@
         document.getElementById("def").style.display = "block";
     }
 
-
-    var usings = (document.getElementById("tags_used").innerHTML).split(", ");
-    var orders = (document.getElementById("order").innerHTML).split(", ");
-
-    for (user of usings) {
-        if (!(orders.includes(user))) {
-            if (document.getElementById("not_included").innerHTML == "") {
-                document.getElementById("not_included").innerHTML += ("Due to word overlap, the following tags are not included: " + user + ", ");
-            }
-            else {
-                document.getElementById("not_included").innerHTML += (user + ", ");
-            }
-        }
-    }
     var arrayLength = words.length;
     for (var i = 0; i < arrayLength; i++) {
         document.getElementById("words").innerHTML += (words[i] + ", ");
     }
     document.getElementById("progress").innerHTML = ("<b>Progress: </b>0/" + word_count);
     document.getElementById("correct").innerHTML = ("<b>Correct: </b>0/0");
-
 </script>
+
+{% if user.is_staff %}
+<script>
+    var total_tags = "{{ final_tags }}";
+    var g_alltags = "{{ alltags }}";
+    const alltags = g_alltags.split("*..*");
+    alltags.pop();
+    const lalith = total_tags.split('&gt;&lt;');
+    const lucky = total_tags.split('&gt;&lt;')
+    var total_roots = "{{ final_roots }}";
+    var g_allroots = "{{ allroots }}";
+    const allroots = g_allroots.split("*..*");
+    allroots.pop();
+    const rahil = total_roots.split('&gt;&lt;');
+    const kabra = total_roots.split('&gt;&lt;')
+
+    function add_word(tag) {
+        if (document.getElementById(tag).style.color == "rgb(13, 110, 253)" || document.getElementById(tag).style.color == "") {
+            document.getElementById(tag).style.color = "rgb(255, 255, 255)";
+            document.getElementById(tag).style.backgroundColor = "rgb(13, 110, 253)";
+            var thing = tag + "||" + words[global_count] + "[]";
+            document.getElementById("add_words").innerHTML = (document.getElementById("add_words").innerHTML).replace(("---" + thing), '');
+            const tester = lucky[global_count].split("&lt;&gt;");
+            if (!tester.includes(tag)) {
+                document.getElementById("add_words").innerHTML += thing;
+            }
+            lalith[global_count] += ("&lt;&gt;" + tag);
+        }
+        else {
+            document.getElementById(tag).style.color = "rgb(13, 110, 253)";
+            document.getElementById(tag).style.backgroundColor = "rgb(255, 255, 255)";
+            var thing = tag + "||" + words[global_count] + "[]";
+            document.getElementById("add_words").innerHTML = (document.getElementById("add_words").innerHTML).replace(thing, '');
+            const tester = lucky[global_count].split("&lt;&gt;");
+            console.log(tester);
+            console.log(tester.includes(tag));
+            if (tester.includes(tag)) {
+                document.getElementById("add_words").innerHTML += ("---" + thing);
+            }
+            lalith[global_count] = lalith[global_count].replace(("&lt;&gt;" + tag), "");
+        }
+    }
+
+    function add_word_root(tag) {
+        coolit = tag.replace("|--|", "");
+
+        if (document.getElementById(tag).style.color == "rgb(37, 207, 242)" || document.getElementById(tag).style.color == "") {
+            document.getElementById(tag).style.color = "rgb(255, 255, 255)";
+            document.getElementById(tag).style.backgroundColor = "rgb(37, 207, 242)";
+            var thing = coolit + "||" + words[global_count] + "[]";
+            document.getElementById("add_words_roots").innerHTML = (document.getElementById("add_words_roots").innerHTML).replace(("---" + thing), '');
+            const tester = kabra[global_count].split("&lt;&gt;");
+            if (!tester.includes(coolit)) {
+                document.getElementById("add_words_roots").innerHTML += thing;
+            }
+            rahil[global_count] += ("&lt;&gt;" + coolit);
+        }
+        else {
+            document.getElementById(tag).style.color = "rgb(37, 207, 242)";
+            document.getElementById(tag).style.backgroundColor = "rgb(255, 255, 255)";
+            var thing = coolit + "||" + words[global_count] + "[]";
+            document.getElementById("add_words_roots").innerHTML = (document.getElementById("add_words_roots").innerHTML).replace(thing, '');
+            const tester = kabra[global_count].split("&lt;&gt;");
+            if (tester.includes(coolit)) {
+                document.getElementById("add_words_roots").innerHTML += ("---" + thing);
+            }
+            rahil[global_count] = rahil[global_count].replace(("&lt;&gt;" + coolit), "");
+        }
+    }
+
+    function new_tag() {
+        name = document.getElementById("tag_value").value;
+        if (!((name.includes("---")) || (name.includes('"')) || (name.includes("'")) || (name.includes("*..*")) || (name.includes(", ")) || (name == "") || (alltags.includes(name)))) {
+            document.getElementById("tag_value").value = "";
+            other_name = "add_word('" + name + "')";
+            document.getElementById("alltags").innerHTML += '<button style="color:rgb(13, 110, 253); background-color: rgb(255, 255, 255);" onclick="' + other_name + '" id="' + name + '" type="button" class="btn btn-primary rounded-pill tag">' + name + '</button>'
+            alltags.push(name);
+            document.getElementById("new_tags").innerHTML += (name + "[]")
+            document.getElementById("id_response").style.display = "none";
+        }
+        else {
+            document.getElementById("id_response").style.display = "block";
+        }
+    }
+
+    document.addEventListener("keyup", function(event) {
+        if (document.activeElement.id == "search_tags") {
+            document.getElementById("alltags").innerHTML = "";
+            for(var i = 0; i < alltags.length; i++) {
+                if ((alltags[i].toLowerCase()).startsWith(document.getElementById("search_tags").value.toLowerCase())) {
+                    document.getElementById("alltags").innerHTML += '<button style="color:rgb(13, 110, 253); background-color: rgb(255, 255, 255);" onclick="add_word(\'' + alltags[i] + '\')" id="' + alltags[i] + '" type="button" class="btn btn-primary rounded-pill tag">' + alltags[i] + '</button>'
+                }
+            }
+            const tester = lalith[global_count].split("&lt;&gt;");
+            for (let i = 0; i < tester.length; i++) {
+                try {
+                    document.getElementById(tester[i]).style.color = "rgb(255, 255, 255)";
+                    document.getElementById(tester[i]).style.backgroundColor = "rgb(13, 110, 253)";
+                }
+                catch(err) {}
+            }
+        }
+        else if (document.activeElement.id == "search_roots") {
+            document.getElementById("allroots").innerHTML = "";
+            for(var i = 0; i < allroots.length; i++) {
+                if ((allroots[i].toLowerCase()).startsWith(document.getElementById("search_roots").value.toLowerCase())) {
+                    document.getElementById("allroots").innerHTML += '<button style="color:rgb(37, 207, 242); background-color: rgb(255, 255, 255);" onclick="add_word_root(\'|--|' + allroots[i] + '\')" id="' + allroots[i] + '" type="button" class="btn btn-info rounded-pill tag">' + allroots[i] + '</button>'
+                }
+            }
+            const tester = rahil[global_count].split("&lt;&gt;");
+            for (let i = 0; i < tester.length; i++) {
+                try {
+                    document.getElementById(tester[i]).style.color = "rgb(255, 255, 255)";
+                    document.getElementById(tester[i]).style.backgroundColor = "rgb(37, 207, 242)";
+                }
+                catch(err) {}
+            }
+        }
+    });
+</script>
+{% endif %}
 {% endblock %}
