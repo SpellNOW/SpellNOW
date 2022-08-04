@@ -1845,19 +1845,22 @@ def changedetails(request):
         late = EmailValidate(userid=request.user.id, email=request.POST["email"], lock1=it1, lock2=it2)
         late.save()
         
-        msg = MIMEMultipart()
-        msg['Subject'] = 'Official SpellNOW! Notification! -- Validate Email'
-        msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
-        msg["To"] = request.POST["email"]
-        body_text = """Hello!\n\nThis is an official SpellNOW! Notification. You have recently requested to change the email address associated with your SpellNOW! account. As per SpellNOW! policy you must click the link below to validate your email address.\n\nhttps://spellnow.org/validatemail/""" + str(request.user.id) + """-""" + str(it1) + """-""" + str(it2) + """\n\nThank you, and we hope you enjoy your continued use of SpellNOW!\n\nSincerely,\nSpellNOW! Support Team"""
-        body_part = MIMEText(body_text, 'plain')
-        msg.attach(body_part)
-        with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
-            smtp_obj.ehlo()
-            smtp_obj.starttls()
-            smtp_obj.ehlo()
-            smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
-            smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
+        try:
+            msg = MIMEMultipart()
+            msg['Subject'] = 'Official SpellNOW! Notification! -- Validate Email'
+            msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
+            msg["To"] = request.POST["email"]
+            body_text = """Hello!\n\nThis is an official SpellNOW! Notification. You have recently requested to change the email address associated with your SpellNOW! account. As per SpellNOW! policy you must click the link below to validate your email address.\n\nhttps://spellnow.org/validatemail/""" + str(request.user.id) + """-""" + str(it1) + """-""" + str(it2) + """\n\nThank you, and we hope you enjoy your continued use of SpellNOW!\n\nSincerely,\nSpellNOW! Support Team"""
+            body_part = MIMEText(body_text, 'plain')
+            msg.attach(body_part)
+            with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
+                smtp_obj.ehlo()
+                smtp_obj.starttls()
+                smtp_obj.ehlo()
+                smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
+                smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
+        except:
+            pass
         
         return HttpResponseRedirect(reverse("informvalidation"))
 
