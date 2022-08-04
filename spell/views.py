@@ -1,3 +1,4 @@
+
 from importlib.metadata import distribution
 from operator import ilshift
 from re import L
@@ -1848,8 +1849,7 @@ def changedetails(request):
         msg['Subject'] = 'Official SpellNOW! Notification! -- Validate Email'
         msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
         msg["To"] = request.POST["email"]
-        body_text = """Hello!\n\nThis is an official SpellNOW! Notification. You have recently requested to change the email address associated with your SpellNOW! account. As per SpellNOW! policy you must click the link below to validate your email address.\n\nhttp://127.0.0.1:8000/validatemail/""" + str(request.user.id) + """-""" + str(it1) + """-""" + str(it2) + """\n\nThank you, and we hope you enjoy your continued use of SpellNOW!\n\nSincerely,\nSpellNOW! Support Team"""
-
+        body_text = """Hello!\n\nThis is an official SpellNOW! Notification. You have recently requested to change the email address associated with your SpellNOW! account. As per SpellNOW! policy you must click the link below to validate your email address.\n\nhttps://spellnow.org/validatemail/""" + str(request.user.id) + """-""" + str(it1) + """-""" + str(it2) + """\n\nThank you, and we hope you enjoy your continued use of SpellNOW!\n\nSincerely,\nSpellNOW! Support Team"""
         body_part = MIMEText(body_text, 'plain')
         msg.attach(body_part)
         with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
