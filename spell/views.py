@@ -384,9 +384,8 @@ def admin_panel(request):
                 corrsperc = 0
         
         tagcount = []
-        for report in Report.objects.filter(user=userusing, specific=False, finished__gt=datetime.date.today()):
-            cool = (report.used).split(", ")
-            tagcount.extend(cool)
+        for report in Report.objects.filter(user=userusing, specific=True, finished__gt=datetime.date.today()):
+            tagcount.append(report.used)
         tagcount = list(dict.fromkeys(tagcount))
         alltags = tagcount
         tagcount = len(tagcount)
@@ -427,7 +426,7 @@ def admin_panel(request):
                 correct += report.correct
                 total += report.total
             
-            tagrep.append([{'tag': tag, 'correct': correct, 'total': total, 'percent': int((correct / total) * 100)}])
+            tagrep.append({'tag': tag, 'correct': correct, 'total': total, 'percent': int((correct / total) * 100)})
         
         toppers = sorted(tagrep, key=lambda d: d['percent'])[:5]
         
