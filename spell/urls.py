@@ -6,12 +6,13 @@ urlpatterns = [
     # Homepage
     path("", views.index, name="index"),
     path("contact", views.contact, name="contact"),
-    path("contactus", views.contactus, name="contactus"),
-    path("contactrender", views.contactrender, name="contactrender"),
 
     # Authorization pages
     path("login", views.login, name="login"),
     path("register", views.register, name="register"),
+    path("single_register", views.single_register, name="single_register"),
+    path("uservalidate/<int:userit>-<int:lockit1>-<int:lockit2>", views.uservalidate, name="uservalidate"),
+    path("deleteuser/<int:id>", views.deleteuser, name="deleteuser"),
     path("logout", views.logout, name="logout"),
 
     # Dashboard
@@ -50,8 +51,9 @@ urlpatterns = [
     # Error
     path("error_404", views.error_404, name="error_404"),
 
-    # Profile
+    # Manage Profile
     path("profile", views.profile, name="profile"),
+    path("deleteuser/<int:id>", views.deleteuser, name="deleteuser"),
 
     # Change Details
 

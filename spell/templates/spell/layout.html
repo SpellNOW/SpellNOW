@@ -133,33 +133,35 @@
           </ul>
         </li><!-- End Components Nav -->
       {% endif %}
+      
+      {% if not question.parent %}
+        <li class="nav-item">
+          <a id="activities" class="nav-link collapsed" data-bs-target="#activities-components-nav" data-bs-toggle="collapse" href="#">
+            <i class="bi bi-grid"></i><span>Activities</span><i class="bi bi-chevron-down ms-auto"></i>
+          </a>
+          <ul id="activities-components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+            <li>
+              <a id="spellit" href="/start">
+                <i class="bi bi-circle"></i><span>Spelling</span>
+              </a>
+            </li>
+            <li>
+              <a href="#">
+                <i class="bi bi-circle"></i><span>Vocabulary</span>
+              </a>
+            </li>
+            <li>
+              <a href="#">
+                <i class="bi bi-circle"></i><span>Roots</span>
+              </a>
 
-      <li class="nav-item">
-        <a id="activities" class="nav-link collapsed" data-bs-target="#activities-components-nav" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-grid"></i><span>Activities</span><i class="bi bi-chevron-down ms-auto"></i>
-        </a>
-        <ul id="activities-components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-          <li>
-            <a id="spellit" href="/start">
-              <i class="bi bi-circle"></i><span>Spelling</span>
-            </a>
-          </li>
-          <li>
-            <a href="#">
-              <i class="bi bi-circle"></i><span>Vocabulary</span>
-            </a>
-          </li>
-          <li>
-            <a href="#">
-              <i class="bi bi-circle"></i><span>Roots</span>
-            </a>
-
-            <a href="#">
-              <i class="bi bi-circle"></i><span>Games</span>
-            </a>
-          </li>
-        </ul>
-      </li><!-- End Components Nav -->
+              <a href="#">
+                <i class="bi bi-circle"></i><span>Games</span>
+              </a>
+            </li>
+          </ul>
+        </li><!-- End Components Nav -->
+      {% endif %}
 
       <li class="nav-item">
         <a id="reports" class="nav-link collapsed" href="/reports">
@@ -171,15 +173,17 @@
       <li class="nav-heading">Pages</li>
 
       {% if not question.subscribed %}
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-          You are currently using the free trial version of SpellNOW!&trade;. Your free trial will end in {{ question.daysleft }} days. Click the link below to subscribe!
-        </div>
-        <li class="nav-item">
-          <a id="subscribe" class="nav-link collapsed" href="#">
-            <i class="bi bi-currency-dollar"></i>
-            <span>Subscribe</span>
-          </a>
-        </li>
+        {% if not question.parent %}
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            You are currently using the free trial version of SpellNOW!&trade;. Your free trial will end in {{ question.daysleft }} days. Click the link below to subscribe!
+          </div>
+          <li class="nav-item">
+            <a id="subscribe" class="nav-link collapsed" href="#">
+              <i class="bi bi-currency-dollar"></i>
+              <span>Subscribe</span>
+            </a>
+          </li>
+        {% endif %}
       {% endif %}
       <li class="nav-item">
         <a id="profilit" class="nav-link collapsed" href="/profile">

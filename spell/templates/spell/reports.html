@@ -17,36 +17,67 @@
 
     
     <section class="section">
-      <div class="row">
-        <div class="col-lg-12">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Reports</h5>
-              <table class="table datatable">
-                <thead>
-                    <tr>
-                      <th scope="col">Date Completed</th>
-                      <th scope="col">Correct Attempts</th>
-                      <th scope="col">Total Attempted</th>
-                      <th scope="col">Percent</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for report in reports %}
-                        <tr>
-                            <td scope="row">{{ report.finished }} EST</td>
-                            <td style="color: #2dab26"><b>{{ report.correct }}</b></td>
-                            <td><b>{{ report.total }}</b></td>
-                            <td><b>{{ report.percent }}%</b></td>
-                            <td><a href="/report/{{ report.id }}"><button type="button" class="btn btn-primary">Details</button></a></td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-              </table>
+      {% if children %}
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Select Student</h5>
+
+            <!-- Pills Tabs -->
+            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+              {% for child in children %}
+                <li class="nav-item" role="presentation">
+                  <form action="/reports" method="post">
+                    {% csrf_token %}
+                    <input style="display: none;" name="child" value="{{ child.id }}">
+                    <button class="nav-link" id="pills-home-tab-{{ child.id }}" data-bs-toggle="pill" data-bs-target="#pills-home" type="submit" role="tab" aria-controls="pills-home" aria-selected="true">{{ child.first_name }} {{ child.last_name }}</button>
+                  </form>
+                </li>
+              {% endfor %}
+            </ul>
+
+          </div>
+        </div>
+      {% endif %}
+      {% if ready %}
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Reports</h5>
+                <table class="table datatable">
+                  <thead>
+                      <tr>
+                        <th scope="col">Date Completed</th>
+                        <th scope="col">Correct Attempts</th>
+                        <th scope="col">Total Attempted</th>
+                        <th scope="col">Percent</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      {% for report in reports %}
+                          <tr>
+                              <td scope="row">{{ report.finished }} EST</td>
+                              <td style="color: #2dab26"><b>{{ report.correct }}</b></td>
+                              <td><b>{{ report.total }}</b></td>
+                              <td><b>{{ report.percent }}%</b></td>
+                              <td><a href="/report/{{ report.id }}"><button type="button" class="btn btn-primary">Details</button></a></td>
+                          </tr>
+                      {% endfor %}
+                  </tbody>
+                </table>
+                </div>
               </div>
             </div>
           </div>
         </div>
+      {% endif %}
     </section>
   </main><!-- End #main -->
+
+  <script>
+    window.addEventListener('load', (event) => {
+      var child = "pills-home-tab-{{ child }}";
+      document.getElementById(child).classList.add("active");
+    });
+  </script>
 {% endblock %}

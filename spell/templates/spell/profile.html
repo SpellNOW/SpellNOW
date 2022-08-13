@@ -34,6 +34,12 @@
                   <li class="nav-item">
                     <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#profile-edit">Edit Profile</button>
                   </li>
+                  
+                  {% if question.parent %}
+                    <li class="nav-item">
+                      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#manage-students">Manage Students</button>
+                    </li>
+                  {% endif %}
 
                   <li class="nav-item">
                     <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-settings">Settings</button>
@@ -51,6 +57,12 @@
                     <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-edit">Edit Profile</button>
                   </li>
 
+                  {% if question.parent %}
+                    <li class="nav-item">
+                      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#manage-students">Manage Students</button>
+                    </li>
+                  {% endif %}
+
                   <li class="nav-item">
                     <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-settings">Settings</button>
                   </li>
@@ -66,6 +78,12 @@
                   <li class="nav-item">
                     <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-edit">Edit Profile</button>
                   </li>
+
+                  {% if question.parent %}
+                    <li class="nav-item">
+                      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#manage-students">Manage Students</button>
+                    </li>
+                  {% endif %}
 
                   <li class="nav-item">
                     <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-settings">Settings</button>
@@ -147,6 +165,55 @@
                     </form><!-- End Profile Edit Form -->
   
                   </div>
+                  {% if question.parent %}
+                    <div class="tab-pane fade pt-3" id="manage-students">
+                      <p>Manage billing for each of your students below. Click <a href="/single_register">here</a> to add new students to your profile.</p>
+                      <table class="table">
+                        <thead>
+                          <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for child in question.children.all %}
+                            <tr>
+                              <td scope="row">{{ child.first_name }} {{ child.last_name }}</td>
+                              {% if child.locked %}
+                                <td style="color: #fc5a5a;"><b>Account Locked</b> -- This student account has been locked, it will be unlocked once you have subscribed.</td>
+                                <td><a href="#"><button type="button" class="btn btn-success">Subscribe!</button></a></td>
+                                <td><a href="#"><button type="button" class="btn btn-danger">Delete Student</button></a></td>
+                              {% elif child.subscribed %}
+                                <td style="color: #68d959;"><b>Subscribed!</b> -- This student account is subscribed to the SpellNOW&trade; suite of services. In order to change billing details or unsubscribe, click "Details".</td>
+                                <td><a href="#"><button type="button" class="btn btn-primary">Details</button></a></td>
+                              {% else %}
+                                <td style="color: #fc5a5a;"><b>Free Trial</b> -- This student account is using the free trial version of SpellNOW&trade;. The free trial will expire in <b>{{ child.daysleft }} days.</b></td>
+                                <td><a href="#"><button type="button" class="btn btn-success">Subscribe!</button></a></td>
+                                <td><button data-bs-toggle="modal" data-bs-target="#verticalycentered" type="button" class="btn btn-danger">Delete Student</button></td>
+                                <div class="modal fade" id="verticalycentered" tabindex="-1">
+                                  <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                      <div class="modal-header">
+                                        <h5 class="modal-title">User Deletion Agreement</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                      </div>
+                                      <div class="modal-body">
+                                        By requesting account deletion for this student, you understand that the student will lose the ability to access SpellNOW!&trade; activities including spelling, vocabulary, and root practices, as well as games. The student will also be unable to view and access the SpellNOW!&trade; database including word information and associations. You will also lose all available data regarding this student's activity, specifically reports. The student also won't be able to login to their account again. You understand the SpellNOW!&trade; <a href="#">billing policy</a> and that you will not receive a refund for cancelling your subscription regardless of the remaining length of your subscription cycle. To continue deleting your account, click the button below.
+                                      </div>
+                                      <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        <a href="/deleteuser/{{ child.id }}"><button type="button" class="btn btn-danger">Delete Student</button></a>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              {% endif %}
+                            </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  {% endif %}
                   <div class="tab-pane fade pt-3" id="profile-settings">
 
                     <!-- Settings Form -->
@@ -298,6 +365,55 @@
                     </form><!-- End Profile Edit Form -->
 
                   </div>
+                  {% if question.parent %}
+                    <div class="tab-pane fade pt-3" id="manage-students">
+                      <p>Manage billing for each of your students below. Click <a href="/single_register">here</a> to add new students to your profile.</p>
+                      <table class="table">
+                        <thead>
+                          <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for child in question.children.all %}
+                            <tr>
+                              <td scope="row">{{ child.first_name }} {{ child.last_name }}</td>
+                              {% if child.locked %}
+                                <td style="color: #fc5a5a;"><b>Account Locked</b> -- This student account has been locked, it will be unlocked once you have subscribed.</td>
+                                <td><a href="#"><button type="button" class="btn btn-success">Subscribe!</button></a></td>
+                                <td><a href="#"><button type="button" class="btn btn-danger">Delete Student</button></a></td>
+                              {% elif child.subscribed %}
+                                <td style="color: #68d959;"><b>Subscribed!</b> -- This student account is subscribed to the SpellNOW&trade; suite of services. In order to change billing details or unsubscribe, click "Details".</td>
+                                <td><a href="#"><button type="button" class="btn btn-primary">Details</button></a></td>
+                              {% else %}
+                                <td style="color: #fc5a5a;"><b>Free Trial</b> -- This student account is using the free trial version of SpellNOW&trade;. The free trial will expire in <b>{{ child.daysleft }} days.</b></td>
+                                <td><a href="#"><button type="button" class="btn btn-success">Subscribe!</button></a></td>
+                                <td><button data-bs-toggle="modal" data-bs-target="#delusermodal{{ child.id }}" type="button" class="btn btn-danger">Delete Student</button></td>
+                                <div class="modal fade" id="delusermodal{{ child.id }}" tabindex="-1">
+                                  <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                      <div class="modal-header">
+                                        <h5 class="modal-title">User Deletion Agreement</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                      </div>
+                                      <div class="modal-body">
+                                        By requesting account deletion for this student, you understand that the student will lose the ability to access SpellNOW!&trade; activities including spelling, vocabulary, and root practices, as well as games. The student will also be unable to view and access the SpellNOW!&trade; database including word information and associations. You will also lose all available data regarding this student's activity, specifically reports. The student also won't be able to login to their account again. You understand the SpellNOW!&trade; <a href="#">billing policy</a> and that you will not receive a refund for cancelling your subscription regardless of the remaining length of your subscription cycle. To continue deleting your account, click the button below.
+                                      </div>
+                                      <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        <a href="/deleteuser/{{ child.id }}"><button type="button" class="btn btn-danger">Delete Student</button></a>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              {% endif %}
+                            </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  {% endif %}
                   <div class="tab-pane fade pt-3" id="profile-settings">
 
                     <!-- Settings Form -->
@@ -459,6 +575,55 @@
                     </form><!-- End Profile Edit Form -->
 
                   </div>
+                  {% if question.parent %}
+                    <div class="tab-pane fade pt-3" id="manage-students">
+                      <p>Manage billing for each of your students below. Click <a href="/single_register">here</a> to add a new student to your profile.</p>
+                      <table class="table">
+                        <thead>
+                          <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for child in question.children.all %}
+                            <tr>
+                              <td scope="row">{{ child.first_name }} {{ child.last_name }}</td>
+                              {% if child.locked %}
+                                <td style="color: #fc5a5a;"><b>Account Locked</b> -- This student account has been locked, it will be unlocked once you have subscribed.</td>
+                                <td><a href="#"><button type="button" class="btn btn-success">Subscribe!</button></a></td>
+                                <td><a href="#"><button type="button" class="btn btn-danger">Delete Student</button></a></td>
+                              {% elif child.subscribed %}
+                                <td style="color: #68d959;"><b>Subscribed!</b> -- This student account is subscribed to the SpellNOW&trade; suite of services. In order to change billing details or unsubscribe, click "Details".</td>
+                                <td><a href="#"><button type="button" class="btn btn-primary">Details</button></a></td>
+                              {% else %}
+                                <td style="color: #fc5a5a;"><b>Free Trial</b> -- This student account is using the free trial version of SpellNOW&trade;. The free trial will expire in <b>{{ child.daysleft }} days.</b></td>
+                                <td><a href="#"><button type="button" class="btn btn-success">Subscribe!</button></a></td>
+                                <td><button data-bs-toggle="modal" data-bs-target="#verticalycentered" type="button" class="btn btn-danger">Delete Student</button></td>
+                                <div class="modal fade" id="verticalycentered" tabindex="-1">
+                                  <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                      <div class="modal-header">
+                                        <h5 class="modal-title">User Deletion Agreement</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                      </div>
+                                      <div class="modal-body">
+                                        By requesting account deletion for this student, you understand that the student will lose the ability to access SpellNOW!&trade; activities including spelling, vocabulary, and root practices, as well as games. The student will also be unable to view and access the SpellNOW!&trade; database including word information and associations. You will also lose all available data regarding this student's activity, specifically reports. The student also won't be able to login to their account again. You understand the SpellNOW!&trade; <a href="#">billing policy</a> and that you will not receive a refund for cancelling your subscription regardless of the remaining length of your subscription cycle. To continue deleting your account, click the button below.
+                                      </div>
+                                      <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        <a href="/deleteuser/{{ child.id }}"><button type="button" class="btn btn-danger">Delete Student</button></a>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              {% endif %}
+                            </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  {% endif %}
                   <div class="tab-pane fade pt-3" id="profile-settings">
 
                     <!-- Settings Form -->

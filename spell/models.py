@@ -1,6 +1,7 @@
 from django.db import models
 from django.forms import BooleanField
 from django.contrib.auth.models import User
+from django import forms
 
 # Create your models here.
 class Account(User):
@@ -11,6 +12,18 @@ class Account(User):
     customer_id = models.TextField(max_length=300, null=True, blank=True)
     changenotifs = models.BooleanField()
     newsletter = models.BooleanField()
+    parent = models.BooleanField()
+    children = models.ManyToManyField("Account", blank=True)
+
+class ConfirmReq(models.Model):
+    fname = models.TextField(max_length=300)
+    lname = models.TextField(max_length=300)
+    username = models.TextField(max_length=300)
+    email = models.TextField(max_length=300)
+    password = models.CharField(max_length=255)
+    parent = models.IntegerField(null=True, blank=True)
+    lock1 = models.IntegerField()
+    lock2 = models.IntegerField()
 
 class Word(models.Model):
     word = models.TextField(max_length=100)
@@ -47,7 +60,7 @@ class ReportDetail(models.Model):
     attempt = models.TextField()
     result = models.TextField(max_length=10)
     time = models.TextField(max_length=600)
-    iid = models.IntegerField()
+    report = models.ForeignKey(Report, on_delete=models.CASCADE)
 
 class Root(models.Model):
     name = models.TextField(max_length=100)

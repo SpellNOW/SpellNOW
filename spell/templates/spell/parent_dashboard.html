@@ -17,6 +17,26 @@
     </div><!-- End Page Title -->
 
     <section class="section dashboard">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Select Student</h5>
+
+          <!-- Pills Tabs -->
+          <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+            {% for child in children %}
+              <li class="nav-item" role="presentation">
+                <form action="/admin_panel" method="post">
+                  {% csrf_token %}
+                  <input style="display: none;" name="child" value="{{ child.id }}">
+                  <button class="nav-link" id="pills-home-tab-{{ child.id }}" data-bs-toggle="pill" data-bs-target="#pills-home" type="submit" role="tab" aria-controls="pills-home" aria-selected="true">{{ child.first_name }} {{ child.last_name }}</button>
+                </form>
+              </li>
+            {% endfor %}
+          </ul>
+
+        </div>
+      </div>
+      {% if ready %}
       <div class="row">
 
         <!-- Left side columns -->
@@ -208,6 +228,9 @@
         </div><!-- End Right side columns -->
 
       </div>
+      {% endif %}
+
+      </div>
       {% if trigger %}
         <button style="display: none;" id="amazingsubscribed" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scrollingModal"></button>
         <div class="modal fade" id="scrollingModal" tabindex="-1">
@@ -240,6 +263,13 @@
     </section>
 
   </main><!-- End #main -->
+
+  <script>
+    window.addEventListener('load', (event) => {
+      var child = "pills-home-tab-{{ child }}";
+      document.getElementById(child).classList.add("active");
+    });
+  </script>
 
   {% if trigger %}
     <script>

@@ -1,4 +1,5 @@
 
+from asyncio.windows_events import NULL
 from importlib.metadata import distribution
 from operator import ilshift
 from re import L
@@ -8,7 +9,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from .models import Account, Word, Tag, Report, Root, ReportDetail, EmailValidate
+from .models import Account, Word, Tag, Report, Root, ReportDetail, EmailValidate, ConfirmReq
 import csv
 from django import forms
 from django.core.files.storage import FileSystemStorage
@@ -187,27 +188,32 @@ def create_word(word):
         else: 
             final_audio += ("'" + audio[i] + "']")
     
-    new = Word(word=word, speech = final_parts, origin1 = final_origin[0], origin2 = final_origin[1], origin3 = final_origin[2], definition1 = final_right[0], definition2 = final_right[1], definition3 = final_right[2], pronounce = final_audio, tagged = False)
+    new = Word(word=word, speech = final_parts, origin1 = final_origin[0], origin2 = final_origin[1], origin3 = final_origin[2], definition1 = final_right[0], definition2 = final_right[1], definition3 = final_right[2], pronounce = final_audio, tagged = False, rooted=False)
     new.save()
 
 def locked(user):
     if not user.is_superuser:
         account = Account.objects.get(username=user.username)
-        gen = str(account.date_joined).split("+")[0]
-        day = gen.split(" ")[0]
-        time = gen.split(" ")[1]
-        opyear = int(day.split("-")[0])
-        opmonth = int(day.split("-")[1])
-        opday = int(day.split("-")[2])
-        ophour = int(time.split(":")[0])
-        opmin = int(time.split(":")[1])
-        opsec = int((time.split(":")[2]).split(".")[0])
-        tv = datetime.datetime(opyear, opmonth, opday, ophour, opmin, opsec)
-        if (account.subscribed == False) and ((datetime.datetime.now() - tv) > datetime.timedelta(days=30)):
-            account.locked = True
-            account.save()
-        elif account.subscribed == False:
-            account.daysleft = 30 - ((datetime.datetime.now() - tv).days)
+        if not account.parent:
+            account = Account.objects.get(username=user.username)
+            gen = str(account.date_joined).split("+")[0]
+            day = gen.split(" ")[0]
+            time = gen.split(" ")[1]
+            opyear = int(day.split("-")[0])
+            opmonth = int(day.split("-")[1])
+            opday = int(day.split("-")[2])
+            ophour = int(time.split(":")[0])
+            opmin = int(time.split(":")[1])
+            opsec = int((time.split(":")[2]).split(".")[0])
+            tv = datetime.datetime(opyear, opmonth, opday, ophour, opmin, opsec)
+            if (account.subscribed == False) and ((datetime.datetime.now() - tv) > datetime.timedelta(days=30)):
+                account.locked = True
+                account.save()
+            elif account.subscribed == False:
+                account.daysleft = 30 - ((datetime.datetime.now() - tv).days)
+                account.save()
+        else:
+            account.daysleft = 30
             account.save()
 
     if user.is_superuser:
@@ -217,9 +223,17 @@ def locked(user):
     else:
         return True
 
+def is_child(user):
+    account = Account.objects.get(username=user.username)
+
+    if account.parent:
+        return False
+    else:
+        return True
+
 # Create your views here.
 
-def error_404(request, exception):
+def error_404(request, exception=False):
     return render(request, "spell/error_404.html", {})
 
 # Homepage
@@ -247,31 +261,6 @@ def contact(request):
     
     return HttpResponseRedirect(reverse("index"))
 
-def contactus(request):
-    msg = MIMEMultipart()
-    msg['Subject'] = 'SpellNOW! Contact Notification'
-    msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
-    msg["To"] = "support@spellnow.org"
-    body_text = """Hello!\n\nThis is an official SpellNOW! Notification. The following details a contact request from a user.\n\n""" + "Name: " + request.POST["name"] + "\nEmail: " + request.POST["email"] + "\nSubject: " + request.POST["subject"] + "\n\nMessage:\n\n" + request.POST["message"] + """\n\nBe sure to contact them back, and have a great day!\n\nSincerely,\nSpellNOW! Support Team"""
-
-    body_part = MIMEText(body_text, 'plain')
-    msg.attach(body_part)
-    with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
-        smtp_obj.ehlo()
-        smtp_obj.starttls()
-        smtp_obj.ehlo()
-        smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
-        smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
-    
-    return HttpResponseRedirect(reverse("contactrender"))
-
-def contactrender(request):
-    return render(request, "spell/contact.html", {
-        "bar": "",
-        "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
-        "active": "contactus"
-    })
-
 # Authorization pages
 def login(request):
     if request.method == "POST":
@@ -295,29 +284,170 @@ def login(request):
 
 def register(request):
     if request.method == "POST":
+        pfname = request.POST["pfname"]
+        plname = request.POST["plname"]
+        pusername = request.POST["pusername"]
+        pemail = request.POST["pemail"]
+        ppasswordi = request.POST["ppassword"]
+        pparentid = 0
+
+        if not Account.objects.filter(username=pusername).exists():
+            it1 = random.randint(10000, 99999)
+            it2 = random.randint(10000, 99999)
+            confreq = ConfirmReq(fname = pfname, lname = plname, username = pusername, email = pemail, password = ppasswordi, lock1 = it1, lock2 = it2, parent=NULL)
+            confreq.save()
+            parentid = confreq.id
+
+            try:
+                msg = MIMEMultipart()
+                msg['Subject'] = 'Official SpellNOW! Notification! -- Validate Email'
+                msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
+                msg["To"] = request.POST["email"]
+                body_text = """Hello!\n\nThis is an official SpellNOW! Notification. You have recently attempted to register for a SpellNOW! account. As per SpellNOW! policy you must click the link below to validate your email address in order to complete account setup.\n\nhttps://127.0.0.1/uservalidate/""" + str(confreq.id) + """-""" + str(it1) + """-""" + str(it2) + """\n\nThank you, and we hope you enjoy your continued use of SpellNOW!\n\nSincerely,\nSpellNOW! Support Team"""
+                body_part = MIMEText(body_text, 'plain')
+                msg.attach(body_part)
+                with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
+                    smtp_obj.ehlo()
+                    smtp_obj.starttls()
+                    smtp_obj.ehlo()
+                    smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
+                    smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
+            except:
+                pass
+        else:
+            return render(request, "spell/register.html", {
+                "form": MyForm(),
+                "message": "Parent username already taken."
+            })
+        
         fname = request.POST["fname"]
         lname = request.POST["lname"]
         username = request.POST["username"]
         email = request.POST["email"]
-        password = request.POST["password"]
+        passwordi = request.POST["password"]
 
-        # Attempt to create new user
-        try:
-            user = Account.objects.create_user(username, email, password, subscribed=False, locked=False)
-            user.first_name = fname
-            user.last_name = lname
-            user.save()
-        except IntegrityError:
+        if not Account.objects.filter(username=username).exists():
+            it1 = random.randint(10000, 99999)
+            it2 = random.randint(10000, 99999)
+            confreq = ConfirmReq(fname = fname, lname = lname, username = username, email = email, password = passwordi, lock1 = it1, lock2 = it2, parent=parentid)
+            confreq.save()
+
+            try:
+                msg = MIMEMultipart()
+                msg['Subject'] = 'Official SpellNOW! Notification! -- Validate Email'
+                msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
+                msg["To"] = request.POST["email"]
+                body_text = """Hello!\n\nThis is an official SpellNOW! Notification. Your parent recently attempted to register for a SpellNOW! account. As per SpellNOW! policy you must click the link below to validate your email address in order to complete account setup.\n\nhttps://127.0.0.1/uservalidate/""" + str(confreq.id) + """-""" + str(it1) + """-""" + str(it2) + """\n\nThank you, and we hope you enjoy your continued use of SpellNOW!\n\nSincerely,\nSpellNOW! Support Team"""
+                body_part = MIMEText(body_text, 'plain')
+                msg.attach(body_part)
+                with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
+                    smtp_obj.ehlo()
+                    smtp_obj.starttls()
+                    smtp_obj.ehlo()
+                    smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
+                    smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
+            except:
+                pass
+            
+            return HttpResponseRedirect(reverse("informvalidation"))
+        else:
             return render(request, "spell/register.html", {
                 "form": MyForm(),
-                "message": "Username already taken."
+                "message": "Student username already taken."
             })
-        
-        auth_login(request, user)
-        return HttpResponseRedirect(reverse("admin_panel"))
     else:
         form=MyForm()
         return render(request, "spell/register.html", {"form": form})
+
+@login_required(login_url='/login')
+@user_passes_test(locked, login_url='/subscribe')
+def single_register(request):
+    if request.method == "POST":
+        userusing = Account.objects.get(username=request.user.username)
+        if userusing.parent:
+            fname = request.POST["fname"]
+            lname = request.POST["lname"]
+            username = request.POST["username"]
+            email = request.POST["email"]
+            passwordi = request.POST["password"]
+
+            if not Account.objects.filter(username=username).exists():
+                it1 = random.randint(10000, 99999)
+                it2 = random.randint(10000, 99999)
+                confreq = ConfirmReq(fname = fname, lname = lname, username = username, email = email, password = passwordi, lock1 = it1, lock2 = it2, parent=userusing.id)
+                confreq.save()
+
+                try:
+                    msg = MIMEMultipart()
+                    msg['Subject'] = 'Official SpellNOW! Notification! -- Validate Email'
+                    msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
+                    msg["To"] = request.POST["email"]
+                    body_text = """Hello!\n\nThis is an official SpellNOW! Notification. Your parent recently attempted to register for a SpellNOW! account. As per SpellNOW! policy you must click the link below to validate your email address in order to complete account setup.\n\nhttps://127.0.0.1/uservalidate/""" + str(confreq.id) + """-""" + str(it1) + """-""" + str(it2) + """\n\nThank you, and we hope you enjoy your continued use of SpellNOW!\n\nSincerely,\nSpellNOW! Support Team"""
+                    body_part = MIMEText(body_text, 'plain')
+                    msg.attach(body_part)
+                    with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
+                        smtp_obj.ehlo()
+                        smtp_obj.starttls()
+                        smtp_obj.ehlo()
+                        smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
+                        smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
+                except:
+                    pass
+                
+                return HttpResponseRedirect(reverse("informvalidation"))
+            else:
+                return render(request, "spell/single_register.html", {
+                    "form": MyForm(),
+                    "message": "Student username already taken."
+                })
+        else:
+            return render(request, "spell/error_404.html", {}) 
+    else:
+        form=MyForm()
+        return render(request, "spell/single_register.html", {"form": form})
+
+def uservalidate(request, userit, lockit1, lockit2):
+    idofuser=userit
+    lock1=lockit1
+    lock2=lockit2
+
+    try:
+        valid = ConfirmReq.objects.get(pk=idofuser, lock1=lock1, lock2=lock2)
+    
+        # Attempt to create new user
+        if valid.parent == NULL:
+            student = ConfirmReq.objects.get(parent=valid.id)
+            user = Account.objects.create_user(valid.username, valid.email, valid.password, subscribed=False, locked=False, daysleft=30, trigger=False, changenotifs=True, newsletter=True, parent=True)
+        else:
+            user = Account.objects.create_user(valid.username, valid.email, valid.password, subscribed=False, locked=False, daysleft=30, trigger=False, changenotifs=True, newsletter=True, parent=False)
+        
+        user.first_name = valid.fname
+        user.last_name = valid.lname
+        user.save()
+
+        if user.parent:
+            try:
+                user.children.add(Account.objects.get(username=student.username))
+                user.save()
+                student.delete()
+                valid.delete()
+            except:
+                pass
+        else:
+            try:
+                kool = ConfirmReq.objects.get(pk=idofuser, lock1=lock1, lock2=lock2)
+                par = Account.objects.get(pk=kool.parent)
+                par.children.add(user)
+                par.save()
+                valid.delete()
+                kool.delete()
+            except:
+                pass
+        
+        auth_login(request, user)
+        return HttpResponseRedirect(reverse("admin_panel"))
+    except:
+        return render(request, "spell/error_404.html", {})
 
 @login_required(login_url='/login')
 def logout(request):
@@ -328,8 +458,9 @@ def logout(request):
 @login_required(login_url='/login')
 @user_passes_test(locked, login_url='/subscribe')
 def admin_panel(request):
-    if not request.user.is_superuser:
-        userusing = Account.objects.get(username=request.user.username)
+    if request.method == "POST":
+        parent = Account.objects.get(username=request.user.username)
+        userusing = Account.objects.get(pk=request.POST["child"])
 
         totalwords = 0
         for report in Report.objects.filter(user=userusing, specific=False, finished__gt=datetime.date.today()):
@@ -394,7 +525,7 @@ def admin_panel(request):
         start = datetime.date.today() - datetime.timedelta(days = 1)
         end = datetime.date.today()
 
-        for report in Report.objects.filter(user=userusing, specific=False, finished__gt=datetime.date.today()):
+        for report in Report.objects.filter(user=userusing, specific=False, finished__range=(start, end)):
             cool = (report.used).split(", ")
             prevtags.extend(cool)
         
@@ -429,27 +560,187 @@ def admin_panel(request):
             tagrep.append({'tag': tag, 'correct': correct, 'total': total, 'percent': int((correct / total) * 100)})
         
         toppers = sorted(tagrep, key=lambda d: d['percent'])[:5]
-        
-        if userusing.trigger:
-            userusing.trigger = False
-            userusing.save()
-            return render(request, "spell/dashboard.html", {
-                "bar": "",
-                "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
-                "active": "home",
-                "trigger": True,
-                "totalwords": totalwords,
-                "wordsconc": word_conc,
-                "wordsperc": wordsperc,
-                "correctwords": correctwords,
-                "corrsconc": corrs_conc,
-                "corrsperc": corrsperc,
-                "tagcount": tagcount,
-                "tagsconc": tags_conc,
-                "tagsperc": tagsperc,
-                "tagsrep": tagrep,
-                "toppers": toppers
-            })
+
+        return render(request, "spell/parent_dashboard.html", {
+            "bar": "",
+            "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+            "active": "home",
+            "ready": True,
+            "children": parent.children.all(),
+            "child": request.POST["child"],
+            "totalwords": totalwords,
+            "wordsconc": word_conc,
+            "wordsperc": wordsperc,
+            "correctwords": correctwords,
+            "corrsconc": corrs_conc,
+            "corrsperc": corrsperc,
+            "tagcount": tagcount,
+            "tagsconc": tags_conc,
+            "tagsperc": tagsperc,
+            "tagsrep": tagrep,
+            "toppers": toppers
+        })
+    else:
+        if not request.user.is_superuser:
+            userusing = Account.objects.get(username=request.user.username)
+            
+            if userusing.parent == True:
+                if userusing.trigger:
+                    userusing.trigger = False
+                    userusing.save()
+                    return render(request, "spell/parent_dashboard.html", {
+                        "bar": "",
+                        "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+                        "active": "home",
+                        "trigger": True,
+                        "children": userusing.children.all(),
+                    })
+                else:
+                    return render(request, "spell/parent_dashboard.html", {
+                        "bar": "",
+                        "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+                        "active": "home",
+                        "children": userusing.children.all(),
+                    })
+            else:
+                userusing = Account.objects.get(username=request.user.username)
+
+                totalwords = 0
+                for report in Report.objects.filter(user=userusing, specific=False, finished__gt=datetime.date.today()):
+                    totalwords += report.total
+                
+                lastwords = 0
+                start = datetime.date.today() - datetime.timedelta(days = 1)
+                end = datetime.date.today()
+
+                for report in Report.objects.filter(user=userusing, specific=False, finished__range=(start, end)):
+                    lastwords += report.total
+                
+                word_conc = ""
+                wordsperc = 0
+                if lastwords < totalwords:
+                    word_conc = "increase"
+                    if lastwords != 0:
+                        wordsperc = int((totalwords / lastwords) * 100) - 100
+                    else:
+                        wordsperc = 0
+                elif lastwords > totalwords:
+                    word_conc = "decrease"
+                    if lastwords != 0:
+                        wordsperc = 100 - int((totalwords / lastwords) * 100)
+                    else:
+                        wordsperc = 0
+                
+                correctwords = 0
+                for report in Report.objects.filter(user=userusing, specific=False, finished__gt=datetime.date.today()):
+                    correctwords += report.correct
+                
+                lastcorrs = 0
+                start = datetime.date.today() - datetime.timedelta(days = 1)
+                end = datetime.date.today()
+
+                for report in Report.objects.filter(user=userusing, specific=False, finished__range=(start, end)):
+                    lastcorrs += report.correct
+                
+                corrs_conc = ""
+                corrsperc = 0
+                if lastcorrs < correctwords:
+                    corrs_conc = "increase"
+                    if lastcorrs != 0:
+                        corrsperc = int((correctwords / lastcorrs) * 100) - 100
+                    else:
+                        corrsperc = 0
+                elif lastcorrs > correctwords:
+                    corrs_conc = "decrease"
+                    if lastcorrs != 0:
+                        corrsperc = 100 - int((correctwords / lastcorrs) * 100)
+                    else:
+                        corrsperc = 0
+                
+                tagcount = []
+                for report in Report.objects.filter(user=userusing, specific=True, finished__gt=datetime.date.today()):
+                    tagcount.append(report.used)
+                tagcount = list(dict.fromkeys(tagcount))
+                alltags = tagcount
+                tagcount = len(tagcount)
+
+                prevtags = []
+                start = datetime.date.today() - datetime.timedelta(days = 1)
+                end = datetime.date.today()
+
+                for report in Report.objects.filter(user=userusing, specific=False, finished__range=(start, end)):
+                    cool = (report.used).split(", ")
+                    prevtags.extend(cool)
+                
+                prevtags = list(dict.fromkeys(prevtags))
+                prevtags = len(prevtags)
+                
+                tags_conc = ""
+                tagsperc = 0
+                if prevtags < tagcount:
+                    tags_conc = "increase"
+                    if prevtags != 0:
+                        tagsperc = int((tagcount / prevtags) * 100) - 100
+                    else:
+                        tagsperc = 0
+                elif prevtags > tagcount:
+                    tags_conc = "decrease"
+                    if prevtags != 0:
+                        tagsperc = 100 - int((tagcount / prevtags) * 100)
+                    else:
+                        tagsperc = 0
+                
+                tagrep = []
+                for tag in alltags:
+                    reports = Report.objects.filter(user=userusing, specific=True, finished__gt=datetime.date.today(), used=tag)
+                    correct = 0
+                    total = 0
+                    
+                    for report in reports:
+                        correct += report.correct
+                        total += report.total
+                    
+                    tagrep.append({'tag': tag, 'correct': correct, 'total': total, 'percent': int((correct / total) * 100)})
+                
+                toppers = sorted(tagrep, key=lambda d: d['percent'])[:5]
+                
+                if userusing.trigger:
+                    userusing.trigger = False
+                    userusing.save()
+                    return render(request, "spell/dashboard.html", {
+                        "bar": "",
+                        "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+                        "active": "home",
+                        "trigger": True,
+                        "totalwords": totalwords,
+                        "wordsconc": word_conc,
+                        "wordsperc": wordsperc,
+                        "correctwords": correctwords,
+                        "corrsconc": corrs_conc,
+                        "corrsperc": corrsperc,
+                        "tagcount": tagcount,
+                        "tagsconc": tags_conc,
+                        "tagsperc": tagsperc,
+                        "tagsrep": tagrep,
+                        "toppers": toppers
+                    })
+                else:
+                    return render(request, "spell/dashboard.html", {
+                        "bar": "",
+                        "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+                        "active": "home",
+                        "totalwords": totalwords,
+                        "wordsconc": word_conc,
+                        "wordsperc": wordsperc,
+                        "correctwords": correctwords,
+                        "corrsconc": corrs_conc,
+                        "corrsperc": corrsperc,
+                        "tagcount": tagcount,
+                        "tagsconc": tags_conc,
+                        "tagsperc": tagsperc,
+                        "tagsrep": tagrep,
+                        "toppers": toppers
+                    })
         else:
             return render(request, "spell/dashboard.html", {
                 "bar": "",
@@ -467,23 +758,6 @@ def admin_panel(request):
                 "tagsrep": tagrep,
                 "toppers": toppers
             })
-    else:
-        return render(request, "spell/dashboard.html", {
-            "bar": "",
-            "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
-            "active": "home",
-            "totalwords": totalwords,
-            "wordsconc": word_conc,
-            "wordsperc": wordsperc,
-            "correctwords": correctwords,
-            "corrsconc": corrs_conc,
-            "corrsperc": corrsperc,
-            "tagcount": tagcount,
-            "tagsconc": tags_conc,
-            "tagsperc": tagsperc,
-            "tagsrep": tagrep,
-            "toppers": toppers
-        })
 
 # Libraries
 @user_passes_test(lambda u: u.is_staff)
@@ -848,7 +1122,6 @@ def root_library(request):
 
 # Word Changes
 @user_passes_test(lambda u: u.is_staff)
-@login_required(login_url='/login')
 @user_passes_test(locked, login_url='/subscribe')
 def update_words(request):
     updates = request.POST["changes"]
@@ -909,7 +1182,6 @@ def update_words(request):
 
 # Tag Changes
 @user_passes_test(lambda u: u.is_staff)
-@login_required(login_url='/login')
 @user_passes_test(locked, login_url='/subscribe')
 def delete_tag(request, id):
     tag = Tag.objects.get(pk=id)
@@ -918,7 +1190,6 @@ def delete_tag(request, id):
 
 # Root Changes
 @user_passes_test(lambda u: u.is_staff)
-@login_required(login_url='/login')
 @user_passes_test(locked, login_url='/subscribe')
 def update_root(request):
     root = Root.objects.get(pk=int(request.POST["id"]))
@@ -1309,7 +1580,6 @@ def word_import(request):
         })
 
 @user_passes_test(lambda u: u.is_staff)
-@login_required(login_url='/login')
 @user_passes_test(locked, login_url='/subscribe')
 def upload_sounds(request):
     f = open("spell/static/spell/custom.csv", "r")
@@ -1337,6 +1607,7 @@ def upload_sounds(request):
 # Spelling
 @login_required(login_url='/login')
 @user_passes_test(locked, login_url='/subscribe')
+@user_passes_test(is_child, login_url='/error_404')
 def start(request):
     return render(request, "spell/spelling_start.html", {
         "bar": "activities",
@@ -1347,8 +1618,8 @@ def start(request):
         "number": len(Word.objects.all())
     })
 
-@login_required(login_url='/login')
 @user_passes_test(locked, login_url='/subscribe')
+@user_passes_test(is_child, login_url='/error_404')
 def spell(request):
     if request.method == "POST":
         tags = request.POST.getlist('*..*tags*..*')
@@ -1563,8 +1834,8 @@ def spell(request):
                 "allroots": wrongio,
             })
 
-@login_required(login_url='/login')
 @user_passes_test(locked, login_url='/subscribe')
+@user_passes_test(is_child, login_url='/error_404')
 def finish(request):
     if request.user.is_staff:
         tags_rep = request.POST["new_tags"]
@@ -1720,14 +1991,15 @@ def finish(request):
         
     count = 1
 
+    report_using = Report.objects.get(id=id_using)
     for tmp in words:
         if int(correct_array[count - 1]) == 0:
             roger = count
-            detail = ReportDetail(count=roger, identification=wilk[count - 1], word=tmp, attempt=atts[count - 1], result="INCORRECT", time=time[count - 1], iid=id_using)
+            detail = ReportDetail(count=roger, identification=wilk[count - 1], word=tmp, attempt=atts[count - 1], result="INCORRECT", time=time[count - 1], report=report_using)
             detail.save()
         else:
             roger = count
-            detail = ReportDetail(count=roger, identification=wilk[count - 1], word=tmp, attempt=atts[count - 1], result="CORRECT", time=time[count - 1], iid=id_using)
+            detail = ReportDetail(count=roger, identification=wilk[count - 1], word=tmp, attempt=atts[count - 1], result="CORRECT", time=time[count - 1], report=report_using)
             detail.save()
         count += 1
     
@@ -1757,35 +2029,89 @@ def finish(request):
 @login_required(login_url='/login')
 @user_passes_test(locked, login_url='/subscribe')
 def reports(request):
-    return render(request, "spell/reports.html", {
-        "bar": "",
-        "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
-        "active": "reports",
-        "reports": Report.objects.filter(specific=False, user=request.user).order_by('-finished')
-    })
+    userusing = Account.objects.get(username=request.user.username)
+
+    if userusing.parent:
+        if request.method == "POST":
+            fun = Account.objects.get(pk=int(request.POST["child"]))
+            print(fun)
+
+            return render(request, "spell/reports.html", {
+                "bar": "",
+                "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+                "active": "reports",
+                "reports": Report.objects.filter(specific=False, user=fun).order_by('-finished'),
+                "ready": True,
+                "child": request.POST["child"],
+                "children": userusing.children.all(),
+            })
+        else:
+            userusing = Account.objects.get(username=request.user.username)
+
+            return render(request, "spell/reports.html", {
+                "bar": "",
+                "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+                "active": "reports",
+                "children": userusing.children.all(),
+            })
+    else:
+        return render(request, "spell/reports.html", {
+            "bar": "",
+            "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+            "active": "reports",
+            "ready": True,
+            "reports": Report.objects.filter(specific=False, user=request.user).order_by('-finished')
+        })
 
 @login_required(login_url='/login')
 @user_passes_test(locked, login_url='/subscribe')
 def report(request, id):
-    userusing = Account.objects.get(username=request.user.username)
-    if len(Report.objects.filter(pk=id, specific=False, user=userusing)) != 0:
-        used = Report.objects.filter(iid=id, specific=True)
-        fnu = Report.objects.get(pk=id)
-        bring = ReportDetail.objects.filter(iid=id)
+    great = Account.objects.get(username=request.user.username)
 
-        return render(request, "spell/report.html", {
-            "bar": "",
-            "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
-            "active": "reports",
-            "used": used,
-            "title": fnu.finished,
-            "correct": fnu.correct,
-            "total": fnu.total,
-            "percent": fnu.percent,
-            "records": bring,
-        })
+    if great.parent:
+        userusing = Account.objects.get(username=request.user.username)
+        try:
+            thingy = Report.objects.get(pk=id, specific=False)
+            
+            if thingy.user in great.children.all():
+                used = Report.objects.filter(iid=id, specific=True)
+                fnu = Report.objects.get(pk=id)
+                bring = ReportDetail.objects.filter(report=fnu)
+
+                return render(request, "spell/report.html", {
+                    "bar": "",
+                    "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+                    "active": "reports",
+                    "used": used,
+                    "title": fnu.finished,
+                    "correct": fnu.correct,
+                    "total": fnu.total,
+                    "percent": fnu.percent,
+                    "records": bring,
+                })
+            else:
+                return render(request, "spell/error_404.html", {})
+        except:
+            return render(request, "spell/error_404.html", {})
     else:
-        return render(request, "spell/error_404.html", {})
+        userusing = Account.objects.get(username=request.user.username)
+        if len(Report.objects.filter(pk=id, specific=False, user=userusing)) != 0:
+            fnu = Report.objects.get(pk=id)
+            bring = ReportDetail.objects.filter(report=fnu)
+
+            return render(request, "spell/report.html", {
+                "bar": "",
+                "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+                "active": "reports",
+                "used": used,
+                "title": fnu.finished,
+                "correct": fnu.correct,
+                "total": fnu.total,
+                "percent": fnu.percent,
+                "records": bring,
+            })
+        else:
+            return render(request, "spell/error_404.html", {})
 
 # Profile
 
@@ -1799,6 +2125,20 @@ def profile(request):
     })
 
 @login_required(login_url='/login')
+@user_passes_test(locked, login_url='/subscribe')
+def deleteuser(request, id):
+    userusing = Account.objects.get(username=request.user.username)
+    student = Account.objects.get(pk=id)
+
+    if userusing.parent:
+        if student in userusing.children.all():
+            student.delete()
+            return HttpResponseRedirect(reverse("profile"))
+        else:
+            return render(request, "spell/error_404.html", {})
+    else:
+        return render(request, "spell/error_404.html", {})
+
 @user_passes_test(locked, login_url='/subscribe')
 def changedetails(request):
     userusing = Account.objects.get(username=request.user.username)
@@ -1849,7 +2189,7 @@ def changedetails(request):
             msg['Subject'] = 'Official SpellNOW! Notification! -- Validate Email'
             msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
             msg["To"] = request.POST["email"]
-            body_text = """Hello!\n\nThis is an official SpellNOW! Notification. You have recently requested to change the email address associated with your SpellNOW! account. As per SpellNOW! policy you must click the link below to validate your email address.\n\nhttps://spellnow.org/validatemail/""" + str(request.user.id) + """-""" + str(it1) + """-""" + str(it2) + """\n\nThank you, and we hope you enjoy your continued use of SpellNOW!\n\nSincerely,\nSpellNOW! Support Team"""
+            body_text = """Hello!\n\nThis is an official SpellNOW! Notification. You have recently requested to change the email address associated with your SpellNOW! account. As per SpellNOW! policy you must click the link below to validate your email address.\n\nhttps://127.0.0.1/validatemail/""" + str(request.user.id) + """-""" + str(it1) + """-""" + str(it2) + """\n\nThank you, and we hope you enjoy your continued use of SpellNOW!\n\nSincerely,\nSpellNOW! Support Team"""
             body_part = MIMEText(body_text, 'plain')
             msg.attach(body_part)
             with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
@@ -1874,7 +2214,6 @@ def changedetails(request):
     else:
         return HttpResponseRedirect(reverse("profile"))
 
-@login_required(login_url='/login')
 @user_passes_test(locked, login_url='/subscribe')
 def changenotifs(request):
     userusing = Account.objects.get(username=request.user.username)
@@ -1924,7 +2263,6 @@ def changenotifs(request):
 
     return HttpResponseRedirect(reverse("profile"))
 
-@login_required(login_url='/login')
 @user_passes_test(locked, login_url='/subscribe')
 def changepassword(request):
     user = authenticate(request, username=request.user.username, password=request.POST["current"])
@@ -1966,13 +2304,8 @@ def changepassword(request):
             "active": "profilit",
         })
 
-@login_required(login_url='/login')
-@user_passes_test(locked, login_url='/subscribe')
 def informvalidation(request):
-    if EmailValidate.objects.filter(userid=request.user.id):
-        return render(request, "spell/inform.html", {})
-    else:
-        return render(request, "spell/error_404.html", {})
+    return render(request, "spell/inform.html", {})
 
 @login_required(login_url='/login')
 def validatemail(request, userit, lockit1, lockit2):

@@ -64,7 +64,7 @@
                     <p class="text-center small">Enter your personal details to create account</p>
                   </div>
 
-                  <form class="row g-3 needs-validation" action="/register" method="post">
+                  <form class="row g-3 needs-validation" action="/single_register" method="post">
                     {% csrf_token %}
                     <div class="col-12">
                       <label for="yourFirstName" class="form-label">Student First Name</label>
@@ -95,38 +95,6 @@
                     <div class="col-12">
                       <label for="yourPassword" class="form-label">Student Password</label>
                       <input type="password" name="password" class="form-control" id="yourPassword" required>
-                      <div class="invalid-feedback">Please enter your password!</div>
-                    </div>
-
-                    <div class="col-12">
-                      <label for="yourFirstName" class="form-label">Parent First Name</label>
-                      <input type="text" name="pfname" class="form-control" id="yourFirstName" required>
-                      <div class="invalid-feedback">Please, enter your first name!</div>
-                    </div>
-
-                    <div class="col-12">
-                      <label for="yourLastName" class="form-label">Parent Last Name</label>
-                      <input type="text" name="plname" class="form-control" id="yourLastName" required>
-                      <div class="invalid-feedback">Please, enter your last name!</div>
-                    </div>
-
-                    <div class="col-12">
-                      <label for="yourEmail" class="form-label">Parent Email</label>
-                      <input type="email" name="pemail" class="form-control" id="yourEmail" required>
-                      <div class="invalid-feedback">Please enter a valid Email adddress!</div>
-                    </div>
-
-                    <div class="col-12">
-                      <label for="yourUsername" class="form-label">Parent Username</label>
-                      <div class="input-group has-validation">
-                        <input type="text" name="pusername" class="form-control" id="yourUsername" required>
-                        <div class="invalid-feedback">Please choose a username.</div>
-                      </div>
-                    </div>
-
-                    <div class="col-12">
-                      <label for="yourPassword" class="form-label">Parent Password</label>
-                      <input type="password" name="ppassword" class="form-control" id="yourPassword" required>
                       <div class="invalid-feedback">Please enter your password!</div>
                     </div>
 
