@@ -1,5 +1,3 @@
-
-from asyncio.windows_events import NULL
 from importlib.metadata import distribution
 from operator import ilshift
 from re import L
@@ -294,7 +292,7 @@ def register(request):
         if not Account.objects.filter(username=pusername).exists():
             it1 = random.randint(10000, 99999)
             it2 = random.randint(10000, 99999)
-            confreq = ConfirmReq(fname = pfname, lname = plname, username = pusername, email = pemail, password = ppasswordi, lock1 = it1, lock2 = it2, parent=NULL)
+            confreq = ConfirmReq(fname = pfname, lname = plname, username = pusername, email = pemail, password = ppasswordi, lock1 = it1, lock2 = it2, parent=None)
             confreq.save()
             parentid = confreq.id
 
@@ -415,7 +413,7 @@ def uservalidate(request, userit, lockit1, lockit2):
         valid = ConfirmReq.objects.get(pk=idofuser, lock1=lock1, lock2=lock2)
     
         # Attempt to create new user
-        if valid.parent == NULL:
+        if valid.parent == None:
             student = ConfirmReq.objects.get(parent=valid.id)
             user = Account.objects.create_user(valid.username, valid.email, valid.password, subscribed=False, locked=False, daysleft=30, trigger=False, changenotifs=True, newsletter=True, parent=True)
         else:
