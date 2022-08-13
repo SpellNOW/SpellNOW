@@ -2004,8 +2004,9 @@ def finish(request):
     msg = MIMEMultipart()
     msg['Subject'] = 'Official SpellNOW! Notification! -- New Report'
     msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
-    msg["To"] = request.user.email
-    body_text = """Hello!\n\nThis is an Official SpellNOW! Notification. You have complete a spelling activity on SpellNOW! with a score of """ + request.POST["score"] + """. Thank you, and we hope for your continued progress for the future.\n\nSincerely,\nSpellNOW! Support Team"""
+    parent = Account.objects.get(children__contains=request.user)
+    msg["To"] = parent.email
+    body_text = """Hello!\n\nThis is an Official SpellNOW! Notification. """ + request.user.first_name + """ has complete a spelling activity on SpellNOW! with a score of """ + request.POST["score"] + """. Thank you, and we hope for your continued progress for the future.\n\nSincerely,\nSpellNOW! Support Team"""
 
     body_part = MIMEText(body_text, 'plain')
     msg.attach(body_part)
