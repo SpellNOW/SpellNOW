@@ -130,7 +130,7 @@
                     </div>
                   </div>
                   <input name="request-id" type="text" value="add-tag-{{ tag.id }}" style="display: none;">
-                  <input type="submit" style="display: none;" id="add-{{ tag.id }}">
+                  <input type="submit" style="display: none;" id="addtag-{{ tag.id }}">
                 </form>
                 <form action="/word_import" enctype="multipart/form-data" method="post">
                   {% csrf_token %}
