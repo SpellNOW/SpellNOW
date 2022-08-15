@@ -2095,6 +2095,7 @@ def report(request, id):
     else:
         userusing = Account.objects.get(username=request.user.username)
         if len(Report.objects.filter(pk=id, specific=False, user=userusing)) != 0:
+            used = Report.objects.filter(iid=id, specific=True)
             fnu = Report.objects.get(pk=id)
             bring = ReportDetail.objects.filter(report=fnu)
 
