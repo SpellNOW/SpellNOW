@@ -35,7 +35,6 @@ urlpatterns = [
 
     # Import
     path("word_import", views.word_import, name="word_import"),
-    path("upload_sounds", views.upload_sounds, name="upload_sounds"),
 
     # Activities
 
@@ -47,6 +46,7 @@ urlpatterns = [
     # Reports
     path("reports", views.reports, name="reports"),
     path("report/<int:id>", views.report, name="report"),
+    path("wordreports", views.wordreports, name="wordreports"),
 
     # Error
     path("error_404", views.error_404, name="error_404"),

@@ -1289,41 +1289,53 @@ def word_import(request):
             if exists("spell/static/spell/custom.csv"):
                 os.remove("spell/static/spell/custom.csv")
             already = []
-            new_word = []
             file = request.FILES["csv"]
             fs = FileSystemStorage()
             fs.save("spell/static/spell/custom.csv", file)
             f = open("spell/static/spell/custom.csv", "r")
             reader = csv.reader(f)
-            next(reader)
-            counter = 0
             for row in reader:
                 final = row[0].lower()
                 
                 if not Word.objects.filter(word=final):
-                    new_word.append(final)
+                    new_word = row[0].lower()
+                    new_speech = row[4]
+
+                    new_origin1 = row[5]
+                    new_origin2 = None
+                    if row[6] != "":
+                        new_origin2 = row[6]
+                    new_origin3 = None
+                    if row[7] != "":
+                        new_origin3 = row[7]
+                    
+                    new_def1 = row[2]
+                    new_def2 = None
+                    if row[3] != "":
+                        new_def2 = row[3]
+                    new_def3 = None
+                    if row[4] != "":
+                        new_def3 = row[4]
+                    
+                    new_pronounce = "['" + row[8] + "']"
+
+                    new = Word(word=new_word, speech = new_speech, origin1 = new_origin1, origin2 = new_origin2, origin3 = new_origin3, definition1 = new_def1, definition2 = new_def2, definition3 = new_def3, pronounce = new_pronounce, tagged=False, rooted=False)
+                    new.save()
                 else:
                     already.append(final)
-                
-                counter += 1
+            
             f.close()
             if len(already) > 0:
-                return render(request, "spell/custom.html", {
+                return render(request, "spell/error.html", {
                     "bar": "libraries",
                     "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                     "active": "import",
-                    'words': new_word,
+                    'nots': [],
                     'already': already,
-                    "error": True,
                     'message2': "SpellNOW!&trade; found these words already in your list:",
                 })
             else:
-                return render(request, "spell/custom.html", {
-                    "bar": "libraries",
-                    "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
-                    "active": "import",
-                    'words': new_word,
-                })
+                return HttpResponseRedirect(reverse("word_library"))
         elif request_id == "del-words":
             if exists("spell/static/spell/delete-words.csv"):
                 os.remove("spell/static/spell/delete-words.csv")
@@ -1577,29 +1589,6 @@ def word_import(request):
             "roots": Root.objects.all()
         })
 
-@user_passes_test(lambda u: u.is_staff)
-@user_passes_test(locked, login_url='/subscribe')
-def upload_sounds(request):
-    f = open("spell/static/spell/custom.csv", "r")
-    reader = csv.reader(f)
-    next(reader)
-    for row in reader:
-        final = row[0].lower()
-        
-        if not Word.objects.filter(word=final):
-            file = request.FILES["file-"+final]
-            fs = FileSystemStorage()
-            fs.save("spell/static/spell/sounds/" + final + ".mp3", file)
-            new_word = row[0].lower()
-            new_speech = request.POST["speech-"+final]
-            new_origin = request.POST["origin-"+final]
-            new_def = request.POST["origin-"+final]
-
-            new = Word(word=new_word, speech = new_speech, origin1 = new_origin, origin2 = None, origin3 = None, definition1 = new_def, definition2 = None, definition3 = None, pronounce = ("*--*" + new_word), tagged=False)
-            new.save()
-    
-    return HttpResponseRedirect(reverse("word_library"))
-
 # Activities
 
 # Spelling
@@ -1625,6 +1614,13 @@ def spell(request):
         fullcall = []
         fullcall.extend(tags)
         fullcall.extend(roots)
+        attn = False
+
+        try:
+            if request.POST.get("attn") == "attemptednone":
+                attn = True
+        except:
+            attn = False
 
         print("========================Verifying word amount========================")
         results = []
@@ -1638,14 +1634,26 @@ def spell(request):
             if not i == "*..*":
                 cool.append(i)
 
-        if "*..*" in tags and "*..*" in roots:
-            results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(tagged=False) | Q(roots__name__in=cool) | Q(rooted=False))).distinct()))
-        elif "*..*" in tags:
-            results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(tagged=False) )).distinct()))
-        elif "*..*" in roots:
-            results.extend(list((Word.objects.filter(Q(roots__name__in=cool) | Q(rooted=False) )).distinct()))
+        if not attn:
+            if "*..*" in tags and "*..*" in roots:
+                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(tagged=False) | Q(roots__name__in=cool) | Q(rooted=False))).distinct()))
+            elif "*..*" in tags:
+                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(tagged=False) )).distinct()))
+            elif "*..*" in roots:
+                results.extend(list((Word.objects.filter(Q(roots__name__in=cool) | Q(rooted=False) )).distinct()))
+            else:
+                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(roots__name__in=cool))).distinct()))
         else:
-            results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(roots__name__in=cool))).distinct()))
+            yaylmao = ReportDetail.objects.filter(report__user__username=request.user.username).values_list('word', flat=True)
+
+            if "*..*" in tags and "*..*" in roots:
+                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(tagged=False) | Q(roots__name__in=cool) | Q(rooted=False))).exclude(word__in = yaylmao).distinct()))
+            elif "*..*" in tags:
+                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(tagged=False) )).exclude(word__in = yaylmao).distinct()))
+            elif "*..*" in roots:
+                results.extend(list((Word.objects.filter(Q(roots__name__in=cool) | Q(rooted=False) )).exclude(word__in = yaylmao).distinct()))
+            else:
+                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(roots__name__in=cool))).exclude(word__in = yaylmao).distinct()))
         
         if (int(len(results)) < int(request.POST["numwords"])) or (int(len(tags)) > int(request.POST["numwords"])):
             return render(request, "spell/spelling_start.html", {
@@ -1683,25 +1691,28 @@ def spell(request):
             didi = []
             results = []
             jeff = 0
+
+            yaylmao = ReportDetail.objects.filter(report__user__username=request.user.username).values_list('word', flat=True)
+
             for ite in fullcall:
                 if ite == "*..*":
-                    didi.append(list(Word.objects.filter(tagged=False).exclude(id__in = results).values_list('pk', flat=True)))
-                    results.extend(list(Word.objects.filter(tagged=False).exclude(id__in = results).values_list('pk', flat=True)))
+                    didi.append(list(Word.objects.filter(tagged=False).exclude(id__in = results).exclude(word__in = yaylmao).values_list('pk', flat=True)))
+                    results.extend(list(Word.objects.filter(tagged=False).exclude(id__in = results).exclude(word__in = yaylmao).values_list('pk', flat=True)))
                     use = len(didi[jeff])
                     lengths.append(use)
                 elif ite == "|--|*..*":
-                    didi.append(list(Word.objects.filter(rooted=False).exclude(id__in = results).values_list('pk', flat=True)))
-                    results.extend(list(Word.objects.filter(rooted=False).exclude(id__in = results).values_list('pk', flat=True)))
+                    didi.append(list(Word.objects.filter(rooted=False).exclude(id__in = results).exclude(word__in = yaylmao).values_list('pk', flat=True)))
+                    results.extend(list(Word.objects.filter(rooted=False).exclude(id__in = results).exclude(word__in = yaylmao).values_list('pk', flat=True)))
                     use = len(didi[jeff])
                     lengths.append(use)
                 elif "|--|" in ite:
-                    didi.append(list(Word.objects.filter(roots__name=ite.replace("|--|", "")).exclude(id__in = results).values_list('pk', flat=True)))
-                    results.extend(list(Word.objects.filter(roots__name=ite.replace("|--|", "")).exclude(id__in = results).values_list('pk', flat=True)))
+                    didi.append(list(Word.objects.filter(roots__name=ite.replace("|--|", "")).exclude(word__in = yaylmao).exclude(id__in = results).values_list('pk', flat=True)))
+                    results.extend(list(Word.objects.filter(roots__name=ite.replace("|--|", "")).exclude(word__in = yaylmao).exclude(id__in = results).values_list('pk', flat=True)))
                     use = len(didi[jeff])
                     lengths.append(use)
                 else:
-                    didi.append(list(Word.objects.filter(tags__name=ite).exclude(id__in = results).values_list('pk', flat=True)))
-                    results.extend(list((Word.objects.filter(tags__name=ite).exclude(id__in = results)).values_list('pk', flat=True)))
+                    didi.append(list(Word.objects.filter(tags__name=ite).exclude(id__in = results).exclude(word__in = yaylmao).values_list('pk', flat=True)))
+                    results.extend(list((Word.objects.filter(tags__name=ite).exclude(id__in = results)).exclude(word__in = yaylmao).values_list('pk', flat=True)))
                     use = len(didi[jeff])
                     lengths.append(use)
                 
@@ -2036,7 +2047,7 @@ def reports(request):
             print(fun)
 
             return render(request, "spell/reports.html", {
-                "bar": "",
+                "bar": "fullreports",
                 "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                 "active": "reports",
                 "reports": Report.objects.filter(specific=False, user=fun).order_by('-finished'),
@@ -2048,14 +2059,14 @@ def reports(request):
             userusing = Account.objects.get(username=request.user.username)
 
             return render(request, "spell/reports.html", {
-                "bar": "",
+                "bar": "fullreports",
                 "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                 "active": "reports",
                 "children": userusing.children.all(),
             })
     else:
         return render(request, "spell/reports.html", {
-            "bar": "",
+            "bar": "fullreports",
             "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
             "active": "reports",
             "ready": True,
@@ -2078,7 +2089,7 @@ def report(request, id):
                 bring = ReportDetail.objects.filter(report=fnu)
 
                 return render(request, "spell/report.html", {
-                    "bar": "",
+                    "bar": "fullreports",
                     "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                     "active": "reports",
                     "used": used,
@@ -2100,7 +2111,7 @@ def report(request, id):
             bring = ReportDetail.objects.filter(report=fnu)
 
             return render(request, "spell/report.html", {
-                "bar": "",
+                "bar": "fullreports",
                 "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                 "active": "reports",
                 "used": used,
@@ -2112,6 +2123,64 @@ def report(request, id):
             })
         else:
             return render(request, "spell/error_404.html", {})
+
+@login_required(login_url='/login')
+@user_passes_test(locked, login_url='/subscribe')
+def wordreports(request):
+    userusing = Account.objects.get(username=request.user.username)
+
+    if userusing.parent:
+        if request.method == "POST":
+            totals = []
+            cool = 0
+            repdet = ReportDetail.objects.filter(report__user__id=int(request.POST["child"]), report__specific = False).values_list('word', flat=True).distinct()
+
+            for word in repdet:
+                if len(ReportDetail.objects.filter(word=word)) > cool:
+                    cool = len(ReportDetail.objects.filter(word=word))
+                
+                thing = {"word": word, "records": list(ReportDetail.objects.filter(word=word).values_list('result', flat=True))}
+                totals.append(thing)
+
+            return render(request, "spell/wordreports.html", {
+                "bar": "fullreports",
+                "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+                "active": "wordreports",
+                "ready": True,
+                "totals": totals,
+                "cool": cool,
+                "child": request.POST["child"],
+                "children": userusing.children.all(),
+            })
+        else:
+            userusing = Account.objects.get(username=request.user.username)
+
+            return render(request, "spell/wordreports.html", {
+                "bar": "fullreports",
+                "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+                "active": "wordreports",
+                "children": userusing.children.all(),
+            })
+    else:
+        totals = []
+        cool = 0
+        repdet = ReportDetail.objects.filter(report__user=request.user, report__specific = False).values_list('word', flat=True).distinct()
+
+        for word in repdet:
+            if len(ReportDetail.objects.filter(word=word)) > cool:
+                cool = len(ReportDetail.objects.filter(word=word))
+            
+            thing = {"word": word, "records": list(ReportDetail.objects.filter(word=word).values_list('result', flat=True))}
+            totals.append(thing)
+
+        return render(request, "spell/wordreports.html", {
+            "bar": "fullreports",
+            "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+            "active": "wordreports",
+            "ready": True,
+            "totals": totals,
+            "cool": cool
+        })
 
 # Profile
 

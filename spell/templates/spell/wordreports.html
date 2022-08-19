@@ -1,0 +1,91 @@
+{% extends "spell/layout.html" %}
+
+{% block title %}SpellNOW!&trade; -- Word Report{% endblock %}
+
+{% block function %}
+  <main id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Word Report</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item">Reports</li>
+          <li class="breadcrumb-item active">Word Report</li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
+
+    
+    <section class="section">
+      {% if children %}
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Select Student</h5>
+
+            <!-- Pills Tabs -->
+            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+              {% for child in children %}
+                <li class="nav-item" role="presentation">
+                  <form action="/wordreports" method="post">
+                    {% csrf_token %}
+                    <input style="display: none;" name="child" value="{{ child.id }}">
+                    <button class="nav-link" id="pills-home-tab-{{ child.id }}" data-bs-toggle="pill" data-bs-target="#pills-home" type="submit" role="tab" aria-controls="pills-home" aria-selected="true">{{ child.first_name }} {{ child.last_name }}</button>
+                  </form>
+                </li>
+              {% endfor %}
+            </ul>
+
+          </div>
+        </div>
+      {% endif %}
+      {% if ready %}
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="card">
+              <div class="card-body" id="tablegoeshere">
+                <h5 class="card-title">Word Report</h5>
+                <p>The following report populates all words attempted by a student. Each 'check' and 'cross' symbol indicates each
+                  attempt the student made. The 'check' symbol indicates the student correctly spelled the word. The 'cross' symbol indicates
+                  the student incorrectly spelled the word.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    </section>
+  </main><!-- End #main -->
+
+  <script>
+    totals = "{{ totals|safe }}";
+    cool = "{{ cool }}";
+    totals = totals.replace(/'/g, '"');
+    const total = JSON.parse(totals);
+
+    window.addEventListener('load', (event) => {
+      fool = '<table class="table datatable"><thead><tr><th scope="col">Word</th></tr></thead><tbody>'
+      
+      for (i = 0; i < total.length; i++) {
+        good = "<tr><td scope=\"row\">" + total[i].word + "</td>";
+        for (j = 0; j < total[i].records.length; j++) {
+          if (total[i].records[j] == "CORRECT") {
+            good += "<td>&check;</td>";
+          }
+          else {
+            good += "<td>&cross;</td>";
+          }
+        }
+        good += "</tr>";
+
+        fool += good;
+      }
+      fool += "</tbody></table>";
+      document.getElementById("tablegoeshere").innerHTML += fool;
+    });
+
+    window.addEventListener('load', (event) => {
+      var child = "pills-home-tab-{{ child }}";
+      document.getElementById(child).classList.add("active");
+    });
+  </script>
+{% endblock %}

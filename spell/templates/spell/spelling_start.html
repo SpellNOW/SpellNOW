@@ -49,6 +49,13 @@
                   <div class="col-md-4">
                     <label for="inputNumber" style="width: 100%;" class="col-sm-2 col-form-label">Number of words:</label>
                     <input type="number" name="numwords" class="form-control" value="{{ number }}">
+                    <br>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" name="attn" id="gridRadios1" value="attemptednone">
+                      <label class="form-check-label" for="gridRadios1">
+                        Exclude words I have already attempted
+                      </label>
+                    </div>
                     {% if message %}
                       <div style="display: block;" class="invalid-feedback">{{ message }}</div>
                     {% endif %}
