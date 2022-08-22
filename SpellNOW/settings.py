@@ -81,7 +81,7 @@ DATABASES = {
         'NAME': 'SpellNOW',  
         'USER': 'dbmasteruser',  
         'PASSWORD': 'lucky1106',  
-        'HOST': 'ls-5d1b4a019cc4d60ff2c5bf9d27ea71f2373885bf.cifnnfubjcpo.us-east-1.rds.amazonaws.com',  
+        'HOST': 'ls-23ffe5592ff133ab548277c651be0b95341a05e8.cifnnfubjcpo.us-east-1.rds.amazonaws.com',  
         'PORT': '3306',
     }  
 }
