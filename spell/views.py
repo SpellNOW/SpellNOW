@@ -1692,31 +1692,54 @@ def spell(request):
             results = []
             jeff = 0
 
-            yaylmao = ReportDetail.objects.filter(report__user__username=request.user.username).values_list('word', flat=True)
+            if not attn:
+                for ite in fullcall:
+                    if ite == "*..*":
+                        didi.append(list(Word.objects.filter(tagged=False).exclude(id__in = results).values_list('pk', flat=True)))
+                        results.extend(list(Word.objects.filter(tagged=False).exclude(id__in = results).values_list('pk', flat=True)))
+                        use = len(didi[jeff])
+                        lengths.append(use)
+                    elif ite == "|--|*..*":
+                        didi.append(list(Word.objects.filter(rooted=False).exclude(id__in = results).values_list('pk', flat=True)))
+                        results.extend(list(Word.objects.filter(rooted=False).exclude(id__in = results).values_list('pk', flat=True)))
+                        use = len(didi[jeff])
+                        lengths.append(use)
+                    elif "|--|" in ite:
+                        didi.append(list(Word.objects.filter(roots__name=ite.replace("|--|", "")).exclude(id__in = results).values_list('pk', flat=True)))
+                        results.extend(list(Word.objects.filter(roots__name=ite.replace("|--|", "")).exclude(id__in = results).values_list('pk', flat=True)))
+                        use = len(didi[jeff])
+                        lengths.append(use)
+                    else:
+                        didi.append(list(Word.objects.filter(tags__name=ite).exclude(id__in = results).values_list('pk', flat=True)))
+                        results.extend(list((Word.objects.filter(tags__name=ite).exclude(id__in = results)).values_list('pk', flat=True)))
+                        use = len(didi[jeff])
+                        lengths.append(use)
+                    jeff += 1
+            else:
+                yaylmao = ReportDetail.objects.filter(report__user__username=request.user.username).values_list('word', flat=True)
 
-            for ite in fullcall:
-                if ite == "*..*":
-                    didi.append(list(Word.objects.filter(tagged=False).exclude(id__in = results).exclude(word__in = yaylmao).values_list('pk', flat=True)))
-                    results.extend(list(Word.objects.filter(tagged=False).exclude(id__in = results).exclude(word__in = yaylmao).values_list('pk', flat=True)))
-                    use = len(didi[jeff])
-                    lengths.append(use)
-                elif ite == "|--|*..*":
-                    didi.append(list(Word.objects.filter(rooted=False).exclude(id__in = results).exclude(word__in = yaylmao).values_list('pk', flat=True)))
-                    results.extend(list(Word.objects.filter(rooted=False).exclude(id__in = results).exclude(word__in = yaylmao).values_list('pk', flat=True)))
-                    use = len(didi[jeff])
-                    lengths.append(use)
-                elif "|--|" in ite:
-                    didi.append(list(Word.objects.filter(roots__name=ite.replace("|--|", "")).exclude(word__in = yaylmao).exclude(id__in = results).values_list('pk', flat=True)))
-                    results.extend(list(Word.objects.filter(roots__name=ite.replace("|--|", "")).exclude(word__in = yaylmao).exclude(id__in = results).values_list('pk', flat=True)))
-                    use = len(didi[jeff])
-                    lengths.append(use)
-                else:
-                    didi.append(list(Word.objects.filter(tags__name=ite).exclude(id__in = results).exclude(word__in = yaylmao).values_list('pk', flat=True)))
-                    results.extend(list((Word.objects.filter(tags__name=ite).exclude(id__in = results)).exclude(word__in = yaylmao).values_list('pk', flat=True)))
-                    use = len(didi[jeff])
-                    lengths.append(use)
-                
-                jeff += 1
+                for ite in fullcall:
+                    if ite == "*..*":
+                        didi.append(list(Word.objects.filter(tagged=False).exclude(id__in = results).exclude(word__in = yaylmao).values_list('pk', flat=True)))
+                        results.extend(list(Word.objects.filter(tagged=False).exclude(id__in = results).exclude(word__in = yaylmao).values_list('pk', flat=True)))
+                        use = len(didi[jeff])
+                        lengths.append(use)
+                    elif ite == "|--|*..*":
+                        didi.append(list(Word.objects.filter(rooted=False).exclude(id__in = results).exclude(word__in = yaylmao).values_list('pk', flat=True)))
+                        results.extend(list(Word.objects.filter(rooted=False).exclude(id__in = results).exclude(word__in = yaylmao).values_list('pk', flat=True)))
+                        use = len(didi[jeff])
+                        lengths.append(use)
+                    elif "|--|" in ite:
+                        didi.append(list(Word.objects.filter(roots__name=ite.replace("|--|", "")).exclude(word__in = yaylmao).exclude(id__in = results).values_list('pk', flat=True)))
+                        results.extend(list(Word.objects.filter(roots__name=ite.replace("|--|", "")).exclude(word__in = yaylmao).exclude(id__in = results).values_list('pk', flat=True)))
+                        use = len(didi[jeff])
+                        lengths.append(use)
+                    else:
+                        didi.append(list(Word.objects.filter(tags__name=ite).exclude(id__in = results).exclude(word__in = yaylmao).values_list('pk', flat=True)))
+                        results.extend(list((Word.objects.filter(tags__name=ite).exclude(id__in = results)).exclude(word__in = yaylmao).values_list('pk', flat=True)))
+                        use = len(didi[jeff])
+                        lengths.append(use)
+                    jeff += 1
             
             globalmin = int(int(request.POST["numwords"])/int(len(lengths)))
             last = int(request.POST["numwords"]) - (globalmin * (int(len(lengths)) - 1))
@@ -1746,6 +1769,7 @@ def spell(request):
                         better.append(globalmin)
             
             for i in range(int(len(lengths))):
+                print(surplus[i])
                 if surplus[i] < 0:
                     j = 0
                     k = 0
