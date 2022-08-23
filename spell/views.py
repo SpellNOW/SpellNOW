@@ -1887,7 +1887,6 @@ def spell(request):
                 "allroots": wrongio,
             })
 
-@user_passes_test(locked, login_url='/subscribe')
 @user_passes_test(is_child, login_url='/error_404')
 def finish(request):
     if request.user.is_staff:
