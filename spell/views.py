@@ -1966,7 +1966,7 @@ def finish(request):
     cool = 0
     id_using = 0
     thingy = (request.POST["score"]).split("/")
-    userusing = Account.objects.get(username="anjalic123")
+    userusing = Account.objects.get(pk=int(request.POST["user"]))
     new = Report(used=ids_used, correct=thingy[0], total=(thingy[1]), percent=(int((int(thingy[0])/int(thingy[1]))*100)), specific=False, user=userusing)
     new.save()
     id_using = new.id
@@ -2057,7 +2057,7 @@ def finish(request):
     msg = MIMEMultipart()
     msg['Subject'] = 'Official SpellNOW! Notification! -- New Report'
     msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
-    parent = Account.objects.get(children__contains=request.user)
+    parent = Account.objects.get(pk=userusing.parents)
     msg["To"] = parent.email
     body_text = """Hello!\n\nThis is an Official SpellNOW! Notification. """ + request.user.first_name + """ has complete a spelling activity on SpellNOW! with a score of """ + request.POST["score"] + """. Thank you, and we hope for your continued progress for the future.\n\nSincerely,\nSpellNOW! Support Team"""
 

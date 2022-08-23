@@ -63,7 +63,6 @@ urlpatterns = [
     path("informvalidation", views.informvalidation, name="informvalidation"),
     path("validatemail/<int:userit>-<int:lockit1>-<int:lockit2>", views.validatemail, name="validatemail"),
 
-
     # -------------DO NOT USE BELOW THIS LINE----------------- #
     # Subscribe
     path("subscribe", views.subscribe, name="subscribe"),

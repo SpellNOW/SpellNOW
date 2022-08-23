@@ -119,6 +119,7 @@
         <textarea name="attempts" id="attempts"></textarea>
         <textarea name="time" id="time"></textarea>
         <input name="score" id="score">
+        <input name="user" id="user" value="{{ request.user.id }}">
         {% if user.is_staff %}
             <textarea name="new_tags" id="new_tags"></textarea>
             <textarea name="add_words" id="add_words"></textarea>
