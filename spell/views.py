@@ -266,12 +266,17 @@ def login(request):
         username = request.POST["username"]
         password = request.POST["password"]
         user = authenticate(request, username=username, password=password)
-
+        form=MyForm(request.POST)
         
         if user is None:
             return render(request, "spell/login.html", {
                 "form": MyForm(),
                 "message": "Invalid username and/or password."
+            })
+        elif not form.is_valid():
+            return render(request, "spell/login.html", {
+                "form": MyForm(),
+                "message": "Invalid captcha."
             })
         else:
             auth_login(request, user)
@@ -288,6 +293,13 @@ def register(request):
         pemail = request.POST["pemail"]
         ppasswordi = request.POST["ppassword"]
         pparentid = 0
+        form=MyForm(request.POST)
+
+        if not form.is_valid():
+            return render(request, "spell/login.html", {
+                "form": MyForm(),
+                "message": "Invalid captcha."
+            })
 
         if not Account.objects.filter(username=pusername).exists():
             it1 = random.randint(10000, 99999)
@@ -368,6 +380,14 @@ def single_register(request):
             username = request.POST["username"]
             email = request.POST["email"]
             passwordi = request.POST["password"]
+
+            form=MyForm(request.POST)
+
+            if not form.is_valid():
+                return render(request, "spell/login.html", {
+                    "form": MyForm(),
+                    "message": "Invalid captcha."
+                })
 
             if not Account.objects.filter(username=username).exists():
                 it1 = random.randint(10000, 99999)
@@ -2163,7 +2183,7 @@ def wordreports(request):
                 if len(ReportDetail.objects.filter(word=word)) > cool:
                     cool = len(ReportDetail.objects.filter(word=word))
                 
-                thing = {"word": word, "records": list(ReportDetail.objects.filter(word=word).values_list('result', flat=True))}
+                thing = {"word": word, "records": list(ReportDetail.objects.filter(word=word).values_list('result', flat=True)), "tags": list(Word.objects.get(word=word).tags.all().values_list('pk', flat=True))}
                 totals.append(thing)
 
             return render(request, "spell/wordreports.html", {
@@ -2190,12 +2210,17 @@ def wordreports(request):
         cool = 0
         repdet = ReportDetail.objects.filter(report__user=request.user, report__specific = False).values_list('word', flat=True).distinct()
 
-        for word in repdet:
+        for word in list(repdet)[:5]:
             if len(ReportDetail.objects.filter(word=word)) > cool:
                 cool = len(ReportDetail.objects.filter(word=word))
             
-            thing = {"word": word, "records": list(ReportDetail.objects.filter(word=word).values_list('result', flat=True))}
+            thing = {"word": word, "records": list(ReportDetail.objects.filter(word=word).values_list('result', flat=True)), "tags": list(Word.objects.get(word=word).tags.all().values_list('pk', flat=True))}
             totals.append(thing)
+
+        alltags = ""
+
+        for tag in Tag.objects.all():
+            alltags += tag.name + "*..*"
 
         return render(request, "spell/wordreports.html", {
             "bar": "fullreports",
@@ -2203,7 +2228,9 @@ def wordreports(request):
             "active": "wordreports",
             "ready": True,
             "totals": totals,
-            "cool": cool
+            "cool": cool,
+            "tags": Tag.objects.all(),
+            "alltags": alltags,
         })
 
 # Profile
