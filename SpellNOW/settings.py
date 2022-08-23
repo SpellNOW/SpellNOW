@@ -25,6 +25,7 @@ DEBUG = True
 SECURE_SSL_REDIRECT = True
 
 ALLOWED_HOSTS = ['*']
+AUTO_LOGOUT = {'IDLE_TIME': 7200}
 
 
 # Application definition
@@ -49,6 +50,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_auto_logout.middleware.auto_logout',
 ]
 
 ROOT_URLCONF = 'SpellNOW.urls'

@@ -73,7 +73,7 @@
                                     <button onclick="new_tag()" type="button" class="btn btn-primary" value="Create">Create</button>
                                 </div>
                             </div>
-                            <p><b style="display: none;" style="color:red" id="id_response">Invalid Tag Name: The tag contains three dashes (---), a quotation mark ("), a apostrophe ('), a star followed by two dots followed by a star (*..*), a comma followed by a space (, ), or already exists.</b></p>
+                            <p><b style="display: none;" style="color:red" id="id_response">Invalid Tag Name: The tag contains three dashes (---), a quotation mark ("), a apostrophe ('), a star followed by two dots followed by a star (*..*), or a comma followed by a space (, ).</b></p>
                             <div style="width: 100%;" class="row g-3">
                                 <div style="width: 100%;" class="col-md-4">
                                     <div class="form-floating mb-3">
@@ -315,7 +315,7 @@
                     document.getElementById("alltags").innerHTML += '<button style="color:rgb(13, 110, 253); background-color: rgb(255, 255, 255);" onclick="add_word(\'' + alltags[i] + '\')" id="' + alltags[i] + '" type="button" class="btn btn-primary rounded-pill tag">' + alltags[i] + '</button>'
                 }
                 for(var i = 0; i < allroots.length; i++) {
-                    document.getElementById("allroots").innerHTML += '<button style="color:rgb(37, 207, 242); background-color: rgb(255, 255, 255);" onclick="add_word_root(\'|--|' + allroots[i] + '\')" id="|--|' + allroots[i] + '" type="button" class="btn btn-info rounded-pill tag">' + allroots[i] + '</button>'
+                    document.getElementById("allroots").innerHTML += '<button style="color:rgb(37, 207, 242); background-color: rgb(255, 255, 255);" onclick="add_word_root(\'|--|' + allroots[i] + '\')" id="' + allroots[i] + '" type="button" class="btn btn-info rounded-pill tag">' + allroots[i] + '</button>'
                 }
                 document.getElementById("search_tags").value = ""
                 document.getElementById("search_roots").value = ""

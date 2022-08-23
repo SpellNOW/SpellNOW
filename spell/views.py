@@ -1887,7 +1887,6 @@ def spell(request):
                 "allroots": wrongio,
             })
 
-@user_passes_test(is_child, login_url='/error_404')
 def finish(request):
     if request.user.is_staff:
         tags_rep = request.POST["new_tags"]
@@ -2184,6 +2183,11 @@ def wordreports(request):
                 
                 thing = {"word": word, "records": list(ReportDetail.objects.filter(word=word).values_list('result', flat=True)), "tags": list(Word.objects.get(word=word).tags.all().values_list('pk', flat=True))}
                 totals.append(thing)
+    
+            alltags = ""
+
+            for tag in Tag.objects.all():
+                alltags += tag.name + "*..*"
 
             return render(request, "spell/wordreports.html", {
                 "bar": "fullreports",
@@ -2194,6 +2198,8 @@ def wordreports(request):
                 "cool": cool,
                 "child": request.POST["child"],
                 "children": userusing.children.all(),
+                "tags": Tag.objects.all(),
+                "alltags": alltags,
             })
         else:
             userusing = Account.objects.get(username=request.user.username)
@@ -2209,7 +2215,7 @@ def wordreports(request):
         cool = 0
         repdet = ReportDetail.objects.filter(report__user=request.user, report__specific = False).values_list('word', flat=True).distinct()
 
-        for word in list(repdet)[:5]:
+        for word in repdet:
             if len(ReportDetail.objects.filter(word=word)) > cool:
                 cool = len(ReportDetail.objects.filter(word=word))
             

@@ -43,11 +43,30 @@
         <div class="row">
           <div class="col-lg-12">
             <div class="card">
-              <div class="card-body" id="tablegoeshere">
+              <div class="card-body">
                 <h5 class="card-title">Word Report</h5>
                 <p>The following report populates all words attempted by a student. Each 'check' and 'cross' symbol indicates each
                   attempt the student made. The 'check' symbol indicates the student correctly spelled the word. The 'cross' symbol indicates
-                  the student incorrectly spelled the word.</p>
+                  the student incorrectly spelled the word. You can even filter words by tags using the function below.</p>
+                <div style="width: 100%;" class="row g-3">
+                  <div style="width: 50%;" class="col-md-4" id="tablegoeshere">
+                  </div>
+                  <div style="width: 50%;" class="col-md-4">
+                    <div style="width: 100%;" class="row g-3">
+                      <div style="width: 100%;" class="col-md-4">
+                        <div class="form-floating mb-3">
+                          <input type="text" class="form-control" id="search_tags" spellcheck="false" autocomplete="off" name="search" placeholder="Search...">
+                          <label for="search_tags">Search Tags</label>
+                        </div>
+                      </div>
+                    </div>
+                    <div id="alltags">
+                      {% for tag in tags %}
+                        <button style="color:rgb(13, 110, 253); background-color: rgb(255, 255, 255);" onclick="add_filt('{{ tag.id }}')" id="{{ tag.id }}" type="button" class="btn btn-primary rounded-pill tag">{{ tag.name }}</button>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -80,12 +99,98 @@
         fool += good;
       }
       fool += "</tbody></table>";
-      document.getElementById("tablegoeshere").innerHTML += fool;
+      document.getElementById("tablegoeshere").innerHTML = fool;
     });
 
     window.addEventListener('load', (event) => {
       var child = "pills-home-tab-{{ child }}";
       document.getElementById(child).classList.add("active");
     });
+
+    var g_alltags = "{{ alltags }}";
+    const alltags = g_alltags.split("*..*");
+    alltags.pop();
+    var filt = [];
+
+    document.addEventListener("keyup", function(event) {
+        if (document.activeElement.id == "search_tags") {
+            document.getElementById("alltags").innerHTML = "";
+            for(var i = 0; i < alltags.length; i++) {
+                if ((alltags[i].toLowerCase()).startsWith(document.getElementById("search_tags").value.toLowerCase())) {
+                    document.getElementById("alltags").innerHTML += '<button style="color:rgb(13, 110, 253); background-color: rgb(255, 255, 255);" onclick="add_filt(\'' + alltags[i] + '\')" id="' + alltags[i] + '" type="button" class="btn btn-primary rounded-pill tag">' + alltags[i] + '</button>'
+                }
+            }
+        }
+    });
+
+    function add_filt(tag) {
+        if (document.getElementById(tag).style.color == "rgb(13, 110, 253)" || document.getElementById(tag).style.color == "") {
+          document.getElementById(tag).style.color = "rgb(255, 255, 255)";
+          document.getElementById(tag).style.backgroundColor = "rgb(13, 110, 253)";
+          filt.push(parseInt(tag));
+          fool = '<table class="table datatable"><thead><tr><th scope="col">Word</th></tr></thead><tbody>'
+          
+          for (i = 0; i < total.length; i++) {
+            init = true;
+            for (j = 0; j < filt.length; j++) {
+              if (!(total[i].tags.includes(filt[j]))) {
+                init = false;
+              }
+            }
+            
+            if (init == true) {
+              good = "<tr><td scope=\"row\">" + total[i].word + "</td>";
+              for (j = 0; j < total[i].records.length; j++) {
+                if (total[i].records[j] == "CORRECT") {
+                  good += "<td>&check;</td>";
+                }
+                else {
+                  good += "<td>&cross;</td>";
+                }
+              }
+              good += "</tr>";
+
+              fool += good;
+            }
+          }
+          
+          fool += "</tbody></table>";
+          document.getElementById("tablegoeshere").innerHTML = fool;
+        }
+        else {
+          document.getElementById(tag).style.color = "rgb(13, 110, 253)";
+          document.getElementById(tag).style.backgroundColor = "rgb(255, 255, 255)";
+
+          filt.pop(parseInt(tag));
+          fool = '<table class="table datatable"><thead><tr><th scope="col">Word</th></tr></thead><tbody>'
+          
+          for (i = 0; i < total.length; i++) {
+            init = true;
+            for (j = 0; j < filt.length; j++) {
+              if (!(total[i].tags.includes(filt[j]))) {
+                init = false;
+              }
+            }
+
+            if (init == true) {
+              good = "<tr><td scope=\"row\">" + total[i].word + "</td>";
+              for (j = 0; j < total[i].records.length; j++) {
+                if (total[i].records[j] == "CORRECT") {
+                  good += "<td>&check;</td>";
+                }
+                else {
+                  good += "<td>&cross;</td>";
+                }
+              }
+              good += "</tr>";
+
+              fool += good;
+            }
+          }
+
+          fool += "</tbody></table>";
+          document.getElementById("tablegoeshere").innerHTML = fool;
+        }
+    }
   </script>
 {% endblock %}
