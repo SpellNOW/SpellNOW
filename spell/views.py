@@ -1966,7 +1966,7 @@ def finish(request):
     cool = 0
     id_using = 0
     thingy = (request.POST["score"]).split("/")
-    userusing = Account.objects.get(username=request.user.username)
+    userusing = Account.objects.get(username="anjalic123")
     new = Report(used=ids_used, correct=thingy[0], total=(thingy[1]), percent=(int((int(thingy[0])/int(thingy[1]))*100)), specific=False, user=userusing)
     new.save()
     id_using = new.id
