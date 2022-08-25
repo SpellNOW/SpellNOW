@@ -300,9 +300,9 @@
         document.getElementById("def2-"+word).innerHTML = "";
         document.getElementById("def3-"+word).innerHTML = "";
         
-        omg1 = "'valueholder-def1" + word + "'"
-        omg2 = "'valueholder-def2" + word + "'"
-        omg3 = "'valueholder-def3" + word + "'"
+        omg1 = "'valueholder-def1-" + word + "'"
+        omg2 = "'valueholder-def2-" + word + "'"
+        omg3 = "'valueholder-def3-" + word + "'"
         document.getElementById("def1-"+word).innerHTML = '<textarea id=' + omg1 + ' onchange="changes(' + omg1 + ')" class="form-control">' + right[0] + '</textarea><br>';
         
         if (right[1] != "None") {
@@ -319,7 +319,7 @@
           document.getElementById("def3-"+word).innerHTML = '<textarea id=' + omg3 + ' onchange="changes(' + omg3 + ')" placeholder="None" class="form-control"></textarea><br>';
         }
 
-        omg = "'valueholder-spec" + word + "'"
+        omg = "'valueholder-spec-" + word + "'"
         speech = document.getElementById("spec-"+word).innerHTML;
         document.getElementById("spec-"+word).innerHTML = '<textarea id=' + omg + ' onchange="changes(' + omg + ')" class="form-control">' + speech + '</textarea><br>';
 
