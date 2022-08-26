@@ -1,0 +1,237 @@
+{% extends "spell/layout.html" %}
+
+{% block title %}SpellNOW!&trade; -- Vocabulary Activity{% endblock %}
+
+{% block function %}
+  <main id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Vocabulary Activity</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item">Activities</li>
+          <li class="breadcrumb-item active">Vocabulary</li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
+
+    
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Vocabulary</h5>
+              <p>Choose the correct option for the given question regarding vocabulary.</p>
+              <div id="nothing">
+                <button onclick="neword()" style="display: block;" class="btn btn-primary" type="button">Click to Launch Activity</button>
+              </div>
+              
+              <div id="everything" style="display:none;">
+                <div style="width:100%" class="row g-3">
+                    <div style="width:100%;" class="col-md-4">
+                        <p style="color: #4d4d4d;" id="progress"></p>
+                        <p style="color: #2dab26;" id="correct"></p>
+                        <div style="width: 100%;" class="row g-3">
+                          <div style="width:100%;" class="col-md-4">
+                            <p id="question">My amazing question</p>
+                            <fieldset class="row mb-3">
+                                <div class="col-sm-10">
+                                  <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="gridRadios" id="gridRadiosA" value="option1">
+                                    <label class="form-check-label" id="optionA" for="gridRadiosA">
+                                      First radio
+                                    </label>
+                                  </div>
+                                  <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="gridRadios" id="gridRadiosB" value="option2">
+                                    <label class="form-check-label" id="optionB" for="gridRadiosB">
+                                      Second radio
+                                    </label>
+                                  </div>
+                                  <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="gridRadios" id="gridRadiosC" value="option">
+                                    <label class="form-check-label" id="optionC" for="gridRadiosC">
+                                      Third radio
+                                    </label>
+                                  </div>
+                                  <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="gridRadios" id="gridRadiosD" value="option">
+                                    <label class="form-check-label" id="optionD" for="gridRadiosD">
+                                      Fourth radio
+                                    </label>
+                                  </div>
+                                </div>
+                              </fieldset>
+                              
+                        <p><b style="display: none;" id="response"></b></p>
+                          <div style="width:20%;" class="col-md-4">
+                            <button type="button" class="btn btn-primary" id="check" onclick="spell()">CHECK</button>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <form style="display: none;" enctype="multipart/form-data" action="{% url 'vocab_finish' %}" method="post">
+        {% csrf_token %}
+        <textarea name="words" id="words"></textarea>
+        <textarea name="ids_used" id="ids_used">{{ ids_used }}</textarea>
+        <textarea name="order" id="order">{{ order }}</textarea>
+        <textarea name="correct_array" id="correct_array"></textarea>
+        <textarea name="vocabas" id="vocabas"></textarea>
+        <textarea name="attempts" id="attempts"></textarea>
+        <textarea name="time" id="time"></textarea>
+        <input name="score" id="score">
+        <input name="user" id="user" value="{{ request.user.id }}">
+        <input id="stop" type="submit">
+    </form>
+    </section>
+  </main><!-- End #main -->
+  <script>
+    var g_words = "{{ words|safe }}";
+    g_words = g_words.replaceAll("'", '"');
+    var g_questions = "{{ questions|safe }}";
+    var g_options = "{{ options|safe }}";
+    var g_ans = "{{ ans|safe }}";
+    var correct_array = "";
+    const words = JSON.parse(g_words);
+    const questions = g_questions.split("+--+");
+    const options = g_options.split("9889");
+    const answers = g_ans.split("||==||");
+    questions.pop();
+    options.pop();
+    answers.pop();
+
+    var global_count = 0;
+    var correct = 0;
+    var progress = 0;
+    var word_count = words.length;
+    var pron_link = "";
+    var watch = 0;
+    var stopwatch;
+    stopwatch = setInterval(function () {if (document.getElementById("nothing").style.display == "none") {watch++;}}, 1000);
+    
+    function neword() {
+        document.getElementById("nothing").style.display = "none";
+        document.getElementById("everything").style.display = "block";
+        var coolio = options[global_count].split("--00--");
+        
+        document.getElementById("question").innerHTML = questions[global_count];
+        document.getElementById("optionA").innerHTML = coolio[0];
+        document.getElementById("optionB").innerHTML = coolio[1];
+        document.getElementById("optionC").innerHTML = coolio[2];
+        document.getElementById("optionD").innerHTML = coolio[3];
+    }
+
+    function spell() {
+        if (document.getElementById("check").innerHTML == "CHECK") {
+            if (document.getElementById("gridRadios" + answers[global_count]).checked != true) {
+                var chosen = "";
+
+                if (document.getElementById("gridRadiosA").checked) {
+                    chosen = "A";
+                } 
+                else if (document.getElementById("gridRadiosB").checked) {
+                    chosen = "B";
+                } 
+                else if (document.getElementById("gridRadiosC").checked) {
+                    chosen = "C";
+                } 
+                else {
+                    chosen = "D";
+                }
+
+                document.getElementById("option" + chosen).style.fontWeight = "bold";
+                document.getElementById("option" + chosen).style.color = "red";
+
+                document.getElementById("option" + answers[global_count]).style.fontWeight = "bold";
+                document.getElementById("option" + answers[global_count]).style.color = "green";
+                
+                document.getElementById("response").style.display = "block";
+                document.getElementById("response").style.color = "red";
+                document.getElementById("response").innerHTML = "INCORRECT! The correct answer is " + answers[global_count] + ".";
+
+                document.getElementById("check").innerHTML = "NEXT";
+                if (global_count + 1 == word_count) {
+                    document.getElementById("check").innerHTML = "FINISH";
+                }
+
+                progress += 1;
+                correct_array += "0, ";
+                document.getElementById("progress").innerHTML = ("<b>Progress: </b>" + progress + "/" + word_count);
+                document.getElementById("correct").innerHTML = ("<b>Correct: </b>" + correct + "/" + progress);
+
+                document.getElementById("attempts").innerHTML += (document.getElementById("option" + chosen).innerHTML + "9009");
+                document.getElementById("vocabas").innerHTML += (document.getElementById("option" + answers[global_count]).innerHTML + "9009");
+            }
+            else {
+                document.getElementById("option" + answers[global_count]).style.fontWeight = "bold";
+                document.getElementById("option" + answers[global_count]).style.color = "green";
+                
+                document.getElementById("response").style.display = "block";
+                document.getElementById("response").style.color = "green";
+                document.getElementById("response").innerHTML = "CORRECT!";
+
+                document.getElementById("check").innerHTML = "NEXT";
+                if (global_count + 1 == word_count) {
+                    document.getElementById("check").innerHTML = "FINISH";
+                }
+
+                progress += 1;
+                correct += 1;
+                correct_array += "1, ";
+                document.getElementById("progress").innerHTML = ("<b>Progress: </b>" + progress + "/" + word_count);
+                document.getElementById("correct").innerHTML = ("<b>Correct: </b>" + correct + "/" + progress);
+
+                document.getElementById("attempts").innerHTML += (document.getElementById("option" + answers[global_count]).innerHTML + "9009");
+                document.getElementById("vocabas").innerHTML += (document.getElementById("option" + answers[global_count]).innerHTML + "9009");
+            }
+        }
+        else if (document.getElementById("check").innerHTML == "NEXT") {
+            document.getElementById("gridRadiosA").checked = false;
+            document.getElementById("gridRadiosB").checked = false;
+            document.getElementById("gridRadiosC").checked = false;
+            document.getElementById("gridRadiosD").checked = false;
+
+            document.getElementById("optionA").style.color = "#444444";
+            document.getElementById("optionB").style.color = "#444444";
+            document.getElementById("optionC").style.color = "#444444";
+            document.getElementById("optionD").style.color = "#444444";
+
+            document.getElementById("optionA").style.fontWeight = "normal";
+            document.getElementById("optionB").style.fontWeight = "normal";
+            document.getElementById("optionC").style.fontWeight = "normal";
+            document.getElementById("optionD").style.fontWeight = "normal";
+
+            document.getElementById("response").style.display = "none";
+            document.getElementById("check").innerHTML = "CHECK"
+
+            global_count += 1;
+            
+            document.getElementById("time").innerHTML += (watch + ", ");
+            watch = 0;
+
+            neword();
+        }
+        else {
+            document.getElementById("time").innerHTML += (watch + ", ");
+
+            document.getElementById("correct_array").innerHTML = correct_array;
+            document.getElementById("score").value = (correct + "/" + word_count);
+            document.getElementById('stop').click();
+        }
+    }
+
+    var arrayLength = questions.length;
+    for (var i = 0; i < arrayLength; i++) {
+        document.getElementById("words").innerHTML += (questions[i] + "990099");
+    }
+    document.getElementById("progress").innerHTML = ("<b>Progress: </b>0/" + word_count);
+    document.getElementById("correct").innerHTML = ("<b>Correct: </b>0/0");
+</script>
+{% endblock %}

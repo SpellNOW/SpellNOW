@@ -46,18 +46,13 @@
                           </div>
                         </div>
                         <p><b style="display: none;" id="response"></b></p>
-                        <button onclick="repron()" type="button" class="btn btn-secondary">Pronounce</button>
-                        <button onclick="spec()" type="button" class="btn btn-secondary">Part of Speech</button>
-                        <button onclick="origin()" type="button" class="btn btn-secondary">Language of Origin</button>
-                        <button onclick="def()" type="button" class="btn btn-secondary">Definition</button>
-                        <br><br>
-                        <p style="display:none;" id="speech"></p>
+                        <p id="speech"></p>
                         <p><b>Language of Origin:</b></p>
-                        <div style="display:none;" id="origin">
+                        <div id="origin">
                         </div>
                         <br>
                         <p><b>Definition:</b></p>
-                        <div style="display:none;" id="def">
+                        <div id="def">
                         </div>
                     </div>
                     {% if user.is_staff %}
@@ -349,18 +344,6 @@
             }
         }
     });
-
-    function spec() {
-        document.getElementById("speech").style.display = "block";
-    }
-
-    function origin() {
-        document.getElementById("origin").style.display = "block";
-    }
-
-    function def() {
-        document.getElementById("def").style.display = "block";
-    }
 
     var arrayLength = words.length;
     for (var i = 0; i < arrayLength; i++) {

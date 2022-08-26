@@ -43,6 +43,11 @@ urlpatterns = [
     path("spell", views.spell, name="spell"),
     path("finish", views.finish, name="finish"),
 
+    # Vocabulary
+    path("vocab_start", views.vocab_start, name="vocab_start"),
+    path("vocab", views.vocab, name="vocab"),
+    path("vocab_finish", views.vocab_finish, name="vocab_finish"),
+
     # Reports
     path("reports", views.reports, name="reports"),
     path("report/<int:id>", views.report, name="report"),

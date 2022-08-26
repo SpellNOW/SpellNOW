@@ -52,6 +52,7 @@ class Report(models.Model):
     finished = models.DateTimeField(auto_now_add=True)
     specific = models.BooleanField()
     iid = models.IntegerField(null=True, blank=True)
+    spelling = models.BooleanField()
     user = models.ForeignKey(Account, on_delete=models.CASCADE, null=True, blank=True)
 
 class ReportDetail(models.Model):
@@ -59,6 +60,16 @@ class ReportDetail(models.Model):
     identification = models.TextField(max_length=600)
     word = models.TextField(max_length=100)
     attempt = models.TextField()
+    result = models.TextField(max_length=10)
+    time = models.TextField(max_length=600)
+    report = models.ForeignKey(Report, on_delete=models.CASCADE)
+
+class VocabReportDetail(models.Model):
+    count = models.IntegerField()
+    identification = models.TextField(max_length=600)
+    question = models.TextField(max_length=1100)
+    answer = models.TextField(max_length=1000)
+    attempt = models.TextField(max_length=1000)
     result = models.TextField(max_length=10)
     time = models.TextField(max_length=600)
     report = models.ForeignKey(Report, on_delete=models.CASCADE)

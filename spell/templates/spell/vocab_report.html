@@ -1,0 +1,98 @@
+{% extends "spell/layout.html" %}
+
+{% block title %}SpellNOW!&trade; -- Activity Report{% endblock %}
+
+{% block function %}
+  <main id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Reports</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item">Reports</li>
+          <li class="breadcrumb-item active">{{ title }} EST</li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
+
+    
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">{{ title }} EST</h5>
+              <table class="table datatable">
+                <thead>
+                    <tr>
+                        <th class="col">Identification</th>
+                        <th class="col">Correct Words</th>
+                        <th class="col">Total Words</th>
+                        <th class="col">Percent</th>
+                    </tr>
+                </thead>
+                <tbody>
+                  {% for use in used %}
+                    <tr>
+                        <td>{{ use.used }}</td>
+                        <td style="color: #2dab26"><b>{{ use.correct }}</b></td>
+                        <td><b>{{ use.total }}</b></td>
+                        <td><b>{{ use.percent }}%</b></td>
+                    </tr>
+                  {% endfor %}
+                  <tr class="within-tr">
+                      <td class="within-td"><b>TOTAL</b></td>
+                      <td class="within-td" style="color: #2dab26"><b>{{ correct }}</b></td>
+                      <td class="within-td"><b>{{ total }}</b></td>
+                      <td class="within-td"><b>{{ percent }}%</b></td>
+                  </tr>
+                </tbody>
+              </table>
+              <br>
+              <h6><b>Record</b></h6>
+              <table class="table datatable">
+                <thead>
+                  <tr>
+                    <th class="col">Progress</th>
+                    <th class="col">Identification</th>
+                    <th class="col">Question</th>
+                    <th class="col">Correct Answer</th>
+                    <th class="col">Attempt</th>
+                    <th class="col">Result</th>
+                    <th class="col">Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for record in records %}
+                    {% if record.result|safe == "CORRECT" %}
+                        <tr style="background-color: #68d959; border: 1px solid #366330;" >
+                            <td><b>{{ record.count|safe }}</b></td>
+                            <td><b>{{ record.identification|safe }}</b></td>
+                            <td>{{ record.question|safe }}</td>
+                            <td><b>{{ record.answer|safe }}</b></td>
+                            <td><b>{{ record.attempt|safe }}</b></td>
+                            <td><b>{{ record.result|safe }}</b></td>
+                            <td><b>{{ record.time|safe }}</b></td>
+                        </tr>
+                    {% else %}
+                        <tr style="background-color: #fc5a5a; border: 1px solid #613a3a;" >
+                            <td><b>{{ record.count|safe }}</b></td>
+                            <td><b>{{ record.identification|safe }}</b></td>
+                            <td>{{ record.question|safe }}</td>
+                            <td><b>{{ record.answer|safe }}</b></td>
+                            <td><b>{{ record.attempt|safe }}</b></td>
+                            <td><b>{{ record.result|safe }}</b></td>
+                            <td><b>{{ record.time|safe }}</b></td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+              </tbody>
+              </table>
+              </div>
+            </div>
+          </div>
+        </div>
+    </section>
+  </main><!-- End #main -->
+{% endblock %}

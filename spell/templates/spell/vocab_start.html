@@ -1,17 +1,17 @@
 {% extends "spell/layout.html" %}
 
-{% block title %}SpellNOW!&trade; -- Configure Spelling Activity{% endblock %}
+{% block title %}SpellNOW!&trade; -- Configure Vocabulary Activity{% endblock %}
 
 {% block function %}
   <main id="main" class="main">
 
     <div class="pagetitle">
-      <h1>Spelling Activity</h1>
+      <h1>Vocabulary Activity</h1>
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="/">Home</a></li>
           <li class="breadcrumb-item">Activities</li>
-          <li class="breadcrumb-item active">Spelling</li>
+          <li class="breadcrumb-item active">Vocabulary</li>
         </ol>
       </nav>
     </div><!-- End Page Title -->
@@ -25,7 +25,7 @@
               <h5 class="card-title">Configure Activity</h5>
               <p>Specify the tags to be used and the number of words and then hit "Start".</p>
               
-              <form action="/spell" method="post">
+              <form action="/vocab" method="post">
                 {% csrf_token %}
                 <div class="row g-3">
                   <div class="col-md-4">

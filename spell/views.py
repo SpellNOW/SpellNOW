@@ -7,7 +7,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from .models import Account, Word, Tag, Report, Root, ReportDetail, EmailValidate, ConfirmReq
+from .models import Account, Word, Tag, Report, Root, ReportDetail, EmailValidate, ConfirmReq, VocabReportDetail
 import csv
 from django import forms
 from django.core.files.storage import FileSystemStorage
@@ -87,7 +87,7 @@ def is_word(word):
     return not error
 
 def create_word(word):
-    r = requests.get('https://dictionaryapi.com/api/v3/references/collegiate/json/' + word + '?key=e115f2c9-c50e-4fc0-9711-f5264280ecff')
+    r = requests.get('https://dictionaryapi.com/api/v3/references/collegiate/json/' + word + '?key=932f5c09-8f67-49aa-b856-e8e99dd4ad7b')
     info = r.json()
 
     replacers = []
@@ -435,7 +435,7 @@ def uservalidate(request, userit, lockit1, lockit2):
         # Attempt to create new user
         if valid.parent == None:
             student = ConfirmReq.objects.get(parent=valid.id)
-            user = Account.objects.create_user(valid.username, valid.email, valid.password, subscribed=False, locked=False, daysleft=30, trigger=False, changenotifs=True, newsletter=True, parent=True)
+            user = Account.objects.create_user(valid.username, valid.email, valid.password, subscribed=False, locked=False, daysleft=30, trigger=False, changenotifs=True, newsletter=True, parent=True, parents=None)
         else:
             user = Account.objects.create_user(valid.username, valid.email, valid.password, subscribed=False, locked=False, daysleft=30, trigger=False, changenotifs=True, newsletter=True, parent=False)
         
@@ -445,6 +445,9 @@ def uservalidate(request, userit, lockit1, lockit2):
 
         if user.parent:
             try:
+                iguy = Account.objects.get(username=student.username)
+                iguy.parents = user.id
+                iguy.save()
                 user.children.add(Account.objects.get(username=student.username))
                 user.save()
                 student.delete()
@@ -454,10 +457,12 @@ def uservalidate(request, userit, lockit1, lockit2):
         else:
             try:
                 kool = ConfirmReq.objects.get(pk=idofuser, lock1=lock1, lock2=lock2)
-                par = Account.objects.get(pk=kool.parent)
+                par = Account.objects.get(username = (ConfirmReq.objects.get(pk=kool.parent)).username)
                 par.children.add(user)
+                user.parents = par.id
+                user.save()
                 par.save()
-                valid.delete()
+                (ConfirmReq.objects.get(pk=kool.parent)).delete()
                 kool.delete()
             except:
                 pass
@@ -1314,6 +1319,7 @@ def word_import(request):
             fs.save("spell/static/spell/custom.csv", file)
             f = open("spell/static/spell/custom.csv", "r")
             reader = csv.reader(f)
+            next(reader)
             for row in reader:
                 final = row[0].lower()
                 
@@ -1321,7 +1327,7 @@ def word_import(request):
                     new_word = row[0].lower()
                     new_speech = row[4]
 
-                    new_origin1 = row[5]
+                    new_origin1 = "No origin given."
                     new_origin2 = None
                     if row[6] != "":
                         new_origin2 = row[6]
@@ -1329,13 +1335,13 @@ def word_import(request):
                     if row[7] != "":
                         new_origin3 = row[7]
                     
-                    new_def1 = row[2]
+                    new_def1 = "No definition given."
                     new_def2 = None
-                    if row[3] != "":
-                        new_def2 = row[3]
+                    if row[2] != "":
+                        new_def2 = row[2]
                     new_def3 = None
-                    if row[4] != "":
-                        new_def3 = row[4]
+                    if row[2] != "":
+                        new_def3 = row[2]
                     
                     new_pronounce = "['" + row[8] + "']"
 
@@ -1967,7 +1973,7 @@ def finish(request):
     id_using = 0
     thingy = (request.POST["score"]).split("/")
     userusing = Account.objects.get(pk=int(request.POST["user"]))
-    new = Report(used=ids_used, correct=thingy[0], total=(thingy[1]), percent=(int((int(thingy[0])/int(thingy[1]))*100)), specific=False, user=userusing)
+    new = Report(used=ids_used, correct=thingy[0], total=(thingy[1]), percent=(int((int(thingy[0])/int(thingy[1]))*100)), specific=False, user=userusing, spelling=True)
     new.save()
     id_using = new.id
 
@@ -1984,7 +1990,7 @@ def finish(request):
                 cool += 1
             
             if abhi != 0:
-                new = Report(used="Untagged", correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing)
+                new = Report(used="Untagged", correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing, spelling=True)
                 new.save()
                 wilk.append("Untagged")
         elif ite == "|--|*..*":
@@ -1998,7 +2004,7 @@ def finish(request):
                 cool += 1
             
             if abhi != 0:
-                new = Report(used="No Roots", correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing)
+                new = Report(used="No Roots", correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing, spelling=True)
                 new.save()
                 wilk.append("No Roots")
         elif "|--|" in ite:
@@ -2012,7 +2018,7 @@ def finish(request):
                 cool += 1
             
             if abhi != 0:
-                new = Report(used=("Root - " + ite.replace("|--|", "")), correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing)
+                new = Report(used=("Root - " + ite.replace("|--|", "")), correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing, spelling=True)
                 new.save()
                 wilk.append(("Root - " + ite.replace("|--|", "")))
         else:
@@ -2026,7 +2032,7 @@ def finish(request):
                 cool += 1
             
             if abhi != 0:
-                new = Report(used=("Tag - " + ite), correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing)
+                new = Report(used=("Tag - " + ite), correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing, spelling=True)
                 new.save()
                 wilk.append(("Tag - " + ite))
     
@@ -2059,7 +2065,7 @@ def finish(request):
     msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
     parent = Account.objects.get(pk=userusing.parents)
     msg["To"] = parent.email
-    body_text = """Hello!\n\nThis is an Official SpellNOW! Notification. """ + request.user.first_name + """ has complete a spelling activity on SpellNOW! with a score of """ + request.POST["score"] + """. Thank you, and we hope for your continued progress for the future.\n\nSincerely,\nSpellNOW! Support Team"""
+    body_text = """Hello!\n\nThis is an Official SpellNOW! Notification. """ + userusing.first_name + """ has complete a spelling activity on SpellNOW! with a score of """ + request.POST["score"] + """. You can learn more details of this activity by visiting https://spellnow.org/report/""" + str(report_using.id) + """. Thank you, and we hope for your continued progress for the future.\n\nSincerely,\nSpellNOW! Support Team"""
 
     body_part = MIMEText(body_text, 'plain')
     msg.attach(body_part)
@@ -2074,6 +2080,565 @@ def finish(request):
         "bar": "activities",
         "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
         "active": "spellit",
+        "score": request.POST["score"]
+    })
+
+# Spelling
+@login_required(login_url='/login')
+@user_passes_test(locked, login_url='/subscribe')
+@user_passes_test(is_child, login_url='/error_404')
+def vocab_start(request):
+    return render(request, "spell/vocab_start.html", {
+        "bar": "activities",
+        "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+        "active": "vocabit",
+        "tags": Tag.objects.all(),
+        "roots": Root.objects.all(),
+        "number": len(Word.objects.all())
+    })
+
+@user_passes_test(locked, login_url='/subscribe')
+@user_passes_test(is_child, login_url='/error_404')
+def vocab(request):
+    if request.method == "POST":
+        tags = request.POST.getlist('*..*tags*..*')
+        roots = request.POST.getlist('*..*root*..*')
+        fullcall = []
+        fullcall.extend(tags)
+        fullcall.extend(roots)
+        attn = False
+
+        try:
+            if request.POST.get("attn") == "attemptednone":
+                attn = True
+        except:
+            attn = False
+
+        print("========================Verifying word amount========================")
+        results = []
+        fun = []
+        for i in tags:
+            if not i == "*..*":
+                fun.append(i)
+        
+        cool = []
+        for i in roots:
+            if not i == "*..*":
+                cool.append(i)
+
+        if not attn:
+            if "*..*" in tags and "*..*" in roots:
+                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(tagged=False) | Q(roots__name__in=cool) | Q(rooted=False))).exclude(definition1=None).distinct()))
+            elif "*..*" in tags:
+                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(tagged=False))).exclude(definition1=None).distinct()))
+            elif "*..*" in roots:
+                results.extend(list((Word.objects.filter(Q(roots__name__in=cool) | Q(rooted=False))).exclude(definition1=None).distinct()))
+            else:
+                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(roots__name__in=cool))).exclude(definition1=None).distinct()))
+        else:
+            yaylmao = ReportDetail.objects.filter(report__user__username=request.user.username).values_list('word', flat=True)
+
+            if "*..*" in tags and "*..*" in roots:
+                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(tagged=False) | Q(roots__name__in=cool) | Q(rooted=False))).exclude(definition1=None).exclude(word__in = yaylmao).distinct()))
+            elif "*..*" in tags:
+                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(tagged=False) )).exclude(word__in = yaylmao).exclude(definition1=None).distinct()))
+            elif "*..*" in roots:
+                results.extend(list((Word.objects.filter(Q(roots__name__in=cool) | Q(rooted=False) )).exclude(word__in = yaylmao).exclude(definition1=None).distinct()))
+            else:
+                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(roots__name__in=cool))).exclude(word__in = yaylmao).exclude(definition1=None).distinct()))
+        
+        if (int(len(results)) < int(request.POST["numwords"])) or (int(len(tags)) > int(request.POST["numwords"])):
+            return render(request, "spell/vocab_start.html", {
+                "bar": "activities",
+                "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+                "active": "spellit",
+                "tags": Tag.objects.all(),
+                "roots": Root.objects.all(),
+                "number": len(Word.objects.all()),
+                "message": "Invalid word count, the maximum number of words you may have under this configuration is " + str(int(len(results))),
+            })
+        else:
+            fines = []
+            allans = ""
+            order = ""
+            final_last_total = 0
+            hllg = []
+            ids_used = ""
+            rightio = ""
+            wrongio = ""
+
+            for cooolio in Tag.objects.all():
+                rightio += cooolio.name + "*..*"
+            
+            for cooolio in Root.objects.all():
+                wrongio += cooolio.name + "*..*"
+
+            print("========================Choosing Words========================")
+            lengths = []
+            didi = []
+            results = []
+            jeff = 0
+
+            if not attn:
+                for ite in fullcall:
+                    if ite == "*..*":
+                        didi.append(list(Word.objects.filter(tagged=False).exclude(id__in = results).values_list('pk', flat=True)))
+                        results.extend(list(Word.objects.filter(tagged=False).exclude(id__in = results).values_list('pk', flat=True)))
+                        use = len(didi[jeff])
+                        lengths.append(use)
+                    elif ite == "|--|*..*":
+                        didi.append(list(Word.objects.filter(rooted=False).exclude(id__in = results).values_list('pk', flat=True)))
+                        results.extend(list(Word.objects.filter(rooted=False).exclude(id__in = results).values_list('pk', flat=True)))
+                        use = len(didi[jeff])
+                        lengths.append(use)
+                    elif "|--|" in ite:
+                        didi.append(list(Word.objects.filter(roots__name=ite.replace("|--|", "")).exclude(id__in = results).values_list('pk', flat=True)))
+                        results.extend(list(Word.objects.filter(roots__name=ite.replace("|--|", "")).exclude(id__in = results).values_list('pk', flat=True)))
+                        use = len(didi[jeff])
+                        lengths.append(use)
+                    else:
+                        didi.append(list(Word.objects.filter(tags__name=ite).exclude(id__in = results).values_list('pk', flat=True)))
+                        results.extend(list((Word.objects.filter(tags__name=ite).exclude(id__in = results)).values_list('pk', flat=True)))
+                        use = len(didi[jeff])
+                        lengths.append(use)
+                    jeff += 1
+            else:
+                yaylmao = ReportDetail.objects.filter(report__user__username=request.user.username).values_list('word', flat=True)
+
+                for ite in fullcall:
+                    if ite == "*..*":
+                        didi.append(list(Word.objects.filter(tagged=False).exclude(id__in = results).exclude(word__in = yaylmao).values_list('pk', flat=True)))
+                        results.extend(list(Word.objects.filter(tagged=False).exclude(id__in = results).exclude(word__in = yaylmao).values_list('pk', flat=True)))
+                        use = len(didi[jeff])
+                        lengths.append(use)
+                    elif ite == "|--|*..*":
+                        didi.append(list(Word.objects.filter(rooted=False).exclude(id__in = results).exclude(word__in = yaylmao).values_list('pk', flat=True)))
+                        results.extend(list(Word.objects.filter(rooted=False).exclude(id__in = results).exclude(word__in = yaylmao).values_list('pk', flat=True)))
+                        use = len(didi[jeff])
+                        lengths.append(use)
+                    elif "|--|" in ite:
+                        didi.append(list(Word.objects.filter(roots__name=ite.replace("|--|", "")).exclude(word__in = yaylmao).exclude(id__in = results).values_list('pk', flat=True)))
+                        results.extend(list(Word.objects.filter(roots__name=ite.replace("|--|", "")).exclude(word__in = yaylmao).exclude(id__in = results).values_list('pk', flat=True)))
+                        use = len(didi[jeff])
+                        lengths.append(use)
+                    else:
+                        didi.append(list(Word.objects.filter(tags__name=ite).exclude(id__in = results).exclude(word__in = yaylmao).values_list('pk', flat=True)))
+                        results.extend(list((Word.objects.filter(tags__name=ite).exclude(id__in = results)).exclude(word__in = yaylmao).values_list('pk', flat=True)))
+                        use = len(didi[jeff])
+                        lengths.append(use)
+                    jeff += 1
+            
+            globalmin = int(int(request.POST["numwords"])/int(len(lengths)))
+            last = int(request.POST["numwords"]) - (globalmin * (int(len(lengths)) - 1))
+            better = []
+            surplus = []
+
+            for i in range(int(len(lengths))):
+                if i == int(len(lengths)) - 1:
+                    if lengths[i] < last:
+                        surplus.append(lengths[i] - last)
+                        better.append(lengths[i])
+                    elif lengths[i] == last:
+                        surplus.append(0)
+                        better.append(lengths[i])
+                    else:
+                        surplus.append(lengths[i] - last)
+                        better.append(last)
+                else:
+                    if lengths[i] < globalmin:
+                        surplus.append(lengths[i] - globalmin)
+                        better.append(lengths[i])
+                    elif lengths[i] == globalmin:
+                        surplus.append(0)
+                        better.append(lengths[i])
+                    else:
+                        surplus.append(lengths[i] - globalmin)
+                        better.append(globalmin)
+            
+            for i in range(int(len(lengths))):
+                print(surplus[i])
+                if surplus[i] < 0:
+                    j = 0
+                    k = 0
+                    while j < surplus[i] * -1:
+                        if surplus[k % int(len(lengths))] > 0:
+                            better[k % int(len(lengths))] += 1
+                            surplus[k % int(len(lengths))] -= 1
+                            j += 1
+                        k += 1
+            
+            for i in range(len(didi)):
+                random.shuffle(didi[i])
+                didi[i] = didi[i][:better[i]]
+
+            defs1 = list(Word.objects.filter().exclude(definition1 = "No definition given.").values_list('definition1', flat=True))
+            defs2 = list(Word.objects.filter().exclude(definition2 = None).values_list('definition2', flat=True))
+            defs3 = list(Word.objects.filter().exclude(definition3 = None).values_list('definition3', flat=True))
+            wordsample = Word.objects.filter().values_list('word', flat=True)
+            optionsit = ""
+            questions = ""
+
+            i = 0
+            print("========================Getting Words========================")
+            for lemmon in range(int(len(better))):
+                for pkg in didi[lemmon]:
+                    word = Word.objects.get(pk=pkg)
+                    chooser = random.randrange(2)
+
+                    if chooser == 0:
+                        questions += "Which of the following best defines the word <b>" + word.word + "</b>?+--+"
+
+                        options = []
+                        
+                        if not word.definition1 == None:
+                            options.append(word.definition1)
+                        
+                        if not word.definition2 == None:
+                            options.append(word.definition2)
+                        
+                        if not word.definition3 == None:
+                            options.append(word.definition3)
+                        
+                        optionuse = (random.choice(options))
+
+                        tmp1 = defs1
+                        tmp2 = defs2
+                        tmp3 = defs3
+                    
+                        try:
+                            tmp1.remove(word.definition1)
+                            tmp2.remove(word.definition2)
+                            tmp3.remove(word.definition3)
+                        except:
+                            pass
+                        
+                        answer = random.randrange(4)
+
+                        if answer == 0:
+                            allans += "A||==||"
+                            optionsit += (optionuse + "--00--")
+
+                            next = random.randrange(3)
+
+                            if next == 0:
+                                optionsit += (random.choice(tmp1) + "--00--")
+                            elif next == 1:
+                                optionsit += (random.choice(tmp2) + "--00--")
+                            else:
+                                optionsit += (random.choice(tmp3) + "--00--")
+                            
+                            next = random.randrange(3)
+
+                            if next == 0:
+                                optionsit += (random.choice(tmp1) + "--00--")
+                            elif next == 1:
+                                optionsit += (random.choice(tmp2) + "--00--")
+                            else:
+                                optionsit += (random.choice(tmp3) + "--00--")
+                            
+                            next = random.randrange(3)
+
+                            if next == 0:
+                                optionsit += (random.choice(tmp1) + "--00--9889")
+                            elif next == 1:
+                                optionsit += (random.choice(tmp2) + "--00--9889")
+                            else:
+                                optionsit += (random.choice(tmp3) + "--00--9889")
+
+                        elif answer == 1:
+                            allans += "B||==||"
+                            next = random.randrange(3)
+
+                            if next == 0:
+                                optionsit += (random.choice(tmp1) + "--00--")
+                            elif next == 1:
+                                optionsit += (random.choice(tmp2) + "--00--")
+                            else:
+                                optionsit += (random.choice(tmp3) + "--00--")
+                            
+                            optionsit += (optionuse + "--00--")
+                            
+                            next = random.randrange(3)
+
+                            if next == 0:
+                                optionsit += (random.choice(tmp1) + "--00--")
+                            elif next == 1:
+                                optionsit += (random.choice(tmp2) + "--00--")
+                            else:
+                                optionsit += (random.choice(tmp3) + "--00--")
+                            
+                            next = random.randrange(3)
+
+                            if next == 0:
+                                optionsit += (random.choice(tmp1) + "--00--9889")
+                            elif next == 1:
+                                optionsit += (random.choice(tmp2) + "--00--9889")
+                            else:
+                                optionsit += (random.choice(tmp3) + "--00--9889")
+                        
+                        elif answer == 2:
+                            allans += "C||==||"
+                            next = random.randrange(3)
+
+                            if next == 0:
+                                optionsit += (random.choice(tmp1) + "--00--")
+                            elif next == 1:
+                                optionsit += (random.choice(tmp2) + "--00--")
+                            else:
+                                optionsit += (random.choice(tmp3) + "--00--")
+                            
+                            next = random.randrange(3)
+
+                            if next == 0:
+                                optionsit += (random.choice(tmp1) + "--00--")
+                            elif next == 1:
+                                optionsit += (random.choice(tmp2) + "--00--")
+                            else:
+                                optionsit += (random.choice(tmp3) + "--00--")
+                            
+                            optionsit += (optionuse + "--00--")
+                            
+                            next = random.randrange(3)
+
+                            if next == 0:
+                                optionsit += (random.choice(tmp1) + "--00--9889")
+                            elif next == 1:
+                                optionsit += (random.choice(tmp2) + "--00--9889")
+                            else:
+                                optionsit += (random.choice(tmp3) + "--00--9889")
+                        else:
+                            allans += "D||==||"
+                            next = random.randrange(3)
+
+                            if next == 0:
+                                optionsit += (random.choice(tmp1) + "--00--")
+                            elif next == 1:
+                                optionsit += (random.choice(tmp2) + "--00--")
+                            else:
+                                optionsit += (random.choice(tmp3) + "--00--")
+                            
+                            next = random.randrange(3)
+
+                            if next == 0:
+                                optionsit += (random.choice(tmp1) + "--00--")
+                            elif next == 1:
+                                optionsit += (random.choice(tmp2) + "--00--")
+                            else:
+                                optionsit += (random.choice(tmp3) + "--00--")
+                            
+                            next = random.randrange(3)
+
+                            if next == 0:
+                                optionsit += (random.choice(tmp1) + "--00--")
+                            elif next == 1:
+                                optionsit += (random.choice(tmp2) + "--00--")
+                            else:
+                                optionsit += (random.choice(tmp3) + "--00--")
+                            
+                            optionsit += (optionuse + "--00--9889")
+                    else:
+                        options = []
+                        
+                        if not word.definition1 == None:
+                            options.append(word.definition1)
+                        
+                        if not word.definition2 == None:
+                            options.append(word.definition2)
+                        
+                        if not word.definition3 == None:
+                            options.append(word.definition3)
+
+                        questions += "Which of the following words is best defined by: <b>" + (random.choice(options)) + "</b>?+--+"
+                        optionuse = word.word
+
+                        tmp = wordsample
+
+                        try:
+                            tmp.remove(word.word)
+                        except:
+                            pass
+                        
+                        answer = random.randrange(4)
+
+                        if answer == 0:
+                            allans += "A||==||"
+                            optionsit += ((optionuse + "--00--") + (random.choice(tmp) + "--00--") + (random.choice(tmp) + "--00--") + (random.choice(tmp) + "--00--9889"))                        
+                        elif answer == 1:
+                            allans += "B||==||"
+                            optionsit += ((random.choice(tmp) + "--00--") + (optionuse + "--00--") + (random.choice(tmp) + "--00--") + (random.choice(tmp) + "--00--9889"))
+                        elif answer == 2:
+                            allans += "C||==||"
+                            optionsit += ((random.choice(tmp) + "--00--") + (random.choice(tmp) + "--00--") + (optionuse + "--00--") + (random.choice(tmp) + "--00--9889"))
+                        else:
+                            allans += "D||==||"
+                            optionsit += ((random.choice(tmp) + "--00--") + (random.choice(tmp) + "--00--") + (random.choice(tmp) + "--00--") + (optionuse + "--00--9889"))
+
+                    order += (fullcall[lemmon] + ", ")
+                    
+                    if not fullcall[lemmon] in hllg:
+                        hllg.append(fullcall[lemmon])
+                        ids_used += (fullcall[lemmon] + ", ")
+
+                    fines.append(word.word)
+
+                    print("Got word " + str(final_last_total) + " of " + request.POST["numwords"])
+                    final_last_total += 1
+                    
+                    i += 1
+            
+            return render(request, "spell/vocab.html", {
+                "bar": "activities",
+                "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+                "active": "vocabit",
+                "words": fines,
+                "ans": allans,
+                "questions": questions,
+                "options": optionsit,
+                "order": order,
+                "ids_used": ids_used,
+            })
+
+def vocab_finish(request):
+    order_in = request.POST["order"]
+    order = order_in.split(", ")
+    order.remove("")
+
+    ids_used = request.POST["ids_used"]
+    total_gags = ids_used.split(", ")
+    total_gags.remove("")
+
+    corrs = request.POST["correct_array"]
+    correct_array = corrs.split(", ")
+    correct_array.remove("")
+
+    glob = request.POST["words"]
+    words = glob.split("990099")
+    words.remove("")
+
+    coolb = request.POST["vocabas"]
+    vocabas = coolb.split("9009")
+    vocabas.remove("")
+
+    dumb = request.POST["attempts"]
+    atts = dumb.split("9009")
+    atts.remove("")
+
+    timings = request.POST["time"]
+    time = timings.split(", ")
+    time.remove("")
+
+    cool = 0
+    id_using = 0
+    thingy = (request.POST["score"]).split("/")
+    userusing = Account.objects.get(pk=int(request.POST["user"]))
+    new = Report(used=ids_used, correct=thingy[0], total=(thingy[1]), percent=(int((int(thingy[0])/int(thingy[1]))*100)), specific=False, user=userusing, spelling=False)
+    new.save()
+    id_using = new.id
+
+    wilk = []
+    for ite in total_gags:
+        if ite == "*..*":
+            nice = 0
+            cool = 0
+            abhi = 0
+            for ishaan in order:
+                if ishaan == ite:
+                    nice += int(correct_array[cool])
+                    abhi += 1
+                cool += 1
+            
+            if abhi != 0:
+                new = Report(used="Untagged", correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing, spelling=False)
+                new.save()
+                wilk.append("Untagged")
+        elif ite == "|--|*..*":
+            nice = 0
+            cool = 0
+            abhi = 0
+            for ishaan in order:
+                if ishaan == ite:
+                    nice += int(correct_array[cool])
+                    abhi += 1
+                cool += 1
+            
+            if abhi != 0:
+                new = Report(used="No Roots", correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing, spelling=False)
+                new.save()
+                wilk.append("No Roots")
+        elif "|--|" in ite:
+            nice = 0
+            cool = 0
+            abhi = 0
+            for ishaan in order:
+                if ishaan == ite:
+                    nice += int(correct_array[cool])
+                    abhi += 1
+                cool += 1
+            
+            if abhi != 0:
+                new = Report(used=("Root - " + ite.replace("|--|", "")), correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing, spelling=False)
+                new.save()
+                wilk.append(("Root - " + ite.replace("|--|", "")))
+        else:
+            print(correct_array)
+            nice = 0
+            cool = 0
+            abhi = 0
+            for ishaan in order:
+                if ishaan == ite:
+                    nice += int(correct_array[cool])
+                    abhi += 1
+                cool += 1
+            
+            if abhi != 0:
+                new = Report(used=("Tag - " + ite), correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing, spelling=False)
+                new.save()
+                wilk.append(("Tag - " + ite))
+    
+    for ite in order:
+        if ite == "*..*":
+            wilk.append("Untagged")
+        elif ite == "|--|*..*":
+            wilk.append("No Roots")
+        elif "|--|" in ite:
+            wilk.append(("Root - " + ite.replace("|--|", "")))
+        else:
+            wilk.append(("Tag - " + ite))
+        
+    count = 1
+
+    report_using = Report.objects.get(id=id_using)
+    for tmp in words:
+        if int(correct_array[count - 1]) == 0:
+            roger = count
+            detail = VocabReportDetail(count=roger, identification=wilk[count - 1], question=tmp, answer = vocabas[count-1], attempt=atts[count - 1], result="INCORRECT", time=time[count - 1], report=report_using)
+            detail.save()
+        else:
+            roger = count
+            detail = VocabReportDetail(count=roger, identification=wilk[count - 1], question=tmp, answer = vocabas[count-1], attempt=atts[count - 1], result="CORRECT", time=time[count - 1], report=report_using)
+            detail.save()
+        count += 1
+    
+    msg = MIMEMultipart()
+    msg['Subject'] = 'Official SpellNOW! Notification! -- New Report'
+    msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
+    parent = Account.objects.get(pk=userusing.parents)
+    msg["To"] = parent.email
+    body_text = """Hello!\n\nThis is an Official SpellNOW! Notification. """ + userusing.first_name + """ has complete a vocabulary activity on SpellNOW! with a score of """ + request.POST["score"] + """. You can learn more details of this activity by visiting https://spellnow.org/report/""" + str(report_using.id) + """. Thank you, and we hope for your continued progress for the future.\n\nSincerely,\nSpellNOW! Support Team"""
+
+    body_part = MIMEText(body_text, 'plain')
+    msg.attach(body_part)
+    with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
+        smtp_obj.ehlo()
+        smtp_obj.starttls()
+        smtp_obj.ehlo()
+        smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
+        smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
+    
+    return render(request, "spell/vocab_finish.html", {
+        "bar": "activities",
+        "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+        "active": "vocabit",
         "score": request.POST["score"]
     })
 
@@ -2128,6 +2693,46 @@ def report(request, id):
             if thingy.user in great.children.all():
                 used = Report.objects.filter(iid=id, specific=True)
                 fnu = Report.objects.get(pk=id)
+
+                if fnu.spelling:
+                    bring = ReportDetail.objects.filter(report=fnu)
+
+                    return render(request, "spell/report.html", {
+                        "bar": "fullreports",
+                        "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+                        "active": "reports",
+                        "used": used,
+                        "title": fnu.finished,
+                        "correct": fnu.correct,
+                        "total": fnu.total,
+                        "percent": fnu.percent,
+                        "records": bring,
+                    })
+                else:
+                    bring = VocabReportDetail.objects.filter(report=fnu)
+
+                    return render(request, "spell/vocab_report.html", {
+                        "bar": "fullreports",
+                        "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+                        "active": "reports",
+                        "used": used,
+                        "title": fnu.finished,
+                        "correct": fnu.correct,
+                        "total": fnu.total,
+                        "percent": fnu.percent,
+                        "records": bring,
+                    })
+            else:
+                return render(request, "spell/error_404.html", {})
+        except:
+            return render(request, "spell/error_404.html", {})
+    else:
+        userusing = Account.objects.get(username=request.user.username)
+        if len(Report.objects.filter(pk=id, specific=False, user=userusing)) != 0:
+            used = Report.objects.filter(iid=id, specific=True)
+            fnu = Report.objects.get(pk=id)
+
+            if fnu.spelling:
                 bring = ReportDetail.objects.filter(report=fnu)
 
                 return render(request, "spell/report.html", {
@@ -2142,27 +2747,19 @@ def report(request, id):
                     "records": bring,
                 })
             else:
-                return render(request, "spell/error_404.html", {})
-        except:
-            return render(request, "spell/error_404.html", {})
-    else:
-        userusing = Account.objects.get(username=request.user.username)
-        if len(Report.objects.filter(pk=id, specific=False, user=userusing)) != 0:
-            used = Report.objects.filter(iid=id, specific=True)
-            fnu = Report.objects.get(pk=id)
-            bring = ReportDetail.objects.filter(report=fnu)
+                bring = VocabReportDetail.objects.filter(report=fnu)
 
-            return render(request, "spell/report.html", {
-                "bar": "fullreports",
-                "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
-                "active": "reports",
-                "used": used,
-                "title": fnu.finished,
-                "correct": fnu.correct,
-                "total": fnu.total,
-                "percent": fnu.percent,
-                "records": bring,
-            })
+                return render(request, "spell/vocab_report.html", {
+                    "bar": "fullreports",
+                    "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+                    "active": "reports",
+                    "used": used,
+                    "title": fnu.finished,
+                    "correct": fnu.correct,
+                    "total": fnu.total,
+                    "percent": fnu.percent,
+                    "records": bring,
+                })
         else:
             return render(request, "spell/error_404.html", {})
 
