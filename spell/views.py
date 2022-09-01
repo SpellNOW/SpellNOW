@@ -1796,18 +1796,6 @@ def word_import(request):
             
             os.remove("wordsscraped.csv")
 
-            if len(nots) > 0:
-                fields = ['Words']
-                    
-                # writing to csv file 
-                with open("spell/static/spell/CustomTemplate.csv", 'w', newline="") as csvfile:
-                    csvwriter = csv.writer(csvfile) 
-                    csvwriter.writerow(fields)
-                    
-                    for thingy in nots:
-                        rows = [thingy]
-                        csvwriter.writerow(rows)
-
             if len(nots) > 0 and not len(already) > 0:
                 return render(request, "spell/error.html", {
                     "bar": "libraries",

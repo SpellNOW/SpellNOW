@@ -31,9 +31,6 @@
                         <li>{{ word }}</li>
                     {% endfor %}
                 </ul>
-                {% if download %}
-                  <a href="{% static 'spell/CustomTemplate.csv' %}" download><button type="button" class="btn btn-primary">Download Words CSV</button></a>
-                {% endif %}
               {% endif %}
               {% if already %}
                   {% if nots %}
