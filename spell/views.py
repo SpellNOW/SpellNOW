@@ -2,8 +2,6 @@ from importlib.metadata import distribution
 from operator import ilshift
 from re import L
 from django.contrib.auth import authenticate, logout as auth_logout, login as auth_login
-from django.db import IntegrityError
-from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -26,8 +24,464 @@ import smtplib
 from django.contrib.auth.decorators import login_required, user_passes_test
 from captcha.fields import CaptchaField
 import datetime
-from django.core.exceptions import ValidationError
-from django.core.validators import validate_email
+from bs4 import BeautifulSoup
+import re
+
+languages = ["Middle English","Latin", "French","German","Italian", "Greek", "Spanish", "Hebrew"]
+
+def merriamweb_scrape(word_to_scrape):
+    my_word = re.sub(r"[^a-zA-Z]","", word_to_scrape)
+    URL = "https://www.merriam-webster.com/dictionary/" + my_word
+    page = requests.get(URL)
+    data = []
+    
+    if page.status_code != 200:
+        data.append(my_word)
+        data.append("WORD NOT FOUND")
+        return -1
+    soup = BeautifulSoup(page.content, "html.parser")
+    #Search for word
+    try:
+        words = soup.find_all("h1", class_="hword")
+        if len(words) <= 0:
+            data.append(my_word)
+            data.append("WORD NOT FOUND")
+            return -1
+        i = 0
+        for word in words:
+            word_element = word.get_text()
+            data.append(word_element)
+            i = i + 1
+            if i == 1:
+                break
+    except:
+        data.append(my_word)
+        data.append("WORD NOT FOUND")
+        return -1
+
+    try:
+        i = 0
+        meanings = soup.find_all("span", class_="dtText")
+        for meaning in meanings:
+            deftext = meaning.get_text()
+            data.append(deftext)
+            i = i + 1
+            if i == 3:
+                break
+        if i == 1:
+            data.append("")
+            data.append("")
+
+        if i == 2:
+            data.append("")
+    except:
+        data.append("")
+        data.append("")
+        data.append("")
+
+    try:
+        i = 0
+        poss = soup.find_all("a", class_="important-blue-link")
+        for pos in poss:
+            postext = pos.get_text()
+            data.append(postext)
+            i = i + 1
+            if i == 1:
+                break
+    except:
+        data.append("")
+
+    try:
+        i = 0
+        add_count = 0
+        loos = soup.find_all("p", class_="et")
+        for loo_ele in loos:
+            los_text = loo_ele.get_text()
+            i = i + 1
+            if i == 3:
+                break
+            for x in range(len(languages)):
+               position=los_text.find(languages[x])
+               if position >= 0:
+                   add_count += 1
+                   if add_count <=3 :
+                      data.append(languages[x])
+        if add_count == 0:
+            data.append("")
+            data.append("")
+            data.append("")
+        if add_count == 1:
+            data.append("")
+            data.append("")
+        if add_count == 2:
+            data.append("")
+    except:
+        data.append("")
+        data.append("")
+        data.append("")
+
+    try:
+        i = 0
+        sound_files = soup.find_all("span", class_="pr")
+        for sound_file in sound_files:
+            title_element = sound_file.get_text()
+            data.append(title_element)
+            i = i + 1
+            if i == 1:
+                break
+    except:
+        data.append("")
+
+    with open('wordsscraped.csv', 'a', newline='', encoding='utf-8') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(data)
+    return 1
+
+
+
+def dictionarydotcom_scrape(word_to_scrape):
+    my_word = re.sub(r"[^a-zA-Z]","", word_to_scrape)
+
+    URL = "https://www.dictionary.com/browse/" + my_word
+    page = requests.get(URL)
+    soup = BeautifulSoup(page.content, "html.parser")
+    results = soup.find(id="base-pw")
+    data = []
+ 
+    #Search for word
+    try:
+        words = results.find_all("div", class_="css-jv03sw e1wg9v5m6")
+        if len(words) <= 0:
+            data.append(my_word)
+            data.append("WORD NOT FOUND")
+            return -1
+        i = 0
+        for word in words:
+            word_element = word.find("h1", class_="css-1sprl0b e1wg9v5m5")
+            data.append(word_element.text.strip())
+            i = i + 1
+            if i == 1:
+                break
+    except:
+        data.append(my_word)
+        data.append("WORD NOT FOUND")
+        return -1
+    #search for sound file link if no sound abort
+    link_url = ""
+    try:
+        i = 0
+        sound_files = results.find_all("div", class_="audio-wrapper")
+        for sound_file in sound_files:
+            title_element = sound_file.find("source", type="audio/mpeg")
+            link_url = title_element["src"]
+            i = i + 1
+            if i == 1:
+                break
+    except:
+        link_url = ""
+
+    if link_url == "":
+        data.append("WORD NOT FOUND")
+        return -1   #Dont write to csv file
+    
+    try:
+        i = 0
+        meanings = results.find_all("div", class_="css-10ul8x e1q3nk1v2")
+        for meaning in meanings:
+            def_element = meaning.find("span", class_="one-click-content css-nnyc96 e1q3nk1v1")
+            data.append(def_element.text.strip())
+            i = i + 1
+            if i == 3:
+                break
+        if i == 1:
+            data.append("")
+            data.append("")
+
+        if i == 2:
+            data.append("")
+    except:
+        data.append("")
+        data.append("")
+        data.append("")
+
+    try:
+        i = 0
+        poss = results.find_all("div", class_="css-69s207 e1hk9ate3")
+        for pos in poss:
+            pos_element = pos.find("span", class_="luna-pos")
+            data.append(pos_element.text.strip())
+            i = i + 1
+            if i == 1:
+                break
+    except:
+        data.append("")
+
+    try:
+        i = 0
+        add_count = 0
+        loos = results.find_all("div", class_="one-click-content css-omho54 e16svm7n0")
+        for loo_ele in loos:
+            los_text = loo_ele.text
+            i = i + 1
+            if i == 3:
+                break
+            for x in range(len(languages)):
+               position=los_text.find(languages[x])
+               if position >= 0:
+                   add_count += 1
+                   if add_count <=3 :
+                      data.append(languages[x])
+        if add_count == 0:
+            data.append("")
+            data.append("")
+            data.append("")
+        if add_count == 1:
+            data.append("")
+            data.append("")
+        if add_count == 2:
+            data.append("")
+    except:
+        data.append("")
+        data.append("")
+        data.append("")
+    
+    try:
+        i = 0
+        sound_files = results.find_all("div", class_="audio-wrapper")
+        for sound_file in sound_files:
+            title_element = sound_file.find("source", type="audio/mpeg")
+            link_url = title_element["src"]
+            data.append(link_url)
+            i = i + 1
+            if i == 1:
+                break
+    except:
+        data.append("")
+    
+    with open('wordsscraped.csv', 'a', newline='', encoding='utf-8') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(data)
+    return 1
+
+def merriammedialapi_scrape(word_to_scrape):
+    r = requests.get('https://www.dictionaryapi.com/api/v3/references/medical/json/' + word_to_scrape + '?key=49fe6b68-417a-44fc-99bd-349b04acca2e')
+    info = r.json()
+    data = []
+    
+    if r.status_code != 200:
+        return -1
+    else:    
+        replacers = []
+        parts = []
+        right = []
+        origin = []
+        audio = []
+
+        final_parts = ""
+        final_right = ["No definition given."]
+        final_origin = ["Medical / Scientific"]
+        final_audio = "["
+
+        try:
+            for stuff in info:
+                if (stuff["hwi"]["hw"].replace("*", "")).lower() == word_to_scrape:
+                    parts.append(stuff["fl"].capitalize())
+                parts = list(set(parts))
+        except:
+            return -1
+
+        try:
+            for stuff in info:
+                for thing in stuff["shortdef"]:
+                    if (stuff["hwi"]["hw"].replace("*", "")).lower() == word_to_scrape:
+                        right.append(thing.capitalize())
+        except:
+            return -1
+
+        for stuff in info:
+            try:
+                stop = stuff["et"][0][1]
+                it = False
+                ayush = ""
+                count = 0
+                for i in range(len(stop)):
+                    if it:
+                        ayush += stop[i]
+                    
+                    if stop[i] == '{' and it == False:
+                        it = True
+                        ayush += "{"
+
+                    if stop[i] == '}':
+                        if count == 0:
+                            count = 1
+                        else:
+                            count = 0
+                            it = False
+                            replacers.append(ayush)
+                            ayush = ""
+
+                for russia in replacers:
+                    stop = stop.replace(russia, "")
+                    
+                if (stuff["hwi"]["hw"].replace("*", "")).lower() == word_to_scrape:
+                    origin.append(stop)
+            except:
+                pass
+
+    
+        for stuff in info:
+            try:
+                check = stuff["hwi"]["prs"]
+                for thing in check:                    
+                    id = thing["sound"]["audio"]
+                    if id[0] + id[1] + id[2] == "bix":
+                        great = "bix"
+                    elif id[0] + id[1] == "gg":
+                        great = "gg"
+                    elif not id[0].isalpha():
+                        great = "number"
+                    else:
+                        great = id[0]
+                    if (stuff["hwi"]["hw"].replace("*", "")).lower() == word_to_scrape:
+                        audio = "https://media.merriam-webster.com/audio/prons/en/us/mp3/" + great + "/" + id + ".mp3"
+            except:
+                pass
+        if not audio or audio == "" or audio == "[]":
+            return -1
+            
+        for i in range(len(parts)):
+            if i != (len(parts) - 1):
+                final_parts += (parts[i] + ", ")
+            else: 
+                final_parts += parts[i]
+        
+        final_origin.append(None)
+        final_origin.append(None)
+        for i in range(len(origin)):
+            if not i >= 3:
+                final_origin[i] = origin[i]
+
+        final_right.append(None)
+        final_right.append(None)
+        for i in range(len(right)):
+            if not i >= 3:
+                final_right[i] = right[i]
+
+        for i in range(len(audio)):
+            if i != (len(audio) - 1):
+                final_audio += ("'" + audio[i] + "', ")
+            else: 
+                final_audio += ("'" + audio[i] + "']")
+
+        data = []
+        
+        data.append(word_to_scrape)
+        data.append(final_right[0])
+        data.append(final_right[1])
+        data.append(final_right[2])
+        data.append(final_parts)
+        data.append(final_origin[0])
+        data.append(final_origin[1])
+        data.append(final_origin[2])        
+        data.append(audio)        
+
+        with open('wordsscraped.csv', 'a', newline='', encoding='utf-8') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(data)
+        
+    return 1
+
+
+def oxfordapi(word_to_scrape):
+    app_id = "ad49f899"
+    app_key = "01622cb742e08d73a16cb360e1b4a581"
+    endpoint = "entries"
+    language_code = "en-us"
+
+    word_id = re.sub(r"[^a-zA-Z]","", word_to_scrape)
+    data = []
+    try:
+        url = "https://od-api.oxforddictionaries.com/api/v2/" + endpoint + "/" + language_code + "/" + word_id.lower()    
+        r = requests.get(url, headers = {"app_id": app_id, "app_key": app_key})
+        jsonObj = r.json()
+        if r.status_code != 200:
+            return -1
+        else:
+            wordtext = jsonObj['word']
+            data.append(wordtext)
+            result = jsonObj['results']
+
+            try: 
+              senses = result[0]['lexicalEntries'][0]['entries'][0]['senses']
+              li_counter = 0
+              for i in range(len(senses)):
+                  definiton = senses[i]['definitions']
+                  data.append(definiton[0])
+                  li_counter = li_counter + 1
+                  if li_counter == 3:
+                      break
+              if li_counter == 1:
+                  data.append("")
+                  data.append("")
+              if li_counter == 2:
+                  data.append("")
+            except:
+                data.append("")
+                data.append("")
+                data.append("")
+
+            try:
+                pos = result[0]['lexicalEntries'][0]['lexicalCategory']['text']
+                data.append(pos)
+            except:
+                data.append("")
+            
+            try:
+                add_count = 0
+                etymology = result[0]['lexicalEntries'][0]['entries'][0]['etymologies']
+                for x in range(len(languages)):
+                    position=etymology[0].find(languages[x])
+                    if position >= 0:
+                        add_count += 1
+                        if add_count <=3 :
+                             data.append(languages[x])
+                if add_count == 0:
+                    data.append("")
+                    data.append("")
+                    data.append("")
+                if add_count == 1:
+                    data.append("")
+                    data.append("")
+                if add_count == 2:
+                    data.append("")
+            except:
+                data.append("")
+                data.append("")
+                data.append("")
+            
+
+            try:
+                entries = result[0]['lexicalEntries'][0]['entries'][0]            
+                if entries.get('pronunciations') is not None:
+                    pronunci = audiofile = result[0]['lexicalEntries'][0]['entries'][0]['pronunciations'][0]
+                    if pronunci.get('audioFile') is not None:
+                        audiofile = pronunci['audioFile']
+                        data.append(audiofile)
+                    else:
+                        pronunci = audiofile = result[0]['lexicalEntries'][0]['entries'][0]['pronunciations'][1]
+                        if pronunci.get('audioFile') is not None:
+                            audiofile = pronunci['audioFile']
+                            data.append(audiofile)
+            except Exception as e: 
+                data.append("")
+
+        with open('wordsscraped.csv', 'a', newline='', encoding='utf-8') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(data)
+        return 1
+    except:
+        return -1
 
 class MyForm(forms.Form):
    captcha=CaptchaField()
@@ -171,13 +625,13 @@ def create_word(word):
     final_origin.append(None)
     final_origin.append(None)
     for i in range(len(origin)):
-        if not i >= 3:
+        if not i >= 3 and (origin[i] != ""):
             final_origin[i] = origin[i]
 
     final_right.append(None)
     final_right.append(None)
     for i in range(len(right)):
-        if not i >= 3:
+        if not i >= 3 and (right[i] != ""):
             final_right[i] = right[i]
 
     for i in range(len(audio)):
@@ -435,9 +889,9 @@ def uservalidate(request, userit, lockit1, lockit2):
         # Attempt to create new user
         if valid.parent == None:
             student = ConfirmReq.objects.get(parent=valid.id)
-            user = Account.objects.create_user(valid.username, valid.email, valid.password, subscribed=False, locked=False, daysleft=30, trigger=False, changenotifs=True, newsletter=True, parent=True, parents=None)
+            user = Account.objects.create_user(valid.username, valid.email, valid.password, subscribed=False, locked=False, daysleft=30, trigger=False, repsub=True, changenotifs=True, newsletter=True, parent=True, parents=None)
         else:
-            user = Account.objects.create_user(valid.username, valid.email, valid.password, subscribed=False, locked=False, daysleft=30, trigger=False, changenotifs=True, newsletter=True, parent=False)
+            user = Account.objects.create_user(valid.username, valid.email, valid.password, subscribed=False, locked=False, daysleft=30, trigger=False, repsub=True, changenotifs=True, newsletter=True, parent=False)
         
         user.first_name = valid.fname
         user.last_name = valid.lname
@@ -1269,12 +1723,86 @@ def word_import(request):
             f.close()
             os.remove("spell/static/spell/words.csv")
 
+            if exists("wordsscraped.csv"):
+                os.remove("wordsscraped.csv")
+
+            if len(nots) > 0:
+                header = ['word', 'def1','def2','def3', 'pos', 'loo1','loo2','loo3', 'soundfile']
+
+                with open('wordsscraped.csv', 'a', newline='', encoding='utf-8') as csvfile:
+                    writer = csv.writer(csvfile)
+                    writer.writerow(header)
+
+                counter = 1
+                li_ret = 0
+                for x in nots:
+                    print("Counter-",counter)
+                    counter += 1
+                    my_word = re.sub(r"[^a-zA-Z]","", x)
+                    data = []
+
+                    li_ret = int(dictionarydotcom_scrape(my_word))
+                    if li_ret <= 0:
+                        li_ret = int(oxfordapi(my_word))
+                        if li_ret <= 0:
+                            li_ret = int(merriammedialapi_scrape(my_word))
+                            if li_ret <= 0:
+                                li_ret = int(merriamweb_scrape(my_word))
+                                if li_ret <= 0:
+                                    print("merriamweb fail")
+                                    data.append(my_word)
+                                    data.append("WORD NOT FOUND")
+                                    with open('wordsscraped.csv', 'a', newline='', encoding='utf-8') as csvfile:
+                                        writer = csv.writer(csvfile)
+                                        writer.writerow(data)
+
+                with open('wordsscraped.csv', 'r', encoding='utf-8') as csvfile:
+                    reader = csv.reader(csvfile)
+                    next(reader)
+                    
+                    for row in reader:
+                        if not row[1] == "WORD NOT FOUND":
+                            new_word = row[0].lower()
+                            new_speech = row[4]
+
+                            new_origin1 = "No origin given."
+                            if row[5] != "":
+                                new_origin1 = row[5]
+                            new_origin2 = None
+                            if row[6] != "":
+                                new_origin2 = row[6]
+                            new_origin3 = None
+                            if row[7] != "":
+                                new_origin3 = row[7]
+                            
+                            new_def1 = "No definition given."
+                            if row[1] != "":
+                                new_def1 = row[1]
+                            new_def2 = None
+                            if row[2] != "":
+                                new_def2 = row[2]
+                            new_def3 = None
+                            if row[3] != "":
+                                new_def3 = row[3]
+                            
+                            try:
+                                if "mp3" in row[8]:
+                                    new_pronounce = "['" + row[8] + "']"
+                                    new = Word(word=new_word, speech = new_speech, origin1 = new_origin1, origin2 = new_origin2, origin3 = new_origin3, definition1 = new_def1, definition2 = new_def2, definition3 = new_def3, pronounce = new_pronounce, tagged=False, rooted=False)
+                                    new.save()
+                                    nots.remove(new_word)
+                            except:
+                                pass
+            
+            os.remove("wordsscraped.csv")
+
             if len(nots) > 0:
                 fields = ['Words']
-                
+                    
+                # writing to csv file 
                 with open("spell/static/spell/CustomTemplate.csv", 'w', newline="") as csvfile:
                     csvwriter = csv.writer(csvfile) 
-                    csvwriter.writerow(fields) 
+                    csvwriter.writerow(fields)
                     
                     for thingy in nots:
                         rows = [thingy]
@@ -2060,21 +2588,23 @@ def finish(request):
             detail.save()
         count += 1
     
-    msg = MIMEMultipart()
-    msg['Subject'] = 'Official SpellNOW! Notification! -- New Report'
-    msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
     parent = Account.objects.get(pk=userusing.parents)
-    msg["To"] = parent.email
-    body_text = """Hello!\n\nThis is an Official SpellNOW! Notification. """ + userusing.first_name + """ has complete a spelling activity on SpellNOW! with a score of """ + request.POST["score"] + """. You can learn more details of this activity by visiting https://spellnow.org/report/""" + str(report_using.id) + """. Thank you, and we hope for your continued progress for the future.\n\nSincerely,\nSpellNOW! Support Team"""
 
-    body_part = MIMEText(body_text, 'plain')
-    msg.attach(body_part)
-    with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
-        smtp_obj.ehlo()
-        smtp_obj.starttls()
-        smtp_obj.ehlo()
-        smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
-        smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
+    if parent.repsub == True:
+        msg = MIMEMultipart()
+        msg['Subject'] = 'Official SpellNOW! Notification! -- New Report'
+        msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
+        msg["To"] = parent.email
+        body_text = """Hello!\n\nThis is an Official SpellNOW! Notification. """ + userusing.first_name + """ has complete a spelling activity on SpellNOW! with a score of """ + request.POST["score"] + """. You can learn more details of this activity by visiting https://spellnow.org/report/""" + str(report_using.id) + """. Thank you, and we hope for your continued progress for the future.\n\nSincerely,\nSpellNOW! Support Team"""
+
+        body_part = MIMEText(body_text, 'plain')
+        msg.attach(body_part)
+        with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
+            smtp_obj.ehlo()
+            smtp_obj.starttls()
+            smtp_obj.ehlo()
+            smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
+            smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
     
     return render(request, "spell/spelling_finish.html", {
         "bar": "activities",
@@ -2619,21 +3149,23 @@ def vocab_finish(request):
             detail.save()
         count += 1
     
-    msg = MIMEMultipart()
-    msg['Subject'] = 'Official SpellNOW! Notification! -- New Report'
-    msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
     parent = Account.objects.get(pk=userusing.parents)
-    msg["To"] = parent.email
-    body_text = """Hello!\n\nThis is an Official SpellNOW! Notification. """ + userusing.first_name + """ has complete a vocabulary activity on SpellNOW! with a score of """ + request.POST["score"] + """. You can learn more details of this activity by visiting https://spellnow.org/report/""" + str(report_using.id) + """. Thank you, and we hope for your continued progress for the future.\n\nSincerely,\nSpellNOW! Support Team"""
 
-    body_part = MIMEText(body_text, 'plain')
-    msg.attach(body_part)
-    with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
-        smtp_obj.ehlo()
-        smtp_obj.starttls()
-        smtp_obj.ehlo()
-        smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
-        smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
+    if parent.repsub == True:
+        msg = MIMEMultipart()
+        msg['Subject'] = 'Official SpellNOW! Notification! -- New Report'
+        msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
+        msg["To"] = parent.email
+        body_text = """Hello!\n\nThis is an Official SpellNOW! Notification. """ + userusing.first_name + """ has complete a vocabulary activity on SpellNOW! with a score of """ + request.POST["score"] + """. You can learn more details of this activity by visiting https://spellnow.org/report/""" + str(report_using.id) + """. Thank you, and we hope for your continued progress for the future.\n\nSincerely,\nSpellNOW! Support Team"""
+
+        body_part = MIMEText(body_text, 'plain')
+        msg.attach(body_part)
+        with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
+            smtp_obj.ehlo()
+            smtp_obj.starttls()
+            smtp_obj.ehlo()
+            smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
+            smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
     
     return render(request, "spell/vocab_finish.html", {
         "bar": "activities",
@@ -2942,6 +3474,17 @@ def changenotifs(request):
     prev = userusing.changenotifs
 
     total = ""
+
+    try:
+        cool = request.POST["repsub"]
+        if cool == "checked":
+            if userusing.repsub == False:
+                total += "Report Notifications: On"
+                userusing.repsub = True
+    except:
+        if userusing.repsub == True:
+            total += "Report Notifications Notifications: Off"
+            userusing.repsub = False
 
     try:
         cool = request.POST["changenotifs"]
