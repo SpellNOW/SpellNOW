@@ -1761,7 +1761,7 @@ def word_import(request):
                     next(reader)
                     
                     for row in reader:
-                        if not row[1] == "WORD NOT FOUND" or not row[1] == "":
+                        if (not row[1] == "WORD NOT FOUND") or (not row[1] == ""):
                             new_word = row[0].lower()
                             new_speech = row[4]
 
