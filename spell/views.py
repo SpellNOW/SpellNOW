@@ -1761,7 +1761,7 @@ def word_import(request):
                     next(reader)
                     
                     for row in reader:
-                        if (not row[1] == "WORD NOT FOUND") or (not row[1] == ""):
+                        try:
                             new_word = row[0].lower()
                             new_speech = row[4]
 
@@ -1784,15 +1784,14 @@ def word_import(request):
                             new_def3 = None
                             if row[3] != "":
                                 new_def3 = row[3]
-                            
-                            try:
-                                if "mp3" in row[8]:
-                                    new_pronounce = "['" + row[8] + "']"
-                                    new = Word(word=new_word, speech = new_speech, origin1 = new_origin1, origin2 = new_origin2, origin3 = new_origin3, definition1 = new_def1, definition2 = new_def2, definition3 = new_def3, pronounce = new_pronounce, tagged=False, rooted=False)
-                                    new.save()
-                                    nots.remove(new_word)
-                            except:
-                                pass
+
+                            if "mp3" in row[8]:
+                                new_pronounce = "['" + row[8] + "']"
+                                new = Word(word=new_word, speech = new_speech, origin1 = new_origin1, origin2 = new_origin2, origin3 = new_origin3, definition1 = new_def1, definition2 = new_def2, definition3 = new_def3, pronounce = new_pronounce, tagged=False, rooted=False)
+                                new.save()
+                                nots.remove(new_word)
+                        except:
+                            pass
             
             os.remove("wordsscraped.csv")
 
