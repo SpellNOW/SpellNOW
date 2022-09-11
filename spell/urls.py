@@ -21,6 +21,8 @@ urlpatterns = [
     # Libraries
     path("word_library", views.word_library, name="word_library"),
     path("tag_library", views.tag_library, name="tag_library"),
+    path("partag", views.partag, name="partag"),
+    path("save_tag/<int:tagid>", views.save_tag, name="save_tag"),
     path("root_library", views.root_library, name="root_library"),
 
     # Word Changes

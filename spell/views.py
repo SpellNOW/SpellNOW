@@ -1500,13 +1500,17 @@ def tag_library(request):
     if request.method == "POST":
         try:
             thing = request.POST["tag"]
-            if not (("---" in thing) or ('"' in thing) or ("'" in thing) or ("*..*" in thing) or (", " in thing)):
-                new = Tag(name=thing)
+            part = int(request.POST["parent"])
+            part = Tag.objects.get(id=part)
+            if not (("---" in thing) or ('"' in thing) or ("'" in thing) or ("*..*" in thing) or (", " in thing) or (thing in Tag.objects.all().values_list("name", flat=True))):
+                new = Tag(name=thing, parent=part)
                 new.save()
                 return render(request, "spell/tag_library.html", {
                     "bar": "libraries",
                     "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                     "active": "taags",
+                    "partags": Tag.objects.filter(parent=None),
+                    "childtags": Tag.objects.filter(parent__isnull=False),
                     "tags": Tag.objects.all()
                 })
             else:
@@ -1515,11 +1519,13 @@ def tag_library(request):
                     "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                     "active": "taags",
                     "tags": Tag.objects.all(),
+                    "partags": Tag.objects.filter(parent=None),
+                    "childtags": Tag.objects.filter(parent__isnull=False),
                     "error": True
                 })
         except:
             thing = request.POST["rentag"]
-            if not (("---" in thing) or ('"' in thing) or ("'" in thing) or ("*..*" in thing) or (", " in thing)):
+            if not (("---" in thing) or ('"' in thing) or ("'" in thing) or ("*..*" in thing) or (", " in thing) or (thing in Tag.objects.all().values_list("name", flat=True))):
                 new = Tag.objects.get(pk=int(request.POST["tagid"]))
                 new.name = thing
                 new.save()
@@ -1527,6 +1533,8 @@ def tag_library(request):
                     "bar": "libraries",
                     "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                     "active": "taags",
+                    "partags": Tag.objects.filter(parent=None),
+                    "childtags": Tag.objects.filter(parent__isnull=False),
                     "tags": Tag.objects.all()
                 })
             else:
@@ -1535,6 +1543,8 @@ def tag_library(request):
                     "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                     "active": "taags",
                     "tags": Tag.objects.all(),
+                    "partags": Tag.objects.filter(parent=None),
+                    "childtags": Tag.objects.filter(parent__isnull=False),
                     "namerror": int(request.POST["tagid"])
                 })
     else:
@@ -1542,8 +1552,42 @@ def tag_library(request):
             "bar": "libraries",
             "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
             "active": "taags",
+            "partags": Tag.objects.filter(parent=None),
+            "childtags": Tag.objects.filter(parent__isnull=False),
             "tags": Tag.objects.all()
         })
+
+@user_passes_test(lambda u: u.is_staff)
+@login_required(login_url='/login')
+@user_passes_test(locked, login_url='/subscribe')
+def partag(request):
+    thing = request.POST["tag"]
+    if not (("---" in thing) or ('"' in thing) or ("'" in thing) or ("*..*" in thing) or (", " in thing) or (thing in Tag.objects.all().values_list("name", flat=True))):
+        new = Tag(parent=None, name=thing)
+        new.save()
+        return HttpResponseRedirect(reverse("tag_library"))
+    else:
+        return render(request, "spell/tag_library.html", {
+            "bar": "libraries",
+            "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+            "active": "taags",
+            "tags": Tag.objects.all(),
+            "partags": Tag.objects.filter(parent=None),
+            "childtags": Tag.objects.filter(parent__isnull=False),
+            "perror": True
+        })
+
+@user_passes_test(lambda u: u.is_staff)
+@login_required(login_url='/login')
+@user_passes_test(locked, login_url='/subscribe')
+def save_tag(request, tagid):
+    thing = int(request.POST["parent"])
+    child = Tag.objects.get(id=tagid)
+    parent = Tag.objects.get(id=thing)
+    child.parent = parent
+    child.save()
+    
+    return HttpResponseRedirect(reverse("tag_library"))
 
 @user_passes_test(lambda u: u.is_staff)
 @login_required(login_url='/login')
@@ -1552,7 +1596,7 @@ def root_library(request):
     if request.method == "POST":
         try:
             thing = request.POST["root"]
-            if not (("---" in thing) or ('"' in thing) or ("'" in thing) or ("*..*" in thing) or (", " in thing)):
+            if not (("---" in thing) or ('"' in thing) or ("'" in thing) or ("*..*" in thing) or (", " in thing) or (thing in Tag.objects.all().values_list("name", flat=True))):
                 new = Root(name=thing)
                 new.save()
                 return render(request, "spell/root_library.html", {
@@ -1571,7 +1615,7 @@ def root_library(request):
                 })
         except:
             thing = request.POST["renroot"]
-            if not (("---" in thing) or ('"' in thing) or ("'" in thing) or ("*..*" in thing) or (", " in thing)):
+            if not (("---" in thing) or ('"' in thing) or ("'" in thing) or ("*..*" in thing) or (", " in thing) or (thing in Tag.objects.all().values_list("name", flat=True))):
                 new = Root.objects.get(pk=int(request.POST["rootid"]))
                 new.name = thing
                 new.save()
@@ -1662,6 +1706,11 @@ def update_words(request):
 @user_passes_test(locked, login_url='/subscribe')
 def delete_tag(request, id):
     tag = Tag.objects.get(pk=id)
+
+    for child in Tag.objects.filter(parent=tag):
+        child.parent = Tag.objects.get(pk=248)
+        child.save()
+
     tag.delete()
     return HttpResponseRedirect(reverse("tag_library"))
 
@@ -2137,11 +2186,17 @@ def word_import(request):
 @user_passes_test(locked, login_url='/subscribe')
 @user_passes_test(is_child, login_url='/error_404')
 def start(request):
+    total = []
+    for tag in Tag.objects.filter(parent=None).exclude(name="Other Tags"):
+        part = {"parent": tag, "children": Tag.objects.filter(parent=tag)}
+        total.append(part)
+    total.append({"parent": Tag.objects.get(name="Other Tags"), "children": Tag.objects.filter(parent=Tag.objects.get(name="Other Tags"))})
+
     return render(request, "spell/spelling_start.html", {
         "bar": "activities",
         "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
         "active": "spellit",
-        "tags": Tag.objects.all(),
+        "tags": total,
         "roots": Root.objects.all(),
         "number": len(Word.objects.all())
     })
@@ -2150,7 +2205,18 @@ def start(request):
 @user_passes_test(is_child, login_url='/error_404')
 def spell(request):
     if request.method == "POST":
-        tags = request.POST.getlist('*..*tags*..*')
+        getterem = Tag.objects.filter(parent=None).values_list('pk', flat=True)
+        tags = []
+        for gotte in getterem:
+            whatwegot = request.POST.getlist("query" + str(gotte))
+            tags.extend(whatwegot)
+        
+        try:
+            if request.POST.get("untagged") == "yes":
+                tags.append("*..*")
+        except:
+            pass
+
         roots = request.POST.getlist('*..*root*..*')
         fullcall = []
         fullcall.extend(tags)
@@ -2232,7 +2298,7 @@ def spell(request):
             didi = []
             results = []
             jeff = 0
-
+            
             if not attn:
                 for ite in fullcall:
                     if ite == "*..*":

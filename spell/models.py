@@ -43,6 +43,7 @@ class Word(models.Model):
     roots = models.ManyToManyField("Root", blank=True)
 
 class Tag(models.Model):
+    parent = models.ForeignKey("Tag", on_delete=models.CASCADE, null=True)
     name = models.TextField(max_length=100)
 
 class Report(models.Model):

@@ -20,11 +20,13 @@
     <section class="section">
       <div class="row">
         <div class="col-lg-12">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">New Tag</h5>
-              <p>Create a new tag by specifying the tag name and click "Create".</p>
-              
+        <div class="card">
+          <div class="card-body">
+            <div class="row g-3" style="width: 100%;">
+              <div class="col-md-4" style="width: 50%;">
+                <h5 class="card-title">New Tag</h5>
+                <p>Create a new tag by specifying the tag name and click "Create".</p>
+                
                 <form action="/tag_library" method="post">
                   {% csrf_token %}
                   <div class="row g-3">
@@ -39,12 +41,68 @@
                     </div>
                   </div>
                   {% if error %}
-                    <div style="display: block;" class="invalid-feedback">Invalid Tag Name: The tag contains three dashes (---), a quotation mark ("), a apostrophe ('), a star followed by two dots followed by a star (*..*), or a comma followed by a space (, ).</div>
+                    <div style="display: block;" class="invalid-feedback">Invalid Tag Name: The tag contains three dashes (---), a quotation mark ("), a apostrophe ('), a star followed by two dots followed by a star (*..*), a comma followed by a space (, ), or already exists.</div>
+                  {% endif %}
+                  <label class="col-sm-2 col-form-label">Parent Tag</label>
+                  <div class="col-sm-10">
+                    <select required name="parent" class="form-select" aria-label="Default select example">
+                      {% for tag in partags %}
+                        <option value="{{ tag.id }}">{{ tag.name }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </form>
+              </div>
+              <div class="col-md-4" style="width: 50%;">
+                <h5 class="card-title">New Parent Tag</h5>
+                <p>Create a new parent tag by specifying the tag name and click "Create".</p>
+                
+                <form action="/partag" method="post">
+                  {% csrf_token %}
+                  <div class="row g-3">
+                    <div class="col-md-4">
+                      <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="floatingInput" name="tag" placeholder="Parent Tag">
+                        <label for="floatingInput">Parent Tag</label>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <button class="btn btn-primary">Create</button>
+                    </div>
+                  </div>
+                  {% if perror %}
+                    <div style="display: block;" class="invalid-feedback">Invalid Tag Name: The tag contains three dashes (---), a quotation mark ("), a apostrophe ('), a star followed by two dots followed by a star (*..*), a comma followed by a space (, ), or already exists.</div>
                   {% endif %}
                 </form>
               </div>
             </div>
+            </div>
           </div>
+        </div>
+        <div class="col-lg-6" style="width:25%;">
+          <div class="card overflow-auto" style="height: 600px;">
+              <div class="card-body">
+                <h5 class="card-title">Parent Tag Library</h5>
+  
+                <!-- Default Table -->
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Tags</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for tag in partags %}
+                      <tr>
+                        <td id="tagres-{{ tag.id }}" onclick="call_tag('{{ tag.id }}')"  class="result">{{ tag.name }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+                <!-- End Default Table Example -->
+              </div>
+          </div>
+        </div>
         <div class="col-lg-6" style="width:25%;">
           <div class="card overflow-auto" style="height: 600px;">
               <div class="card-body">
@@ -58,7 +116,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    {% for tag in tags %}
+                    {% for tag in childtags %}
                       <tr>
                         <td id="tagres-{{ tag.id }}" onclick="call_tag('{{ tag.id }}')"  class="result">{{ tag.name }}</td>
                       </tr>
@@ -70,12 +128,30 @@
           </div>
         </div>
 
-        <div class="col-lg-6" style="width:75%;">
+        <div class="col-lg-6" style="width:50%;">
           {% for tag in tags %}
             {% if tag.id == namerror %}
               <div id="tag-{{ tag.id }}" style="display: block;" class="card result_card">
                 <div class="card-header">{{ tag.name }}</div>
                 <div class="card-body">
+                  {% if tag.parent is not None %}
+                    <br>
+                    <form action="/tag_library" method="post">
+                      {% csrf_token %}
+                      <label class="col-sm-2 col-form-label">Parent Tag</label>
+                      <div class="col-sm-10">
+                        <select required name="parent" class="form-select" aria-label="Default select example">
+                          {% for par in partags %}
+                            {% if par is tag.parent %}
+                              <option selected value="{{ tag.id }}">{{ tag.name }}</option>
+                            {% else %}
+                              <option value="{{ tag.id }}">{{ tag.name }}</option>
+                            {% endif %}
+                          {% endfor %}
+                        </select>
+                      </div>
+                    </form>
+                  {% endif %}
                   <br>
                   <form action="/tag_library" method="post">
                     {% csrf_token %}
@@ -90,7 +166,7 @@
                         <button class="btn btn-primary">Rename</button>
                       </div>
                     </div>
-                    <div style="display: block;" class="invalid-feedback">Invalid Tag Name: The tag contains three dashes (---), a quotation mark ("), a apostrophe ('), a star followed by two dots followed by a star (*..*), or a comma followed by a space (, ).</div>
+                    <div style="display: block;" class="invalid-feedback">Invalid Tag Name: The tag contains three dashes (---), a quotation mark ("), a apostrophe ('), a star followed by two dots followed by a star (*..*), a comma followed by a space (, ), or already exists.</div>
                     <br>
                     <input style="display:none;" type="text" name="tagid" value="{{ tag.id }}">
                   </form>
@@ -103,6 +179,27 @@
               <div id="tag-{{ tag.id }}" style="display: none;" class="card result_card">
                 <div class="card-header">{{ tag.name }}</div>
                 <div class="card-body">
+                  {% if tag.parent is not None %}
+                  <br>
+                  <form action="/save_tag/{{ tag.id }}" method="post">
+                    {% csrf_token %}
+                    <label class="col-sm-2 col-form-label">Parent Tag</label>
+                    <div class="col-sm-10">
+                      <select required name="parent" class="form-select" aria-label="Default select example">
+                        {% for par in partags %}
+                          {% if par == tag.parent %}
+                            <option selected value="{{ par.id }}">{{ par.name }}</option>
+                          {% else %}
+                            <option value="{{ par.id }}">{{ par.name }}</option>
+                          {% endif %}
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <input style="display: none;" value="{{ tag.id }}" name="tagid">
+                    <br>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                  </form>
+                  {% endif %}
                   <br>
                   <form action="/tag_library" method="post">
                     {% csrf_token %}
