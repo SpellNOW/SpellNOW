@@ -6,6 +6,7 @@ urlpatterns = [
     # Homepage
     path("", views.index, name="index"),
     path("contact", views.contact, name="contact"),
+    path("contactrender", views.contactrender, name="contactrender"),
 
     # Authorization pages
     path("login", views.login, name="login"),

@@ -695,6 +695,13 @@ def index(request):
     else:
         return render(request, "spell/index.html")
 
+def contactrender(request):
+    return render(request, "spell/contact.html", {
+        "bar": "",
+        "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+        "active": "contactus"
+    })
+
 def contact(request):
     msg = MIMEMultipart()
     msg['Subject'] = 'SpellNOW! Contact Notification'
@@ -750,7 +757,7 @@ def register(request):
         form=MyForm(request.POST)
 
         if not form.is_valid():
-            return render(request, "spell/login.html", {
+            return render(request, "spell/register.html", {
                 "form": MyForm(),
                 "message": "Invalid captcha."
             })
@@ -889,9 +896,9 @@ def uservalidate(request, userit, lockit1, lockit2):
         # Attempt to create new user
         if valid.parent == None:
             student = ConfirmReq.objects.get(parent=valid.id)
-            user = Account.objects.create_user(valid.username, valid.email, valid.password, subscribed=False, locked=False, daysleft=30, trigger=False, repsub=True, changenotifs=True, newsletter=True, parent=True, parents=None)
+            user = Account.objects.create_user(valid.username, valid.email, valid.password, subscribed=False, locked=False, daysleft=30, trigger=True, repsub=True, changenotifs=True, newsletter=True, parent=True, parents=None)
         else:
-            user = Account.objects.create_user(valid.username, valid.email, valid.password, subscribed=False, locked=False, daysleft=30, trigger=False, repsub=True, changenotifs=True, newsletter=True, parent=False)
+            user = Account.objects.create_user(valid.username, valid.email, valid.password, subscribed=False, locked=False, daysleft=30, trigger=True, repsub=True, changenotifs=True, newsletter=True, parent=False)
         
         user.first_name = valid.fname
         user.last_name = valid.lname

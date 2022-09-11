@@ -173,20 +173,6 @@
       </li><!-- End Components Nav -->
 
       <li class="nav-heading">Pages</li>
-
-      {% if not question.subscribed %}
-        {% if not question.parent %}
-          <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            You are currently using the free trial version of SpellNOW!&trade;. Your free trial will end in {{ question.daysleft }} days. Click the link below to subscribe!
-          </div>
-          <li class="nav-item">
-            <a id="subscribe" class="nav-link collapsed" href="#">
-              <i class="bi bi-currency-dollar"></i>
-              <span>Subscribe</span>
-            </a>
-          </li>
-        {% endif %}
-      {% endif %}
       <li class="nav-item">
         <a id="profilit" class="nav-link collapsed" href="/profile">
           <i class="bi bi-person"></i>

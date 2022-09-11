@@ -180,15 +180,13 @@
                             <tr>
                               <td scope="row">{{ child.first_name }} {{ child.last_name }}</td>
                               {% if child.locked %}
-                                <td style="color: #fc5a5a;"><b>Account Locked</b> -- This student account has been locked, it will be unlocked once you have subscribed.</td>
-                                <td><a href="#"><button type="button" class="btn btn-success">Subscribe!</button></a></td>
+                                <td style="color: #fc5a5a;"><b>Account Locked</b> -- This student account has been locked as the free trial has endded.</td>
                                 <td><a href="#"><button type="button" class="btn btn-danger">Delete Student</button></a></td>
                               {% elif child.subscribed %}
                                 <td style="color: #68d959;"><b>Subscribed!</b> -- This student account is subscribed to the SpellNOW&trade; suite of services. In order to change billing details or unsubscribe, click "Details".</td>
                                 <td><a href="#"><button type="button" class="btn btn-primary">Details</button></a></td>
                               {% else %}
                                 <td style="color: #fc5a5a;"><b>Free Trial</b> -- This student account is using the free trial version of SpellNOW&trade;. The free trial will expire in <b>{{ child.daysleft }} days.</b></td>
-                                <td><a href="#"><button type="button" class="btn btn-success">Subscribe!</button></a></td>
                                 <td><button data-bs-toggle="modal" data-bs-target="#verticalycentered" type="button" class="btn btn-danger">Delete Student</button></td>
                                 <div class="modal fade" id="verticalycentered" tabindex="-1">
                                   <div class="modal-dialog modal-dialog-centered">
@@ -381,14 +379,12 @@
                               <td scope="row">{{ child.first_name }} {{ child.last_name }}</td>
                               {% if child.locked %}
                                 <td style="color: #fc5a5a;"><b>Account Locked</b> -- This student account has been locked, it will be unlocked once you have subscribed.</td>
-                                <td><a href="#"><button type="button" class="btn btn-success">Subscribe!</button></a></td>
                                 <td><a href="#"><button type="button" class="btn btn-danger">Delete Student</button></a></td>
                               {% elif child.subscribed %}
                                 <td style="color: #68d959;"><b>Subscribed!</b> -- This student account is subscribed to the SpellNOW&trade; suite of services. In order to change billing details or unsubscribe, click "Details".</td>
                                 <td><a href="#"><button type="button" class="btn btn-primary">Details</button></a></td>
                               {% else %}
                                 <td style="color: #fc5a5a;"><b>Free Trial</b> -- This student account is using the free trial version of SpellNOW&trade;. The free trial will expire in <b>{{ child.daysleft }} days.</b></td>
-                                <td><a href="#"><button type="button" class="btn btn-success">Subscribe!</button></a></td>
                                 <td><button data-bs-toggle="modal" data-bs-target="#delusermodal{{ child.id }}" type="button" class="btn btn-danger">Delete Student</button></td>
                                 <div class="modal fade" id="delusermodal{{ child.id }}" tabindex="-1">
                                   <div class="modal-dialog modal-dialog-centered">
@@ -591,14 +587,12 @@
                               <td scope="row">{{ child.first_name }} {{ child.last_name }}</td>
                               {% if child.locked %}
                                 <td style="color: #fc5a5a;"><b>Account Locked</b> -- This student account has been locked, it will be unlocked once you have subscribed.</td>
-                                <td><a href="#"><button type="button" class="btn btn-success">Subscribe!</button></a></td>
                                 <td><a href="#"><button type="button" class="btn btn-danger">Delete Student</button></a></td>
                               {% elif child.subscribed %}
                                 <td style="color: #68d959;"><b>Subscribed!</b> -- This student account is subscribed to the SpellNOW&trade; suite of services. In order to change billing details or unsubscribe, click "Details".</td>
                                 <td><a href="#"><button type="button" class="btn btn-primary">Details</button></a></td>
                               {% else %}
                                 <td style="color: #fc5a5a;"><b>Free Trial</b> -- This student account is using the free trial version of SpellNOW&trade;. The free trial will expire in <b>{{ child.daysleft }} days.</b></td>
-                                <td><a href="#"><button type="button" class="btn btn-success">Subscribe!</button></a></td>
                                 <td><button data-bs-toggle="modal" data-bs-target="#verticalycentered" type="button" class="btn btn-danger">Delete Student</button></td>
                                 <div class="modal fade" id="verticalycentered" tabindex="-1">
                                   <div class="modal-dialog modal-dialog-centered">
