@@ -245,7 +245,17 @@
     <script>
       window.addEventListener('load', (event) => {
         document.getElementById('amazingsubscribed').click()
+        gtag('event', 'sign_up', {
+          'app_name': 'SpellNOW!',
+          'screen_name': 'Dashboard',
+        });
       });
     </script>
   {% endif %}
+  <script>
+    gtag('event', 'login', {
+      'app_name': 'SpellNOW!',
+      'screen_name': 'Dashboard',
+    });
+  </script>
 {% endblock %}
