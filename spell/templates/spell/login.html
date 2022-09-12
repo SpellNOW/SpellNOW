@@ -87,7 +87,7 @@
                     <p><b>Captcha</b> (Please use the textbox below to type the letters visible in the below image): </p>
                     {{form.captcha}}
                     <div class="col-12">
-                      <button class="btn btn-primary w-100" type="submit">Login</button>
+                      <button onclick="gtag('event', 'login', {'app_name': 'SpellNOW!', 'screen_name': 'Dashboard',});" class="btn btn-primary w-100" type="submit">Login</button>
                     </div>
                     <div class="col-12">
                       <p class="small mb-0">Don't have account? <a href="/register">Create an account</a></p>
