@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate, logout as auth_logout, login as au
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+from django.db.models import Count
 from .models import Account, Word, Tag, Report, Root, ReportDetail, EmailValidate, ConfirmReq, VocabReportDetail
 import csv
 from django import forms
@@ -1850,6 +1851,10 @@ def word_import(request):
                             pass
             
             os.remove("wordsscraped.csv")
+
+            for duplicate in Word.objects.values("word").annotate(records=Count("word")).filter(records__gt=1):
+                for word in Word.objects.filter(word=duplicate["word"])[1:]:
+                    word.delete()
 
             if len(nots) > 0 and not len(already) > 0:
                 return render(request, "spell/error.html", {
