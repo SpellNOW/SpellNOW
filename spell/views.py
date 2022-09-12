@@ -2678,11 +2678,17 @@ def finish(request):
 @user_passes_test(locked, login_url='/subscribe')
 @user_passes_test(is_child, login_url='/error_404')
 def vocab_start(request):
+    total = []
+    for tag in Tag.objects.filter(parent=None).exclude(name="Other Tags"):
+        part = {"parent": tag, "children": Tag.objects.filter(parent=tag)}
+        total.append(part)
+    total.append({"parent": Tag.objects.get(name="Other Tags"), "children": Tag.objects.filter(parent=Tag.objects.get(name="Other Tags"))})
+
     return render(request, "spell/vocab_start.html", {
         "bar": "activities",
         "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
-        "active": "vocabit",
-        "tags": Tag.objects.all(),
+        "active": "vocabi",
+        "tags": total,
         "roots": Root.objects.all(),
         "number": len(Word.objects.all())
     })
@@ -2691,7 +2697,18 @@ def vocab_start(request):
 @user_passes_test(is_child, login_url='/error_404')
 def vocab(request):
     if request.method == "POST":
-        tags = request.POST.getlist('*..*tags*..*')
+        getterem = Tag.objects.filter(parent=None).values_list('pk', flat=True)
+        tags = []
+        for gotte in getterem:
+            whatwegot = request.POST.getlist("query" + str(gotte))
+            tags.extend(whatwegot)
+        
+        try:
+            if request.POST.get("untagged") == "yes":
+                tags.append("*..*")
+        except:
+            pass
+
         roots = request.POST.getlist('*..*root*..*')
         fullcall = []
         fullcall.extend(tags)
