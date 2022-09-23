@@ -12,6 +12,7 @@ urlpatterns = [
     path("login", views.login, name="login"),
     path("register", views.register, name="register"),
     path("single_register", views.single_register, name="single_register"),
+    path("student_register", views.student_register, name="student_register"),
     path("uservalidate/<int:userit>-<int:lockit1>-<int:lockit2>", views.uservalidate, name="uservalidate"),
     path("deleteuser/<int:id>", views.deleteuser, name="deleteuser"),
     path("logout", views.logout, name="logout"),

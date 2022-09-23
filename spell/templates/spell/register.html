@@ -67,12 +67,22 @@
               <div class="card mb-3">
 
                 <div class="card-body">
-
                   <div class="pt-4 pb-2">
                     <h5 class="card-title text-center pb-0 fs-4">Create an Account</h5>
                     <p class="text-center small">Enter your personal details to create account</p>
                   </div>
-
+                  <!-- Default Tabs -->
+              {% if not student %}
+              <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">For Parents</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">For Students</button>
+                </li>
+              </ul>
+              <div class="tab-content pt-2" id="myTabContent">
+                <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
                   <form class="row g-3 needs-validation" action="/register" method="post">
                     {% csrf_token %}
                     <div class="col-12">
@@ -146,8 +156,10 @@
                         <div class="invalid-feedback">You must agree before submitting.</div>
                       </div>
                     </div>
-                    {% if message %}
-                      <div style="display: block;" class="invalid-feedback">{{ message }}</div>
+                    {% if not student %}
+                      {% if message %}
+                        <div style="display: block;" class="invalid-feedback">{{ message }}</div>
+                      {% endif %}
                     {% endif %}
                     <p><b>Captcha</b> (Please use the textbox below to type the letters visible in the below image): </p>
                     {{form.captcha}}
@@ -158,7 +170,223 @@
                       <p class="small mb-0">Already have an account? <a href="/login">Log in</a></p>
                     </div>
                   </form>
+                </div>
+                <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                  <form class="row g-3 needs-validation" action="/student_register" method="post">
+                    {% csrf_token %}
+                    <div class="col-12">
+                      <label for="yourFirstName" class="form-label">Student First Name</label>
+                      <input type="text" name="fname" class="form-control" id="yourFirstName" required>
+                      <div class="invalid-feedback">Please, enter your first name!</div>
+                    </div>
 
+                    <div class="col-12">
+                      <label for="yourLastName" class="form-label">Student Last Name</label>
+                      <input type="text" name="lname" class="form-control" id="yourLastName" required>
+                      <div class="invalid-feedback">Please, enter your last name!</div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourEmail" class="form-label">Student Email</label>
+                      <input type="email" name="email" class="form-control" id="yourEmail" required>
+                      <div class="invalid-feedback">Please enter a valid Email adddress!</div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourUsername" class="form-label">Student Username</label>
+                      <div class="input-group has-validation">
+                        <input type="text" name="username" class="form-control" id="yourUsername" required>
+                        <div class="invalid-feedback">Please choose a username.</div>
+                      </div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourPassword" class="form-label">Student Password</label>
+                      <input type="password" name="password" class="form-control" id="yourPassword" required>
+                      <div class="invalid-feedback">Please enter your password!</div>
+                    </div>
+
+                    <div class="col-12">
+                      <div class="form-check">
+                        <input class="form-check-input" name="terms" type="checkbox" value="" id="acceptTerms" required>
+                        <label class="form-check-label" for="acceptTerms">I agree and accept the <a href="#">terms and conditions</a></label>
+                        <div class="invalid-feedback">You must agree before submitting.</div>
+                      </div>
+                    </div>
+                    {% if student %}
+                      {% if message %}
+                        <div style="display: block;" class="invalid-feedback">{{ message }}</div>
+                      {% endif %}
+                    {% endif %}
+                    <p><b>Captcha</b> (Please use the textbox below to type the letters visible in the below image): </p>
+                    {{form.captcha}}
+                    <div class="col-12">
+                      <button class="btn btn-primary w-100" type="submit">Create Account</button>
+                    </div>
+                    <div class="col-12">
+                      <p class="small mb-0">Already have an account? <a href="/login">Log in</a></p>
+                    </div>
+                  </form>
+                </div>
+              </div><!-- End Default Tabs -->
+              {% else %}
+              <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="false">For Parents</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="true">For Students</button>
+                </li>
+              </ul>
+              <div class="tab-content pt-2" id="myTabContent">
+                <div class="tab-pane fade" id="home" role="tabpanel" aria-labelledby="home-tab">
+                  <form class="row g-3 needs-validation" action="/register" method="post">
+                    {% csrf_token %}
+                    <div class="col-12">
+                      <label for="yourFirstName" class="form-label">Student First Name</label>
+                      <input type="text" name="fname" class="form-control" id="yourFirstName" required>
+                      <div class="invalid-feedback">Please, enter your first name!</div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourLastName" class="form-label">Student Last Name</label>
+                      <input type="text" name="lname" class="form-control" id="yourLastName" required>
+                      <div class="invalid-feedback">Please, enter your last name!</div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourEmail" class="form-label">Student Email</label>
+                      <input type="email" name="email" class="form-control" id="yourEmail" required>
+                      <div class="invalid-feedback">Please enter a valid Email adddress!</div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourUsername" class="form-label">Student Username</label>
+                      <div class="input-group has-validation">
+                        <input type="text" name="username" class="form-control" id="yourUsername" required>
+                        <div class="invalid-feedback">Please choose a username.</div>
+                      </div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourPassword" class="form-label">Student Password</label>
+                      <input type="password" name="password" class="form-control" id="yourPassword" required>
+                      <div class="invalid-feedback">Please enter your password!</div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourFirstName" class="form-label">Parent First Name</label>
+                      <input type="text" name="pfname" class="form-control" id="yourFirstName" required>
+                      <div class="invalid-feedback">Please, enter your first name!</div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourLastName" class="form-label">Parent Last Name</label>
+                      <input type="text" name="plname" class="form-control" id="yourLastName" required>
+                      <div class="invalid-feedback">Please, enter your last name!</div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourEmail" class="form-label">Parent Email</label>
+                      <input type="email" name="pemail" class="form-control" id="yourEmail" required>
+                      <div class="invalid-feedback">Please enter a valid Email adddress!</div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourUsername" class="form-label">Parent Username</label>
+                      <div class="input-group has-validation">
+                        <input type="text" name="pusername" class="form-control" id="yourUsername" required>
+                        <div class="invalid-feedback">Please choose a username.</div>
+                      </div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourPassword" class="form-label">Parent Password</label>
+                      <input type="password" name="ppassword" class="form-control" id="yourPassword" required>
+                      <div class="invalid-feedback">Please enter your password!</div>
+                    </div>
+
+                    <div class="col-12">
+                      <div class="form-check">
+                        <input class="form-check-input" name="terms" type="checkbox" value="" id="acceptTerms" required>
+                        <label class="form-check-label" for="acceptTerms">I agree and accept the <a href="#">terms and conditions</a></label>
+                        <div class="invalid-feedback">You must agree before submitting.</div>
+                      </div>
+                    </div>
+                    {% if not student %}
+                      {% if message %}
+                        <div style="display: block;" class="invalid-feedback">{{ message }}</div>
+                      {% endif %}
+                    {% endif %}
+                    <p><b>Captcha</b> (Please use the textbox below to type the letters visible in the below image): </p>
+                    {{form.captcha}}
+                    <div class="col-12">
+                      <button class="btn btn-primary w-100" type="submit">Create Account</button>
+                    </div>
+                    <div class="col-12">
+                      <p class="small mb-0">Already have an account? <a href="/login">Log in</a></p>
+                    </div>
+                  </form>
+                </div>
+                <div class="tab-pane fade show active" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                  <form class="row g-3 needs-validation" action="/student_register" method="post">
+                    {% csrf_token %}
+                    <div class="col-12">
+                      <label for="yourFirstName" class="form-label">Student First Name</label>
+                      <input type="text" name="fname" class="form-control" id="yourFirstName" required>
+                      <div class="invalid-feedback">Please, enter your first name!</div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourLastName" class="form-label">Student Last Name</label>
+                      <input type="text" name="lname" class="form-control" id="yourLastName" required>
+                      <div class="invalid-feedback">Please, enter your last name!</div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourEmail" class="form-label">Student Email</label>
+                      <input type="email" name="email" class="form-control" id="yourEmail" required>
+                      <div class="invalid-feedback">Please enter a valid Email adddress!</div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourUsername" class="form-label">Student Username</label>
+                      <div class="input-group has-validation">
+                        <input type="text" name="username" class="form-control" id="yourUsername" required>
+                        <div class="invalid-feedback">Please choose a username.</div>
+                      </div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourPassword" class="form-label">Student Password</label>
+                      <input type="password" name="password" class="form-control" id="yourPassword" required>
+                      <div class="invalid-feedback">Please enter your password!</div>
+                    </div>
+
+                    <div class="col-12">
+                      <div class="form-check">
+                        <input class="form-check-input" name="terms" type="checkbox" value="" id="acceptTerms" required>
+                        <label class="form-check-label" for="acceptTerms">I agree and accept the <a href="#">terms and conditions</a></label>
+                        <div class="invalid-feedback">You must agree before submitting.</div>
+                      </div>
+                    </div>
+                    {% if student %}
+                      {% if message %}
+                        <div style="display: block;" class="invalid-feedback">{{ message }}</div>
+                      {% endif %}
+                    {% endif %}
+                    <p><b>Captcha</b> (Please use the textbox below to type the letters visible in the below image): </p>
+                    {{form.captcha}}
+                    <div class="col-12">
+                      <button class="btn btn-primary w-100" type="submit">Create Account</button>
+                    </div>
+                    <div class="col-12">
+                      <p class="small mb-0">Already have an account? <a href="/login">Log in</a></p>
+                    </div>
+                  </form>
+                </div>
+              </div><!-- End Default Tabs -->
+              {% endif %}
                 </div>
               </div>
 

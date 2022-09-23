@@ -16,6 +16,7 @@ class Account(User):
     children = models.ManyToManyField("Account", blank=True)
     parents = models.IntegerField(null=True, blank=True)
     repsub = models.BooleanField()
+    haschild = models.BooleanField(null=True, blank=True)
 
 class ConfirmReq(models.Model):
     fname = models.TextField(max_length=300)

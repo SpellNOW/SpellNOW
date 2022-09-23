@@ -679,7 +679,7 @@ def locked(user):
 def is_child(user):
     account = Account.objects.get(username=user.username)
 
-    if account.parent:
+    if account.parent == True:
         return False
     else:
         return True
@@ -798,7 +798,7 @@ def register(request):
         email = request.POST["email"]
         passwordi = request.POST["password"]
 
-        if not Account.objects.filter(username=username).exists():
+        if (not Account.objects.filter(username=username).exists()) and (not ConfirmReq.objects.filter(username=username).exists()):
             it1 = random.randint(10000, 99999)
             it2 = random.randint(10000, 99999)
             confreq = ConfirmReq(fname = fname, lname = lname, username = username, email = email, password = passwordi, lock1 = it1, lock2 = it2, parent=parentid)
@@ -846,15 +846,18 @@ def single_register(request):
             form=MyForm(request.POST)
 
             if not form.is_valid():
-                return render(request, "spell/login.html", {
+                return render(request, "spell/single_register.html", {
                     "form": MyForm(),
-                    "message": "Invalid captcha."
+                    "message": "Invalid captcha.",
+                    "student": False
                 })
 
-            if not Account.objects.filter(username=username).exists():
+            if (not Account.objects.filter(username=username).exists()) and (not ConfirmReq.objects.filter(username=username).exists()):
                 it1 = random.randint(10000, 99999)
                 it2 = random.randint(10000, 99999)
-                confreq = ConfirmReq(fname = fname, lname = lname, username = username, email = email, password = passwordi, lock1 = it1, lock2 = it2, parent=userusing.id)
+                confreq = ConfirmReq(fname = request.user.first_name, lname = request.user.last_name, username = request.user.username, email = request.user.email, password = request.user.password, lock1 = 1, lock2 = 1, parent=None)
+                confreq.save()
+                confreq = ConfirmReq(fname = fname, lname = lname, username = username, email = email, password = passwordi, lock1 = it1, lock2 = it2, parent=confreq.id)
                 confreq.save()
 
                 try:
@@ -878,13 +881,62 @@ def single_register(request):
             else:
                 return render(request, "spell/single_register.html", {
                     "form": MyForm(),
-                    "message": "Student username already taken."
+                    "message": "Student username already taken.",
+                    "student": False
                 })
         else:
             return render(request, "spell/error_404.html", {}) 
     else:
         form=MyForm()
-        return render(request, "spell/single_register.html", {"form": form})
+        return render(request, "spell/single_register.html", {"form": form, "student": False})
+
+def student_register(request):
+    if request.method == "POST":
+        fname = request.POST["fname"]
+        lname = request.POST["lname"]
+        username = request.POST["username"]
+        email = request.POST["email"]
+        passwordi = request.POST["password"]
+
+        form=MyForm(request.POST)
+
+        if not form.is_valid():
+            return render(request, "spell/register.html", {
+                "form": MyForm(),
+                "message": "Invalid captcha.",
+                "student": True
+            })
+
+        if not Account.objects.filter(username=username).exists():
+            it1 = random.randint(10000, 99999)
+            it2 = random.randint(10000, 99999)
+            confreq = ConfirmReq(fname = fname, lname = lname, username = username, email = email, password = passwordi, lock1 = it1, lock2 = it2, parent=None)
+            confreq.save()
+
+            try:
+                msg = MIMEMultipart()
+                msg['Subject'] = 'Official SpellNOW! Notification! -- Validate Email'
+                msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
+                msg["To"] = request.POST["email"]
+                body_text = """Hello!\n\nThis is an official SpellNOW! Notification. Your recently attempted to register for a SpellNOW! account. As per SpellNOW! policy you must click the link below to validate your email address in order to complete account setup.\n\nhttps://spellnow.org/uservalidate/""" + str(confreq.id) + """-""" + str(it1) + """-""" + str(it2) + """\n\nThank you, and we hope you enjoy your continued use of SpellNOW!\n\nSincerely,\nSpellNOW! Support Team"""
+                body_part = MIMEText(body_text, 'plain')
+                msg.attach(body_part)
+                with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
+                    smtp_obj.ehlo()
+                    smtp_obj.starttls()
+                    smtp_obj.ehlo()
+                    smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
+                    smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
+            except:
+                pass
+            
+            return HttpResponseRedirect(reverse("informvalidation"))
+        else:
+            return render(request, "spell/register.html", {
+                "form": MyForm(),
+                "message": "Student username already taken.",
+                "student": True
+            })
 
 def uservalidate(request, userit, lockit1, lockit2):
     idofuser=userit
@@ -895,7 +947,7 @@ def uservalidate(request, userit, lockit1, lockit2):
         valid = ConfirmReq.objects.get(pk=idofuser, lock1=lock1, lock2=lock2)
     
         # Attempt to create new user
-        if valid.parent == None:
+        if (valid.parent == None) and (ConfirmReq.objects.filter(parent=valid.id).exists()):
             student = ConfirmReq.objects.get(parent=valid.id)
             user = Account.objects.create_user(valid.username, valid.email, valid.password, subscribed=False, locked=False, daysleft=30, trigger=True, repsub=True, changenotifs=True, newsletter=True, parent=True, parents=None)
         else:
@@ -909,8 +961,11 @@ def uservalidate(request, userit, lockit1, lockit2):
             try:
                 iguy = Account.objects.get(username=student.username)
                 iguy.parents = user.id
+                iguy.haschild = False
                 iguy.save()
-                user.children.add(Account.objects.get(username=student.username))
+                user.children.add(iguy)
+                user.date_joined = iguy.date_joined
+                user.haschild = True
                 user.save()
                 student.delete()
                 valid.delete()
@@ -920,14 +975,24 @@ def uservalidate(request, userit, lockit1, lockit2):
             try:
                 kool = ConfirmReq.objects.get(pk=idofuser, lock1=lock1, lock2=lock2)
                 par = Account.objects.get(username = (ConfirmReq.objects.get(pk=kool.parent)).username)
-                par.children.add(user)
-                user.parents = par.id
-                user.save()
+                par.haschild = True
                 par.save()
+                user.haschild = False
+                par.children.add(user)
+                par.save()
+                user.parents = par.id
+                if par.haschild:
+                    user.date_joined = par.date_joined
+                user.save()
+                
                 (ConfirmReq.objects.get(pk=kool.parent)).delete()
+                
                 kool.delete()
             except:
-                pass
+                try:
+                    fun = (ConfirmReq.objects.get(pk=kool.parent))
+                except:
+                    kool.delete()
         
         auth_login(request, user)
         return HttpResponseRedirect(reverse("admin_panel"))
@@ -2653,23 +2718,26 @@ def finish(request):
             detail.save()
         count += 1
     
-    parent = Account.objects.get(pk=userusing.parents)
+    try:
+        parent = Account.objects.get(pk=userusing.parents)
 
-    if parent.repsub == True:
-        msg = MIMEMultipart()
-        msg['Subject'] = 'Official SpellNOW! Notification! -- New Report'
-        msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
-        msg["To"] = parent.email
-        body_text = """Hello!\n\nThis is an Official SpellNOW! Notification. """ + userusing.first_name + """ has complete a spelling activity on SpellNOW! with a score of """ + request.POST["score"] + """. You can learn more details of this activity by visiting https://spellnow.org/report/""" + str(report_using.id) + """. Thank you, and we hope for your continued progress for the future.\n\nSincerely,\nSpellNOW! Support Team"""
+        if parent.repsub == True:
+            msg = MIMEMultipart()
+            msg['Subject'] = 'Official SpellNOW! Notification! -- New Report'
+            msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
+            msg["To"] = parent.email
+            body_text = """Hello!\n\nThis is an Official SpellNOW! Notification. """ + userusing.first_name + """ has complete a spelling activity on SpellNOW! with a score of """ + request.POST["score"] + """. You can learn more details of this activity by visiting https://spellnow.org/report/""" + str(report_using.id) + """. Thank you, and we hope for your continued progress for the future.\n\nSincerely,\nSpellNOW! Support Team"""
 
-        body_part = MIMEText(body_text, 'plain')
-        msg.attach(body_part)
-        with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
-            smtp_obj.ehlo()
-            smtp_obj.starttls()
-            smtp_obj.ehlo()
-            smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
-            smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
+            body_part = MIMEText(body_text, 'plain')
+            msg.attach(body_part)
+            with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
+                smtp_obj.ehlo()
+                smtp_obj.starttls()
+                smtp_obj.ehlo()
+                smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
+                smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
+    except:
+        pass
     
     return render(request, "spell/spelling_finish.html", {
         "bar": "activities",
@@ -2692,7 +2760,7 @@ def vocab_start(request):
     return render(request, "spell/vocab_start.html", {
         "bar": "activities",
         "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
-        "active": "vocabi",
+        "active": "vocabit",
         "tags": total,
         "roots": Root.objects.all(),
         "number": len(Word.objects.all())
@@ -3231,23 +3299,26 @@ def vocab_finish(request):
             detail.save()
         count += 1
     
-    parent = Account.objects.get(pk=userusing.parents)
+    try:
+        parent = Account.objects.get(pk=userusing.parents)
 
-    if parent.repsub == True:
-        msg = MIMEMultipart()
-        msg['Subject'] = 'Official SpellNOW! Notification! -- New Report'
-        msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
-        msg["To"] = parent.email
-        body_text = """Hello!\n\nThis is an Official SpellNOW! Notification. """ + userusing.first_name + """ has complete a vocabulary activity on SpellNOW! with a score of """ + request.POST["score"] + """. You can learn more details of this activity by visiting https://spellnow.org/report/""" + str(report_using.id) + """. Thank you, and we hope for your continued progress for the future.\n\nSincerely,\nSpellNOW! Support Team"""
+        if parent.repsub == True:
+            msg = MIMEMultipart()
+            msg['Subject'] = 'Official SpellNOW! Notification! -- New Report'
+            msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
+            msg["To"] = parent.email
+            body_text = """Hello!\n\nThis is an Official SpellNOW! Notification. """ + userusing.first_name + """ has complete a vocabulary activity on SpellNOW! with a score of """ + request.POST["score"] + """. You can learn more details of this activity by visiting https://spellnow.org/report/""" + str(report_using.id) + """. Thank you, and we hope for your continued progress for the future.\n\nSincerely,\nSpellNOW! Support Team"""
 
-        body_part = MIMEText(body_text, 'plain')
-        msg.attach(body_part)
-        with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
-            smtp_obj.ehlo()
-            smtp_obj.starttls()
-            smtp_obj.ehlo()
-            smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
-            smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
+            body_part = MIMEText(body_text, 'plain')
+            msg.attach(body_part)
+            with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
+                smtp_obj.ehlo()
+                smtp_obj.starttls()
+                smtp_obj.ehlo()
+                smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
+                smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
+    except:
+        pass
     
     return render(request, "spell/vocab_finish.html", {
         "bar": "activities",
@@ -3452,16 +3523,41 @@ def wordreports(request):
 # Profile
 
 @login_required(login_url='/login')
-@user_passes_test(locked, login_url='/subscribe')
 def profile(request):
+    account = Account.objects.get(username=request.user.username)
+    actualparent = False
+    if account.parent:
+        for account in Account.objects.filter(parents=account.id):
+            gen = str(account.date_joined).split("+")[0]
+            day = gen.split(" ")[0]
+            time = gen.split(" ")[1]
+            opyear = int(day.split("-")[0])
+            opmonth = int(day.split("-")[1])
+            opday = int(day.split("-")[2])
+            ophour = int(time.split(":")[0])
+            opmin = int(time.split(":")[1])
+            opsec = int((time.split(":")[2]).split(".")[0])
+            tv = datetime.datetime(opyear, opmonth, opday, ophour, opmin, opsec)
+            if (account.subscribed == False) and ((datetime.datetime.now() - tv) > datetime.timedelta(days=30)):
+                account.locked = True
+                account.save()
+            elif account.subscribed == False:
+                account.daysleft = 30 - ((datetime.datetime.now() - tv).days)
+                account.save()
+            
+            actualparent = True
+    
+    if account.parent or ConfirmReq.objects.filter(username=account.username, parent=None) or ((not ConfirmReq.objects.filter(username=account.username).exists()) and (not Account.objects.filter(children__in=[account]).exists())):
+        actualparent = True
+
     return render(request, "spell/profile.html", {
         "bar": "",
         "active": "profilit",
         "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+        "actualparent": actualparent,
     })
 
 @login_required(login_url='/login')
-@user_passes_test(locked, login_url='/subscribe')
 def deleteuser(request, id):
     userusing = Account.objects.get(username=request.user.username)
     student = Account.objects.get(pk=id)
@@ -3472,10 +3568,13 @@ def deleteuser(request, id):
             return HttpResponseRedirect(reverse("profile"))
         else:
             return render(request, "spell/error_404.html", {})
+    elif ((not ConfirmReq.objects.filter(username=userusing.username).exists()) and (not Account.objects.filter(children__in=[userusing]).exists())):
+        userusing.delete()
+        return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "spell/error_404.html", {})
 
-@user_passes_test(locked, login_url='/subscribe')
+@login_required(login_url='/login')
 def changedetails(request):
     userusing = Account.objects.get(username=request.user.username)
     userproblems = False
@@ -3550,7 +3649,7 @@ def changedetails(request):
     else:
         return HttpResponseRedirect(reverse("profile"))
 
-@user_passes_test(locked, login_url='/subscribe')
+@login_required(login_url='/login')
 def changenotifs(request):
     userusing = Account.objects.get(username=request.user.username)
     prev = userusing.changenotifs
@@ -3610,7 +3709,7 @@ def changenotifs(request):
 
     return HttpResponseRedirect(reverse("profile"))
 
-@user_passes_test(locked, login_url='/subscribe')
+@login_required(login_url='/login')
 def changepassword(request):
     user = authenticate(request, username=request.user.username, password=request.POST["current"])
     if user is not None:
