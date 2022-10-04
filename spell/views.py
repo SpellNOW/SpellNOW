@@ -2321,8 +2321,6 @@ def spell(request):
                 roots.append("|--|*..*")
         except:
             pass
-        
-        print(roots)
 
         fullcall = []
         fullcall.extend(tags)
@@ -2819,7 +2817,32 @@ def vocab(request):
         except:
             pass
 
-        roots = request.POST.getlist('*..*root*..*')
+        roots = []
+        whatwegot = request.POST.getlist("acctlatin")
+        roots.extend(whatwegot)
+        whatwegot = request.POST.getlist("acctgreek")
+        roots.extend(whatwegot)
+        whatwegot = request.POST.getlist("acctitalian")
+        roots.extend(whatwegot)
+        whatwegot = request.POST.getlist("acctspanish")
+        roots.extend(whatwegot)
+        whatwegot = request.POST.getlist("acctfrench")
+        roots.extend(whatwegot)
+        whatwegot = request.POST.getlist("acctgerman")
+        roots.extend(whatwegot)
+        whatwegot = request.POST.getlist("acctportuguese")
+        roots.extend(whatwegot)
+        whatwegot = request.POST.getlist("acctmiddlenglish")
+        roots.extend(whatwegot)
+        whatwegot = request.POST.getlist("acctothers")
+        roots.extend(whatwegot)
+
+        try:
+            if request.POST.get("unrooted") == "yes":
+                roots.append("|--|*..*")
+        except:
+            pass
+
         fullcall = []
         fullcall.extend(tags)
         fullcall.extend(roots)
@@ -2843,26 +2866,30 @@ def vocab(request):
             if not i == "*..*":
                 cool.append(i)
 
+        gunroots = []
+        for root in roots:
+            gunroots.append(root.replace("|--|", ""))
+
         if not attn:
             if "*..*" in tags and "*..*" in roots:
-                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(tagged=False) | Q(roots__name__in=cool) | Q(rooted=False))).exclude(definition1=None).distinct()))
+                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(tagged=False) | Q(roots__name__in=gunroots) | Q(rooted=False))).exclude(definition1=None).distinct()))
             elif "*..*" in tags:
                 results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(tagged=False))).exclude(definition1=None).distinct()))
             elif "*..*" in roots:
                 results.extend(list((Word.objects.filter(Q(roots__name__in=cool) | Q(rooted=False))).exclude(definition1=None).distinct()))
             else:
-                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(roots__name__in=cool))).exclude(definition1=None).distinct()))
+                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(roots__name__in=gunroots))).exclude(definition1=None).distinct()))
         else:
             yaylmao = ReportDetail.objects.filter(report__user__username=request.user.username).values_list('word', flat=True)
 
             if "*..*" in tags and "*..*" in roots:
-                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(tagged=False) | Q(roots__name__in=cool) | Q(rooted=False))).exclude(definition1=None).exclude(word__in = yaylmao).distinct()))
+                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(tagged=False) | Q(roots__name__in=gunroots) | Q(rooted=False))).exclude(definition1=None).exclude(word__in = yaylmao).distinct()))
             elif "*..*" in tags:
                 results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(tagged=False) )).exclude(word__in = yaylmao).exclude(definition1=None).distinct()))
             elif "*..*" in roots:
                 results.extend(list((Word.objects.filter(Q(roots__name__in=cool) | Q(rooted=False) )).exclude(word__in = yaylmao).exclude(definition1=None).distinct()))
             else:
-                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(roots__name__in=cool))).exclude(word__in = yaylmao).exclude(definition1=None).distinct()))
+                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(roots__name__in=gunroots))).exclude(word__in = yaylmao).exclude(definition1=None).distinct()))
         
         if (int(len(results)) < int(request.POST["numwords"])) or (int(len(tags)) > int(request.POST["numwords"])):
             return render(request, "spell/vocab_start.html", {
