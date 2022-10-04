@@ -42,7 +42,9 @@
                             <div class="accordion-body">  
                               <select style="width:100%;" class="form-select" id="validationDefault04" multiple name="query{{ tag.parent.id }}">
                                 {% for childtag in tag.children %}
-                                  <option value="{{ childtag.name }}">{{ childtag.name }}</option>
+                                  {% if childtag.id != 240 %}
+                                    <option value="{{ childtag.name }}">{{ childtag.name }}</option>
+                                  {% endif %}
                                 {% endfor %}
                               </select>
                             </div>
@@ -53,12 +55,42 @@
                   </div>
                   <div class="col-md-4">
                     <label for="allrots" class="form-label">Included roots (Ctrl + click):</label>
-                    <select style="width:100%;" class="form-select" id="allrots" multiple name="*..*root*..*">
-                      {% for root in roots %}
-                        <option value="|--|{{ root.name }}">{{ root.name }}</option>
+                    <div class="accordion" id="rootExample">
+                      {% for category in fun %}
+                        <div class="accordion-item">
+                          <h2 class="accordion-header" id="headingOne">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#acct{{ category.Ids }}" aria-expanded="true" aria-controls="acct{{ category.Ids }}">
+                              {{ category.Root }}
+                            </button>
+                          </h2>
+                          <div id="acct{{ category.Ids }}" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#rootExample">
+                            <div class="accordion-body">  
+                              <select style="width:100%;" class="form-select" id="validationDefault04" multiple name="acct{{ category.Ids }}">
+                                {% for root in category.Go %}
+                                  <option value="|--|{{ root.name }}">{{ root.name }}</option>
+                                {% endfor %}
+                              </select>
+                            </div>
+                          </div>
+                        </div>
                       {% endfor %}
-                        <option value="|--|*..*">No Roots</option>
-                    </select>
+                      <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingOne">
+                          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#acctothers" aria-expanded="true" aria-controls="acctothers">
+                            Other Roots
+                          </button>
+                        </h2>
+                        <div id="acctothers" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#rootExample">
+                          <div class="accordion-body">  
+                            <select style="width:100%;" class="form-select" id="validationDefault04" multiple name="acctothers">
+                              {% for root in others %}
+                                <option value="|--|{{ root.name }}">{{ root.name }}</option>
+                              {% endfor %}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <div class="col-md-4">
                     <label for="inputNumber" style="width: 100%;" class="col-sm-2 col-form-label">Number of words:</label>

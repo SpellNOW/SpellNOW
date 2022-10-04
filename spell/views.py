@@ -2275,7 +2275,9 @@ def start(request):
         "active": "spellit",
         "tags": total,
         "roots": Root.objects.all(),
-        "number": len(Word.objects.all())
+        "number": len(Word.objects.all()),
+        "fun": [{"Ids": "latin", "Root": "Latin", "Go": list(Root.objects.filter(origin="Latin"))}, {"Ids": "greek", "Root": "Greek", "Go": list(Root.objects.filter(origin="Greek"))}, {"Ids": "italian", "Root": "Italian", "Go": list(Root.objects.filter(origin="Italian"))}, {"Ids": "spanish", "Root": "Spanish", "Go": list(Root.objects.filter(origin="Spanish"))}, {"Ids": "french", "Root": "French", "Go": list(Root.objects.filter(origin="French"))}, {"Ids": "german", "Root": "German", "Go": list(Root.objects.filter(origin="German"))}, {"Ids": "portuguese", "Root": "Portuguese", "Go": list(Root.objects.filter(origin="Portuguese"))}, {"Ids": "middlenglish", "Root": "Middle English", "Go": list(Root.objects.filter(origin="Middle English"))}],
+        "others": Root.objects.all().exclude(origin="Latin").exclude(origin="Greek").exclude(origin="Italian").exclude(origin="Spanish").exclude(origin="French").exclude(origin="German").exclude(origin="Portuguese").exclude(origin="Middle English")
     })
 
 @user_passes_test(locked, login_url='/subscribe')
@@ -2293,8 +2295,35 @@ def spell(request):
                 tags.append("*..*")
         except:
             pass
+        
+        roots = []
+        whatwegot = request.POST.getlist("acctlatin")
+        roots.extend(whatwegot)
+        whatwegot = request.POST.getlist("acctgreek")
+        roots.extend(whatwegot)
+        whatwegot = request.POST.getlist("acctitalian")
+        roots.extend(whatwegot)
+        whatwegot = request.POST.getlist("acctspanish")
+        roots.extend(whatwegot)
+        whatwegot = request.POST.getlist("acctfrench")
+        roots.extend(whatwegot)
+        whatwegot = request.POST.getlist("acctgerman")
+        roots.extend(whatwegot)
+        whatwegot = request.POST.getlist("acctportuguese")
+        roots.extend(whatwegot)
+        whatwegot = request.POST.getlist("acctmiddlenglish")
+        roots.extend(whatwegot)
+        whatwegot = request.POST.getlist("acctothers")
+        roots.extend(whatwegot)
 
-        roots = request.POST.getlist('*..*root*..*')
+        try:
+            if request.POST.get("unrooted") == "yes":
+                roots.append("|--|*..*")
+        except:
+            pass
+        
+        print(roots)
+
         fullcall = []
         fullcall.extend(tags)
         fullcall.extend(roots)
@@ -2318,26 +2347,30 @@ def spell(request):
             if not i == "*..*":
                 cool.append(i)
 
+        gunroots = []
+        for root in roots:
+            gunroots.append(root.replace("|--|", ""))
+
         if not attn:
-            if "*..*" in tags and "*..*" in roots:
-                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(tagged=False) | Q(roots__name__in=cool) | Q(rooted=False))).distinct()))
+            if "*..*" in tags and "|--|*..*" in roots:
+                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(tagged=False) | Q(roots__name__in=gunroots) | Q(rooted=False))).distinct()))
             elif "*..*" in tags:
                 results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(tagged=False) )).distinct()))
-            elif "*..*" in roots:
+            elif "|--|*..*" in roots:
                 results.extend(list((Word.objects.filter(Q(roots__name__in=cool) | Q(rooted=False) )).distinct()))
             else:
-                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(roots__name__in=cool))).distinct()))
+                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(roots__name__in=gunroots))).distinct()))
         else:
             yaylmao = ReportDetail.objects.filter(report__user__username=request.user.username).values_list('word', flat=True)
 
-            if "*..*" in tags and "*..*" in roots:
-                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(tagged=False) | Q(roots__name__in=cool) | Q(rooted=False))).exclude(word__in = yaylmao).distinct()))
+            if "*..*" in tags and "|--|*..*" in roots:
+                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(tagged=False) | Q(roots__name__in=gunroots) | Q(rooted=False))).exclude(word__in = yaylmao).distinct()))
             elif "*..*" in tags:
                 results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(tagged=False) )).exclude(word__in = yaylmao).distinct()))
-            elif "*..*" in roots:
+            elif "|--|*..*" in roots:
                 results.extend(list((Word.objects.filter(Q(roots__name__in=cool) | Q(rooted=False) )).exclude(word__in = yaylmao).distinct()))
             else:
-                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(roots__name__in=cool))).exclude(word__in = yaylmao).distinct()))
+                results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(roots__name__in=gunroots))).exclude(word__in = yaylmao).distinct()))
         
         if (int(len(results)) < int(request.POST["numwords"])) or (int(len(tags)) > int(request.POST["numwords"])):
             return render(request, "spell/spelling_start.html", {
@@ -2348,6 +2381,8 @@ def spell(request):
                 "roots": Root.objects.all(),
                 "number": len(Word.objects.all()),
                 "message": "Invalid word count, the maximum number of words you may have under this configuration is " + str(int(len(results))),
+                "fun": [{"Ids": "latin", "Root": "Latin", "Go": list(Root.objects.filter(origin="Latin"))}, {"Ids": "greek", "Root": "Greek", "Go": list(Root.objects.filter(origin="Greek"))}, {"Ids": "italian", "Root": "Italian", "Go": list(Root.objects.filter(origin="Italian"))}, {"Ids": "spanish", "Root": "Spanish", "Go": list(Root.objects.filter(origin="Spanish"))}, {"Ids": "french", "Root": "French", "Go": list(Root.objects.filter(origin="French"))}, {"Ids": "german", "Root": "German", "Go": list(Root.objects.filter(origin="German"))}, {"Ids": "portuguese", "Root": "Portuguese", "Go": list(Root.objects.filter(origin="Portuguese"))}, {"Ids": "middlenglish", "Root": "Middle English", "Go": list(Root.objects.filter(origin="Middle English"))}],
+                "others": Root.objects.all().exclude(origin="Latin").exclude(origin="Greek").exclude(origin="Italian").exclude(origin="Spanish").exclude(origin="French").exclude(origin="German").exclude(origin="Portuguese").exclude(origin="Middle English")
             })
         else:
             fines = []
@@ -2763,7 +2798,9 @@ def vocab_start(request):
         "active": "vocabit",
         "tags": total,
         "roots": Root.objects.all(),
-        "number": len(Word.objects.all())
+        "number": len(Word.objects.all()),
+        "fun": [{"Ids": "latin", "Root": "Latin", "Go": list(Root.objects.filter(origin="Latin"))}, {"Ids": "greek", "Root": "Greek", "Go": list(Root.objects.filter(origin="Greek"))}, {"Ids": "italian", "Root": "Italian", "Go": list(Root.objects.filter(origin="Italian"))}, {"Ids": "spanish", "Root": "Spanish", "Go": list(Root.objects.filter(origin="Spanish"))}, {"Ids": "french", "Root": "French", "Go": list(Root.objects.filter(origin="French"))}, {"Ids": "german", "Root": "German", "Go": list(Root.objects.filter(origin="German"))}, {"Ids": "portuguese", "Root": "Portuguese", "Go": list(Root.objects.filter(origin="Portuguese"))}, {"Ids": "middlenglish", "Root": "Middle English", "Go": list(Root.objects.filter(origin="Middle English"))}],
+        "others": Root.objects.all().exclude(origin="Latin").exclude(origin="Greek").exclude(origin="Italian").exclude(origin="Spanish").exclude(origin="French").exclude(origin="German").exclude(origin="Portuguese").exclude(origin="Middle English")
     })
 
 @user_passes_test(locked, login_url='/subscribe')
@@ -2836,6 +2873,8 @@ def vocab(request):
                 "roots": Root.objects.all(),
                 "number": len(Word.objects.all()),
                 "message": "Invalid word count, the maximum number of words you may have under this configuration is " + str(int(len(results))),
+                "fun": [{"Ids": "latin", "Root": "Latin", "Go": list(Root.objects.filter(origin="Latin"))}, {"Ids": "greek", "Root": "Greek", "Go": list(Root.objects.filter(origin="Greek"))}, {"Ids": "italian", "Root": "Italian", "Go": list(Root.objects.filter(origin="Italian"))}, {"Ids": "spanish", "Root": "Spanish", "Go": list(Root.objects.filter(origin="Spanish"))}, {"Ids": "french", "Root": "French", "Go": list(Root.objects.filter(origin="French"))}, {"Ids": "german", "Root": "German", "Go": list(Root.objects.filter(origin="German"))}, {"Ids": "portuguese", "Root": "Portuguese", "Go": list(Root.objects.filter(origin="Portuguese"))}, {"Ids": "middlenglish", "Root": "Middle English", "Go": list(Root.objects.filter(origin="Middle English"))}],
+                "others": Root.objects.all().exclude(origin="Latin").exclude(origin="Greek").exclude(origin="Italian").exclude(origin="Spanish").exclude(origin="French").exclude(origin="German").exclude(origin="Portuguese").exclude(origin="Middle English")
             })
         else:
             fines = []
