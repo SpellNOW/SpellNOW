@@ -2276,8 +2276,8 @@ def start(request):
         "tags": total,
         "roots": Root.objects.all(),
         "number": len(Word.objects.all()),
-        "fun": [{"Ids": "latin", "Root": "Latin", "Go": list(Root.objects.filter(origin="Latin"))}, {"Ids": "greek", "Root": "Greek", "Go": list(Root.objects.filter(origin="Greek"))}, {"Ids": "italian", "Root": "Italian", "Go": list(Root.objects.filter(origin="Italian"))}, {"Ids": "spanish", "Root": "Spanish", "Go": list(Root.objects.filter(origin="Spanish"))}, {"Ids": "french", "Root": "French", "Go": list(Root.objects.filter(origin="French"))}, {"Ids": "german", "Root": "German", "Go": list(Root.objects.filter(origin="German"))}, {"Ids": "portuguese", "Root": "Portuguese", "Go": list(Root.objects.filter(origin="Portuguese"))}, {"Ids": "middlenglish", "Root": "Middle English", "Go": list(Root.objects.filter(origin="Middle English"))}],
-        "others": Root.objects.all().exclude(origin="Latin").exclude(origin="Greek").exclude(origin="Italian").exclude(origin="Spanish").exclude(origin="French").exclude(origin="German").exclude(origin="Portuguese").exclude(origin="Middle English")
+        "fun": [{"Ids": "latin", "Root": "Latin", "Go": list(Root.objects.filter(origin="Latin"))}, {"Ids": "newlatin", "Root": "New Latin", "Go": list(Root.objects.filter(origin="New Latin"))}, {"Ids": "greek", "Root": "Greek", "Go": list(Root.objects.filter(origin="Greek"))}, {"Ids": "italian", "Root": "Italian", "Go": list(Root.objects.filter(origin="Italian"))}, {"Ids": "spanish", "Root": "Spanish", "Go": list(Root.objects.filter(origin="Spanish"))}, {"Ids": "french", "Root": "French", "Go": list(Root.objects.filter(origin="French"))}, {"Ids": "german", "Root": "German", "Go": list(Root.objects.filter(origin="German"))}, {"Ids": "portuguese", "Root": "Portuguese", "Go": list(Root.objects.filter(origin="Portuguese"))}, {"Ids": "middlenglish", "Root": "Middle English", "Go": list(Root.objects.filter(origin="Middle English"))}, {"Ids": "isv", "Root": "International Scientific Vocabulary", "Go": list(Root.objects.filter(origin="International Scientific Vocabulary"))}],
+        "others": Root.objects.all().exclude(Q(origin="Latin") | Q(origin="International Scientific Vocabulary") | Q(origin="New Latin") | Q(origin="Greek") | Q(origin="Italian") | Q(origin="Spanish") | Q(origin="French") | Q(origin="German") | Q(origin="Portuguese") | Q(origin="Middle English"))
     })
 
 @user_passes_test(locked, login_url='/subscribe')
@@ -2299,6 +2299,8 @@ def spell(request):
         roots = []
         whatwegot = request.POST.getlist("acctlatin")
         roots.extend(whatwegot)
+        whatwegot = request.POST.getlist("acctnewlatin")
+        roots.extend(whatwegot)
         whatwegot = request.POST.getlist("acctgreek")
         roots.extend(whatwegot)
         whatwegot = request.POST.getlist("acctitalian")
@@ -2312,6 +2314,8 @@ def spell(request):
         whatwegot = request.POST.getlist("acctportuguese")
         roots.extend(whatwegot)
         whatwegot = request.POST.getlist("acctmiddlenglish")
+        roots.extend(whatwegot)
+        whatwegot = request.POST.getlist("acctisv")
         roots.extend(whatwegot)
         whatwegot = request.POST.getlist("acctothers")
         roots.extend(whatwegot)
@@ -2379,8 +2383,8 @@ def spell(request):
                 "roots": Root.objects.all(),
                 "number": len(Word.objects.all()),
                 "message": "Invalid word count, the maximum number of words you may have under this configuration is " + str(int(len(results))),
-                "fun": [{"Ids": "latin", "Root": "Latin", "Go": list(Root.objects.filter(origin="Latin"))}, {"Ids": "greek", "Root": "Greek", "Go": list(Root.objects.filter(origin="Greek"))}, {"Ids": "italian", "Root": "Italian", "Go": list(Root.objects.filter(origin="Italian"))}, {"Ids": "spanish", "Root": "Spanish", "Go": list(Root.objects.filter(origin="Spanish"))}, {"Ids": "french", "Root": "French", "Go": list(Root.objects.filter(origin="French"))}, {"Ids": "german", "Root": "German", "Go": list(Root.objects.filter(origin="German"))}, {"Ids": "portuguese", "Root": "Portuguese", "Go": list(Root.objects.filter(origin="Portuguese"))}, {"Ids": "middlenglish", "Root": "Middle English", "Go": list(Root.objects.filter(origin="Middle English"))}],
-                "others": Root.objects.all().exclude(origin="Latin").exclude(origin="Greek").exclude(origin="Italian").exclude(origin="Spanish").exclude(origin="French").exclude(origin="German").exclude(origin="Portuguese").exclude(origin="Middle English")
+                "fun": [{"Ids": "latin", "Root": "Latin", "Go": list(Root.objects.filter(origin="Latin"))}, {"Ids": "newlatin", "Root": "New Latin", "Go": list(Root.objects.filter(origin="New Latin"))}, {"Ids": "greek", "Root": "Greek", "Go": list(Root.objects.filter(origin="Greek"))}, {"Ids": "italian", "Root": "Italian", "Go": list(Root.objects.filter(origin="Italian"))}, {"Ids": "spanish", "Root": "Spanish", "Go": list(Root.objects.filter(origin="Spanish"))}, {"Ids": "french", "Root": "French", "Go": list(Root.objects.filter(origin="French"))}, {"Ids": "german", "Root": "German", "Go": list(Root.objects.filter(origin="German"))}, {"Ids": "portuguese", "Root": "Portuguese", "Go": list(Root.objects.filter(origin="Portuguese"))}, {"Ids": "middlenglish", "Root": "Middle English", "Go": list(Root.objects.filter(origin="Middle English"))}, {"Ids": "isv", "Root": "International Scientific Vocabulary", "Go": list(Root.objects.filter(origin="International Scientific Vocabulary"))}],
+                "others": Root.objects.all().exclude(Q(origin="Latin") | Q(origin="International Scientific Vocabulary") | Q(origin="New Latin") | Q(origin="Greek") | Q(origin="Italian") | Q(origin="Spanish") | Q(origin="French") | Q(origin="German") | Q(origin="Portuguese") | Q(origin="Middle English"))
             })
         else:
             fines = []
@@ -2797,8 +2801,8 @@ def vocab_start(request):
         "tags": total,
         "roots": Root.objects.all(),
         "number": len(Word.objects.all()),
-        "fun": [{"Ids": "latin", "Root": "Latin", "Go": list(Root.objects.filter(origin="Latin"))}, {"Ids": "greek", "Root": "Greek", "Go": list(Root.objects.filter(origin="Greek"))}, {"Ids": "italian", "Root": "Italian", "Go": list(Root.objects.filter(origin="Italian"))}, {"Ids": "spanish", "Root": "Spanish", "Go": list(Root.objects.filter(origin="Spanish"))}, {"Ids": "french", "Root": "French", "Go": list(Root.objects.filter(origin="French"))}, {"Ids": "german", "Root": "German", "Go": list(Root.objects.filter(origin="German"))}, {"Ids": "portuguese", "Root": "Portuguese", "Go": list(Root.objects.filter(origin="Portuguese"))}, {"Ids": "middlenglish", "Root": "Middle English", "Go": list(Root.objects.filter(origin="Middle English"))}],
-        "others": Root.objects.all().exclude(origin="Latin").exclude(origin="Greek").exclude(origin="Italian").exclude(origin="Spanish").exclude(origin="French").exclude(origin="German").exclude(origin="Portuguese").exclude(origin="Middle English")
+        "fun": [{"Ids": "latin", "Root": "Latin", "Go": list(Root.objects.filter(origin="Latin"))}, {"Ids": "newlatin", "Root": "New Latin", "Go": list(Root.objects.filter(origin="New Latin"))}, {"Ids": "greek", "Root": "Greek", "Go": list(Root.objects.filter(origin="Greek"))}, {"Ids": "italian", "Root": "Italian", "Go": list(Root.objects.filter(origin="Italian"))}, {"Ids": "spanish", "Root": "Spanish", "Go": list(Root.objects.filter(origin="Spanish"))}, {"Ids": "french", "Root": "French", "Go": list(Root.objects.filter(origin="French"))}, {"Ids": "german", "Root": "German", "Go": list(Root.objects.filter(origin="German"))}, {"Ids": "portuguese", "Root": "Portuguese", "Go": list(Root.objects.filter(origin="Portuguese"))}, {"Ids": "middlenglish", "Root": "Middle English", "Go": list(Root.objects.filter(origin="Middle English"))}, {"Ids": "isv", "Root": "International Scientific Vocabulary", "Go": list(Root.objects.filter(origin="International Scientific Vocabulary"))}],
+        "others": Root.objects.all().exclude(Q(origin="Latin") | Q(origin="International Scientific Vocabulary") | Q(origin="New Latin") | Q(origin="Greek") | Q(origin="Italian") | Q(origin="Spanish") | Q(origin="French") | Q(origin="German") | Q(origin="Portuguese") | Q(origin="Middle English"))
     })
 
 @user_passes_test(locked, login_url='/subscribe')
@@ -2819,6 +2823,10 @@ def vocab(request):
 
         roots = []
         whatwegot = request.POST.getlist("acctlatin")
+        roots.extend(whatwegot)
+        whatwegot = request.POST.getlist("acctnewlatin")
+        roots.extend(whatwegot)
+        whatwegot = request.POST.getlist("acctisv")
         roots.extend(whatwegot)
         whatwegot = request.POST.getlist("acctgreek")
         roots.extend(whatwegot)
@@ -2880,7 +2888,7 @@ def vocab(request):
             else:
                 results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(roots__name__in=gunroots))).exclude(definition1=None).distinct()))
         else:
-            yaylmao = ReportDetail.objects.filter(report__user__username=request.user.username).values_list('word', flat=True)
+            yaylmao = VocabReportDetail.objects.filter(report__user__username=request.user.username).values_list('word', flat=True)
 
             if "*..*" in tags and "*..*" in roots:
                 results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(tagged=False) | Q(roots__name__in=gunroots) | Q(rooted=False))).exclude(definition1=None).exclude(word__in = yaylmao).distinct()))
@@ -2900,8 +2908,8 @@ def vocab(request):
                 "roots": Root.objects.all(),
                 "number": len(Word.objects.all()),
                 "message": "Invalid word count, the maximum number of words you may have under this configuration is " + str(int(len(results))),
-                "fun": [{"Ids": "latin", "Root": "Latin", "Go": list(Root.objects.filter(origin="Latin"))}, {"Ids": "greek", "Root": "Greek", "Go": list(Root.objects.filter(origin="Greek"))}, {"Ids": "italian", "Root": "Italian", "Go": list(Root.objects.filter(origin="Italian"))}, {"Ids": "spanish", "Root": "Spanish", "Go": list(Root.objects.filter(origin="Spanish"))}, {"Ids": "french", "Root": "French", "Go": list(Root.objects.filter(origin="French"))}, {"Ids": "german", "Root": "German", "Go": list(Root.objects.filter(origin="German"))}, {"Ids": "portuguese", "Root": "Portuguese", "Go": list(Root.objects.filter(origin="Portuguese"))}, {"Ids": "middlenglish", "Root": "Middle English", "Go": list(Root.objects.filter(origin="Middle English"))}],
-                "others": Root.objects.all().exclude(origin="Latin").exclude(origin="Greek").exclude(origin="Italian").exclude(origin="Spanish").exclude(origin="French").exclude(origin="German").exclude(origin="Portuguese").exclude(origin="Middle English")
+                "fun": [{"Ids": "latin", "Root": "Latin", "Go": list(Root.objects.filter(origin="Latin"))}, {"Ids": "newlatin", "Root": "New Latin", "Go": list(Root.objects.filter(origin="New Latin"))}, {"Ids": "greek", "Root": "Greek", "Go": list(Root.objects.filter(origin="Greek"))}, {"Ids": "italian", "Root": "Italian", "Go": list(Root.objects.filter(origin="Italian"))}, {"Ids": "spanish", "Root": "Spanish", "Go": list(Root.objects.filter(origin="Spanish"))}, {"Ids": "french", "Root": "French", "Go": list(Root.objects.filter(origin="French"))}, {"Ids": "german", "Root": "German", "Go": list(Root.objects.filter(origin="German"))}, {"Ids": "portuguese", "Root": "Portuguese", "Go": list(Root.objects.filter(origin="Portuguese"))}, {"Ids": "middlenglish", "Root": "Middle English", "Go": list(Root.objects.filter(origin="Middle English"))}, {"Ids": "isv", "Root": "International Scientific Vocabulary", "Go": list(Root.objects.filter(origin="International Scientific Vocabulary"))}],
+                "others": Root.objects.all().exclude(Q(origin="Latin") | Q(origin="International Scientific Vocabulary") | Q(origin="New Latin") | Q(origin="Greek") | Q(origin="Italian") | Q(origin="Spanish") | Q(origin="French") | Q(origin="German") | Q(origin="Portuguese") | Q(origin="Middle English"))
             })
         else:
             fines = []
@@ -2949,7 +2957,7 @@ def vocab(request):
                         lengths.append(use)
                     jeff += 1
             else:
-                yaylmao = ReportDetail.objects.filter(report__user__username=request.user.username).values_list('word', flat=True)
+                yaylmao = VocabReportDetail.objects.filter(report__user__username=request.user.username).values_list('word', flat=True)
 
                 for ite in fullcall:
                     if ite == "*..*":
