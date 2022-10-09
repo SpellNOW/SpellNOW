@@ -151,6 +151,9 @@
     var watch = 0;
     var stopwatch;
     stopwatch = setInterval(function () {if (document.getElementById("nothing").style.display == "none") {watch++;}}, 1000);
+
+    var alltags_inner = document.getElementById("alltags").innerHTML;
+    var allroots_inner = document.getElementById("allroots").innerHTML;
     
     function neword() {
         document.getElementById("nothing").style.display = "none";
@@ -295,26 +298,23 @@
         }
         else if (document.getElementById("check").innerHTML == "NEXT") {
             document.getElementById("response").style.display = "none";
+            console.log("1");
             try {
                 document.getElementById("tags").style.display = "none";
                 document.getElementById("roots").style.display = "none";
             }
             catch(err) {}
+            console.log("2");
             document.getElementById("spelling").value = "";
             document.getElementById("check").innerHTML = "CHECK"
+            console.log("3");
 
             try {
-                document.getElementById("alltags").innerHTML = ""
-                document.getElementById("allroots").innerHTML = ""
-                for(var i = 0; i < alltags.length; i++) {
-                    document.getElementById("alltags").innerHTML += '<button style="color:rgb(13, 110, 253); background-color: rgb(255, 255, 255);" onclick="add_word(\'' + alltags[i] + '\')" id="' + alltags[i] + '" type="button" class="btn btn-primary rounded-pill tag">' + alltags[i] + '</button>'
-                }
-                for(var i = 0; i < allroots.length; i++) {
-                    document.getElementById("allroots").innerHTML += '<button style="color:rgb(37, 207, 242); background-color: rgb(255, 255, 255);" onclick="add_word_root(\'|--|' + allroots[i] + '\')" id="' + allroots[i] + '" type="button" class="btn btn-info rounded-pill tag">' + allroots[i] + '</button>'
-                }
+                document.getElementById("alltags").innerHTML = alltags_inner;
+                document.getElementById("allroots").innerHTML = allroots_inner;
                 document.getElementById("search_tags").value = ""
                 document.getElementById("search_roots").value = ""
-                }
+            }
             catch(err) {}
 
             global_count += 1;
