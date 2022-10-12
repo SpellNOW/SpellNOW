@@ -1338,7 +1338,7 @@ def word_library(request):
                         "bar": "libraries",
                         "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                         "active": "coolwords",
-                        "tags": Tag.objects.all(),
+                        "tags": Tag.objects.filter(parent=None),
                         "roots": Root.objects.all(),
                         "results": results
                     })
@@ -1347,7 +1347,7 @@ def word_library(request):
                         "bar": "libraries",
                         "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                         "active": "coolwords",
-                        "tags": Tag.objects.all(),
+                        "tags": Tag.objects.filter(parent=None),
                         "roots": Root.objects.all(),
                         "message": True
                     })
@@ -1374,7 +1374,7 @@ def word_library(request):
                                 "bar": "libraries",
                                 "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                                 "active": "coolwords",
-                                "tags": Tag.objects.all(),
+                                "tags": Tag.objects.filter(parent=None),
                                 "roots": Root.objects.all(),
                                 "results": results
                             })
@@ -1383,7 +1383,7 @@ def word_library(request):
                                 "bar": "libraries",
                                 "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                                 "active": "coolwords",
-                                "tags": Tag.objects.all(),
+                                "tags": Tag.objects.filter(parent=None),
                                 "roots": Root.objects.all(),
                                 "message": True
                             })
@@ -1405,7 +1405,7 @@ def word_library(request):
                                     "bar": "libraries",
                                     "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                                     "active": "coolwords",
-                                    "tags": Tag.objects.all(),
+                                    "tags": Tag.objects.filter(parent=None),
                                     "roots": Root.objects.all(),
                                     "results": set(results)
                                 })
@@ -1414,7 +1414,7 @@ def word_library(request):
                                     "bar": "libraries",
                                     "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                                     "active": "coolwords",
-                                    "tags": Tag.objects.all(),
+                                    "tags": Tag.objects.filter(parent=None),
                                     "roots": Root.objects.all(),
                                     "message": True
                                 })
@@ -1435,7 +1435,7 @@ def word_library(request):
                                 "bar": "libraries",
                                 "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                                 "active": "coolwords",
-                                "tags": Tag.objects.all(),
+                                "tags": Tag.objects.filter(parent=None),
                                 "roots": Root.objects.all(),
                                 "results": results
                             })
@@ -1444,7 +1444,7 @@ def word_library(request):
                                 "bar": "libraries",
                                 "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                                 "active": "coolwords",
-                                "tags": Tag.objects.all(),
+                                "tags": Tag.objects.filter(parent=None),
                                 "roots": Root.objects.all(),
                                 "message": True
                             })
@@ -1456,7 +1456,7 @@ def word_library(request):
                             "bar": "libraries",
                             "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                             "active": "coolwords",
-                            "tags": Tag.objects.all(),
+                            "tags": Tag.objects.filter(parent=None),
                             "roots": Root.objects.all(),
                             "results": results
                         })
@@ -1465,7 +1465,7 @@ def word_library(request):
                             "bar": "libraries",
                             "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                             "active": "coolwords",
-                            "tags": Tag.objects.all(),
+                            "tags": Tag.objects.filter(parent=None),
                             "roots": Root.objects.all(),
                             "message": True
                         })
@@ -1492,7 +1492,7 @@ def word_library(request):
                             "bar": "libraries",
                             "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                             "active": "coolwords",
-                            "tags": Tag.objects.all(),
+                            "tags": Tag.objects.filter(parent=None),
                             "roots": Root.objects.all(),
                             "results": results
                         })
@@ -1501,7 +1501,7 @@ def word_library(request):
                             "bar": "libraries",
                             "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                             "active": "coolwords",
-                            "tags": Tag.objects.all(),
+                            "tags": Tag.objects.filter(parent=None),
                             "roots": Root.objects.all(),
                             "message": True
                         })
@@ -1523,7 +1523,7 @@ def word_library(request):
                             "bar": "libraries",
                             "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                             "active": "coolwords",
-                            "tags": Tag.objects.all(),
+                            "tags": Tag.objects.filter(parent=None),
                             "roots": Root.objects.all(),
                             "results": results
                         })
@@ -1532,7 +1532,7 @@ def word_library(request):
                             "bar": "libraries",
                             "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                             "active": "coolwords",
-                            "tags": Tag.objects.all(),
+                            "tags": Tag.objects.filter(parent=None),
                             "roots": Root.objects.all(),
                             "message": True
                         })
@@ -1544,7 +1544,7 @@ def word_library(request):
                         "bar": "libraries",
                         "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                         "active": "coolwords",
-                        "tags": Tag.objects.all(),
+                        "tags": Tag.objects.filter(parent=None),
                         "roots": Root.objects.all(),
                         "results": results
                     })
@@ -1553,7 +1553,7 @@ def word_library(request):
                         "bar": "libraries",
                         "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                         "active": "coolwords",
-                        "tags": Tag.objects.all(),
+                        "tags": Tag.objects.filter(parent=None),
                         "roots": Root.objects.all(),
                         "message": True
                     })
@@ -1562,7 +1562,7 @@ def word_library(request):
             "bar": "libraries",
             "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
             "active": "coolwords",
-            "tags": Tag.objects.all(),
+            "tags": Tag.objects.filter(parent=None),
             "roots": Root.objects.all()
         })
 
@@ -1833,7 +1833,10 @@ def word_import(request):
             reader = csv.reader(f)
             next(reader)
             for row in reader:
-                new_word = row[0].lower()
+                try:
+                    new_word = row[0].lower()
+                except:
+                    continue
                 
                 if not Word.objects.filter(word=new_word):
                     if is_word(new_word):
@@ -1962,7 +1965,10 @@ def word_import(request):
             reader = csv.reader(f)
             next(reader)
             for row in reader:
-                final = row[0].lower()
+                try:
+                    final = row[0].lower()
+                except:
+                    continue
                 
                 if not Word.objects.filter(word=final):
                     new_word = row[0].lower()
@@ -2014,7 +2020,10 @@ def word_import(request):
             reader = csv.reader(f)
             next(reader)
             for row in reader:
-                final = row[0].lower()
+                try:
+                    final = row[0].lower()
+                except:
+                    continue
                 
                 if not Word.objects.filter(word=final):
                     nots.append(final)
@@ -2050,7 +2059,10 @@ def word_import(request):
             next(reader)
             tag = Tag.objects.get(pk=(request_id.split("-"))[2])
             for row in reader:
-                final = row[0].lower()
+                try:
+                    final = row[0].lower()
+                except:
+                    continue
                 
                 if Word.objects.filter(word=final, tags__in=[tag]):
                     already.append(final)
@@ -2118,7 +2130,10 @@ def word_import(request):
             next(reader)
             tag = Tag.objects.get(pk=(request_id.split("-"))[2])
             for row in reader:
-                final = row[0].lower()
+                try:
+                    final = row[0].lower()
+                except:
+                    continue
                 
                 if not Word.objects.filter(word=final, tags__in=[tag]):
                     nots.append(final)
@@ -2155,7 +2170,10 @@ def word_import(request):
             next(reader)
             roots = Root.objects.get(pk=(request_id.split("-"))[2])
             for row in reader:
-                final = row[0].lower()
+                try:
+                    final = row[0].lower()
+                except:
+                    continue
                 
                 if Word.objects.filter(word=final, roots__in=[roots]):
                     already.append(final)
@@ -2223,7 +2241,10 @@ def word_import(request):
             next(reader)
             root = Root.objects.get(pk=(request_id.split("-"))[2])
             for row in reader:
-                final = row[0].lower()
+                try:
+                    final = row[0].lower()
+                except:
+                    continue
                 
                 if not Word.objects.filter(word=final, roots__in=[root]):
                     nots.append(final)
@@ -2252,7 +2273,7 @@ def word_import(request):
             "bar": "libraries",
             "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
             "active": "import",
-            "tags": Tag.objects.all(),
+            "tags": Tag.objects.all().exclude(parent=None),
             "roots": Root.objects.all()
         })
 
