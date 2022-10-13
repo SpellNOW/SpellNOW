@@ -2410,6 +2410,7 @@ def spell(request):
                 "tags": total,
                 "roots": Root.objects.all(),
                 "number": len(Word.objects.all()),
+                "message": "Invalid word count, the maximum number of words you may have under this configuration is " + str(int(len(results))),
                 "fun": [{"Ids": "latin", "Root": "Latin", "Go": list(Root.objects.filter(origin="Latin"))}, {"Ids": "newlatin", "Root": "New Latin", "Go": list(Root.objects.filter(origin="New Latin"))}, {"Ids": "greek", "Root": "Greek", "Go": list(Root.objects.filter(origin="Greek"))}, {"Ids": "italian", "Root": "Italian", "Go": list(Root.objects.filter(origin="Italian"))}, {"Ids": "spanish", "Root": "Spanish", "Go": list(Root.objects.filter(origin="Spanish"))}, {"Ids": "french", "Root": "French", "Go": list(Root.objects.filter(origin="French"))}, {"Ids": "german", "Root": "German", "Go": list(Root.objects.filter(origin="German"))}, {"Ids": "portuguese", "Root": "Portuguese", "Go": list(Root.objects.filter(origin="Portuguese"))}, {"Ids": "middlenglish", "Root": "Middle English", "Go": list(Root.objects.filter(origin="Middle English"))}, {"Ids": "isv", "Root": "International Scientific Vocabulary", "Go": list(Root.objects.filter(origin="International Scientific Vocabulary"))}],
                 "others": Root.objects.all().exclude(Q(origin="Latin") | Q(origin="International Scientific Vocabulary") | Q(origin="New Latin") | Q(origin="Greek") | Q(origin="Italian") | Q(origin="Spanish") | Q(origin="French") | Q(origin="German") | Q(origin="Portuguese") | Q(origin="Middle English"))
             })
@@ -2927,11 +2928,18 @@ def vocab(request):
                 results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(roots__name__in=gunroots))).exclude(word__in = yaylmao).exclude(definition1=None).distinct()))
         
         if (int(len(results)) < int(request.POST["numwords"])) or (int(len(tags)) > int(request.POST["numwords"])):
+            total = []
+        
+            for tag in Tag.objects.filter(parent=None).exclude(name="Other Tags"):
+                part = {"parent": tag, "children": Tag.objects.filter(parent=tag)}
+                total.append(part)
+            total.append({"parent": Tag.objects.get(name="Other Tags"), "children": Tag.objects.filter(parent=Tag.objects.get(name="Other Tags"))})
+            
             return render(request, "spell/vocab_start.html", {
                 "bar": "activities",
                 "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
-                "active": "spellit",
-                "tags": Tag.objects.all(),
+                "active": "vocabit",
+                "tags": total,
                 "roots": Root.objects.all(),
                 "number": len(Word.objects.all()),
                 "message": "Invalid word count, the maximum number of words you may have under this configuration is " + str(int(len(results))),
