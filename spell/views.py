@@ -2916,7 +2916,8 @@ def vocab(request):
             else:
                 results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(roots__name__in=gunroots))).exclude(definition1=None).distinct()))
         else:
-            yaylmao = VocabReportDetail.objects.filter(report__user__username=request.user.username).values_list('word', flat=True)
+            yaylmao = list(VocabReportDetail.objects.filter(report__user__username=request.user.username).exclude(answer__contains=" ").values_list('answer', flat=True))
+            yaylmao.extend(list(VocabReportDetail.objects.filter(report__user__username=request.user.username).exclude(question__contains=" ").values_list('question', flat=True)))
 
             if "*..*" in tags and "*..*" in roots:
                 results.extend(list((Word.objects.filter(Q(tags__name__in=fun) | Q(tagged=False) | Q(roots__name__in=gunroots) | Q(rooted=False))).exclude(definition1=None).exclude(word__in = yaylmao).distinct()))
@@ -2992,7 +2993,8 @@ def vocab(request):
                         lengths.append(use)
                     jeff += 1
             else:
-                yaylmao = VocabReportDetail.objects.filter(report__user__username=request.user.username).values_list('word', flat=True)
+                yaylmao = list(VocabReportDetail.objects.filter(report__user__username=request.user.username).exclude(answer__contains=" ").values_list('answer', flat=True))
+                yaylmao.extend(list(VocabReportDetail.objects.filter(report__user__username=request.user.username).exclude(question__contains=" ").values_list('question', flat=True)))
 
                 for ite in fullcall:
                     if ite == "*..*":
