@@ -1861,7 +1861,6 @@ def word_import(request):
                 counter = 1
                 li_ret = 0
                 for x in nots:
-                    print("Counter-",counter)
                     counter += 1
                     my_word = re.sub(r"[^a-zA-Z]","", x)
                     data = []
@@ -1874,7 +1873,6 @@ def word_import(request):
                             if li_ret <= 0:
                                 li_ret = int(merriamweb_scrape(my_word))
                                 if li_ret <= 0:
-                                    print("merriamweb fail")
                                     data.append(my_word)
                                     data.append("WORD NOT FOUND")
                                     with open('wordsscraped.csv', 'a', newline='', encoding='utf-8') as csvfile:
@@ -2358,7 +2356,6 @@ def spell(request):
         except:
             attn = False
 
-        print("========================Verifying word amount========================")
         results = []
         fun = []
         for i in tags:
@@ -2435,7 +2432,6 @@ def spell(request):
             for cooolio in Root.objects.all():
                 wrongio += cooolio.name + "*..*"
 
-            print("========================Choosing Words========================")
             lengths = []
             didi = []
             results = []
@@ -2518,7 +2514,6 @@ def spell(request):
                         better.append(globalmin)
             
             for i in range(int(len(lengths))):
-                print(surplus[i])
                 if surplus[i] < 0:
                     j = 0
                     k = 0
@@ -2534,7 +2529,6 @@ def spell(request):
                 didi[i] = didi[i][:better[i]]
 
             i = 0
-            print("========================Getting Words========================")
             for lemmon in range(int(len(better))):
                 for pkg in didi[lemmon]:
                     word = Word.objects.get(pk=pkg)
@@ -2567,7 +2561,6 @@ def spell(request):
                         allprons += (word.pronounce + " || ")
                     
                     final_last_total += 1
-                    print("Got word " + str(final_last_total) + " of " + request.POST["numwords"])
                             
                     usage = word.tags.all()
 
@@ -2890,7 +2883,6 @@ def vocab(request):
         except:
             attn = False
 
-        print("========================Verifying word amount========================")
         results = []
         fun = []
         for i in tags:
@@ -2963,7 +2955,6 @@ def vocab(request):
             for cooolio in Root.objects.all():
                 wrongio += cooolio.name + "*..*"
 
-            print("========================Choosing Words========================")
             lengths = []
             didi = []
             results = []
@@ -3047,7 +3038,6 @@ def vocab(request):
                         better.append(globalmin)
             
             for i in range(int(len(lengths))):
-                print(surplus[i])
                 if surplus[i] < 0:
                     j = 0
                     k = 0
@@ -3070,7 +3060,6 @@ def vocab(request):
             questions = ""
 
             i = 0
-            print("========================Getting Words========================")
             for lemmon in range(int(len(better))):
                 for pkg in didi[lemmon]:
                     word = Word.objects.get(pk=pkg)
@@ -3272,7 +3261,6 @@ def vocab(request):
 
                     fines.append(word.word)
 
-                    print("Got word " + str(final_last_total) + " of " + request.POST["numwords"])
                     final_last_total += 1
                     
                     i += 1
@@ -3371,7 +3359,6 @@ def vocab_finish(request):
                 new.save()
                 wilk.append(("Root - " + ite.replace("|--|", "")))
         else:
-            print(correct_array)
             nice = 0
             cool = 0
             abhi = 0
