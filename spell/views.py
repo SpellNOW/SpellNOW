@@ -1,6 +1,3 @@
-from importlib.metadata import distribution
-from operator import ilshift
-from re import L
 from django.contrib.auth import authenticate, logout as auth_logout, login as auth_login
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
@@ -13,7 +10,6 @@ from django.core.files.storage import FileSystemStorage
 import os
 import stripe
 import requests
-import json
 from os.path import exists
 from django.db.models import Q
 import random
