@@ -3880,6 +3880,23 @@ def validatemail(request, userit, lockit1, lockit2):
     except:
         return render(request, "spell/error_404.html", {})
 
+def privacy(request):
+    return render(request, "spell/privacy.html", {
+        "bar": "",
+        "active": "privacy",
+    })
+
+def terms(request):
+    return render(request, "spell/terms.html", {
+        "bar": "",
+        "active": "terms",
+    })
+
+@user_passes_test(lambda u: u.is_staff)
+@login_required(login_url='/login')
+def allusers():
+    pass
+
 # Subscribe
 
 @login_required(login_url='/login')

@@ -71,6 +71,11 @@ urlpatterns = [
     path("changepassword", views.changepassword, name="changepassword"),
     path("informvalidation", views.informvalidation, name="informvalidation"),
     path("validatemail/<int:userit>-<int:lockit1>-<int:lockit2>", views.validatemail, name="validatemail"),
+    
+    # Legal
+
+    path("privacy", views.privacy, name="privacy"),
+    path("terms", views.terms, name="terms"),
 
     # -------------DO NOT USE BELOW THIS LINE----------------- #
     # Subscribe

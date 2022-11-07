@@ -71,44 +71,46 @@
       <i class="bi bi-list toggle-sidebar-btn"></i>
     </div><!-- End Logo -->
 
-    <nav class="header-nav ms-auto">
-      <ul class="d-flex align-items-center">
+    {% if question %}
+      <nav class="header-nav ms-auto">
+        <ul class="d-flex align-items-center">
 
-        <li class="nav-item dropdown pe-3">
+          <li class="nav-item dropdown pe-3">
 
-          <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
-            <span class="d-none d-md-block dropdown-toggle ps-2">{{ request.user.username }}</span>
-          </a><!-- End Profile Iamge Icon -->
+            <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
+              <span class="d-none d-md-block dropdown-toggle ps-2">{{ request.user.username }}</span>
+            </a><!-- End Profile Iamge Icon -->
 
-          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
-            <li class="dropdown-header">
-              <h6>{{request.user.first_name}} {{ request.user.last_name }}</h6>
-            </li>
-            <li>
-              <hr class="dropdown-divider">
-            </li>
+            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+              <li class="dropdown-header">
+                <h6>{{request.user.first_name}} {{ request.user.last_name }}</h6>
+              </li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
 
-            <li>
-              <a class="dropdown-item d-flex align-items-center" href="/profile">
-                <i class="bi bi-person"></i>
-                <span>My Profile</span>
-              </a>
-            </li>
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-            <li>
-              <a class="dropdown-item d-flex align-items-center" href="/logout">
-                <i class="bi bi-box-arrow-right"></i>
-                <span>Sign Out</span>
-              </a>
-            </li>
+              <li>
+                <a class="dropdown-item d-flex align-items-center" href="/profile">
+                  <i class="bi bi-person"></i>
+                  <span>My Profile</span>
+                </a>
+              </li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+              <li>
+                <a class="dropdown-item d-flex align-items-center" href="/logout">
+                  <i class="bi bi-box-arrow-right"></i>
+                  <span>Sign Out</span>
+                </a>
+              </li>
 
-          </ul><!-- End Profile Dropdown Items -->
-        </li><!-- End Profile Nav -->
+            </ul><!-- End Profile Dropdown Items -->
+          </li><!-- End Profile Nav -->
 
-      </ul>
-    </nav><!-- End Icons Navigation -->
+        </ul>
+      </nav><!-- End Icons Navigation -->
+    {% endif %}
 
   </header><!-- End Header -->
 
@@ -124,86 +126,115 @@
         </a>
       </li><!-- End Dashboard Nav -->
       
-      {% if user.is_staff %}
-        <li class="nav-item">
-          <a id="libraries" class="nav-link collapsed" data-bs-target="#libraries-components-nav" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-menu-button-wide"></i><span>Libraries</span><i class="bi bi-chevron-down ms-auto"></i>
-          </a>
-          <ul id="libraries-components-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-            <li>
-              <a id="coolwords" href="/word_library">
-                <i class="bi bi-circle"></i><span>Words</span>
-              </a>
-            </li>
-            <li>
-              <a id="taags" href="/tag_library">
-                <i class="bi bi-circle"></i><span>Tags</span>
-              </a>
-            </li>
-            <li>
-              <a id="rootslib" href="/root_library">
-                <i class="bi bi-circle"></i><span>Roots</span>
-              </a>
+      {% if question %}
+        {% if user.is_staff %}
+          <li class="nav-item">
+            <a id="libraries" class="nav-link collapsed" data-bs-target="#libraries-components-nav" data-bs-toggle="collapse" href="#">
+              <i class="bi bi-menu-button-wide"></i><span>Libraries</span><i class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <ul id="libraries-components-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+              <li>
+                <a id="coolwords" href="/word_library">
+                  <i class="bi bi-circle"></i><span>Words</span>
+                </a>
+              </li>
+              <li>
+                <a id="taags" href="/tag_library">
+                  <i class="bi bi-circle"></i><span>Tags</span>
+                </a>
+              </li>
+              <li>
+                <a id="rootslib" href="/root_library">
+                  <i class="bi bi-circle"></i><span>Roots</span>
+                </a>
 
-              <a id="import" href="/word_import">
-                <i class="bi bi-circle"></i><span>Import</span>
+                <a id="import" href="/word_import">
+                  <i class="bi bi-circle"></i><span>Import</span>
+                </a>
+              </li>
+            </ul>
+          </li><!-- End Components Nav -->
+        {% endif %}
+        
+        {% if not question.parent %}
+          <li class="nav-item">
+            <a id="activities" class="nav-link collapsed" data-bs-target="#activities-components-nav" data-bs-toggle="collapse" href="#">
+              <i class="bi bi-grid"></i><span>Activities</span><i class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <ul id="activities-components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+              <li>
+                <a id="spellit" href="/start">
+                  <i class="bi bi-circle"></i><span>Spelling</span>
+                </a>
+              </li>
+              <li>
+                <a id="vocabit" href="/vocab_start">
+                  <i class="bi bi-circle"></i><span>Vocabulary</span>
+                </a>
+              </li>
+            </ul>
+          </li><!-- End Components Nav -->
+        {% endif %}
+
+        <li class="nav-item">
+          <a id="fullreports" class="nav-link collapsed" data-bs-target="#fullreports-components-nav" data-bs-toggle="collapse" href="#">
+            <i class="bi bi-bar-chart"></i><span>Reports</span><i class="bi bi-chevron-down ms-auto"></i>
+          </a>
+          <ul id="fullreports-components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+            <li>
+              <a id="reports" href="/reports">
+                <i class="bi bi-circle"></i><span>Activity Reports</span>
+              </a>
+            </li>
+            <li>
+              <a id="wordreports" href="/wordreports">
+                <i class="bi bi-circle"></i><span>Word Report</span>
               </a>
             </li>
           </ul>
         </li><!-- End Components Nav -->
-      {% endif %}
-      
-      {% if not question.parent %}
+
+        <li class="nav-heading">Pages</li>
         <li class="nav-item">
-          <a id="activities" class="nav-link collapsed" data-bs-target="#activities-components-nav" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-grid"></i><span>Activities</span><i class="bi bi-chevron-down ms-auto"></i>
+          <a id="profilit" class="nav-link collapsed" href="/profile">
+            <i class="bi bi-person"></i>
+            <span>Profile</span>
           </a>
-          <ul id="activities-components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-            <li>
-              <a id="spellit" href="/start">
-                <i class="bi bi-circle"></i><span>Spelling</span>
-              </a>
-            </li>
-            <li>
-              <a id="vocabit" href="/vocab_start">
-                <i class="bi bi-circle"></i><span>Vocabulary</span>
-              </a>
-            </li>
-          </ul>
-        </li><!-- End Components Nav -->
+        </li>
+        <li class="nav-item">
+          <a id="contactus" class="nav-link collapsed" href="/contactrender">
+            <i class="bi bi-envelope"></i>
+            <span>Contact</span>
+          </a>
+        </li><!-- End Contact Page Nav -->
+        <li class="nav-item">
+          <a id="terms" class="nav-link collapsed" href="/terms">
+            <i class="ri ri-git-repository-line"></i>
+            <span>Terms and Conditions</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a id="privacy" class="nav-link collapsed" href="/privacy">
+            <i class="ri ri-git-repository-private-line"></i>
+            <span>Privacy Policy</span>
+          </a>
+        </li>
       {% endif %}
-
-      <li class="nav-item">
-        <a id="fullreports" class="nav-link collapsed" data-bs-target="#fullreports-components-nav" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-bar-chart"></i><span>Reports</span><i class="bi bi-chevron-down ms-auto"></i>
-        </a>
-        <ul id="fullreports-components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-          <li>
-            <a id="reports" href="/reports">
-              <i class="bi bi-circle"></i><span>Activity Reports</span>
-            </a>
-          </li>
-          <li>
-            <a id="wordreports" href="/wordreports">
-              <i class="bi bi-circle"></i><span>Word Report</span>
-            </a>
-          </li>
-        </ul>
-      </li><!-- End Components Nav -->
-
-      <li class="nav-heading">Pages</li>
-      <li class="nav-item">
-        <a id="profilit" class="nav-link collapsed" href="/profile">
-          <i class="bi bi-person"></i>
-          <span>Profile</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a id="contactus" class="nav-link collapsed" href="/contactrender">
-          <i class="bi bi-envelope"></i>
-          <span>Contact</span>
-        </a>
-      </li><!-- End Contact Page Nav -->
+      {% if not question %}
+        <li class="nav-heading">Pages</li>
+        <li class="nav-item">
+          <a id="terms" class="nav-link collapsed" href="/terms">
+            <i class="ri ri-git-repository-line"></i>
+            <span>Terms and Conditions</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a id="privacy" class="nav-link collapsed" href="/privacy">
+            <i class="ri ri-git-repository-private-line"></i>
+            <span>Privacy Policy</span>
+          </a>
+        </li>
+      {% endif %}
 
     </ul>
 
