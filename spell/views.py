@@ -3675,13 +3675,13 @@ def changedetails(request):
 
     total = ""
 
-    if userusing.first_name != request.POST["fname"]:
+    if userusing.first_name != request.POST["fname"] and request.POST["fname"] != "":
         total += "First Name: " + userusing.first_name + " -> " + request.POST["fname"] + "\n"
     
-    if userusing.last_name != request.POST["lname"]:
+    if userusing.last_name != request.POST["lname"] and request.POST["lname"] != "":
         total += "Last Name: " + userusing.last_name + " -> " + request.POST["lname"] + "\n"
     
-    if (userusing.username != request.POST["username"]) and len(Account.objects.filter(username=request.POST["username"])) == 0:
+    if (userusing.username != request.POST["username"]) and len(Account.objects.filter(username=request.POST["username"])) == 0 and request.POST["username"] != "":
         total += "Username: " + userusing.username + " -> " + request.POST["username"] + "\n"
         userusing.username = request.POST["username"]
     elif (userusing.username != request.POST["username"]):
@@ -3707,7 +3707,7 @@ def changedetails(request):
             smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
             smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
 
-    if userusing.email != request.POST["email"]:
+    if userusing.email != request.POST["email"] and request.POST["email"] != "":
         it1 = random.randint(10000, 99999)
         it2 = random.randint(10000, 99999)
         late = EmailValidate(userid=request.user.id, email=request.POST["email"], lock1=it1, lock2=it2)
@@ -3807,7 +3807,7 @@ def changenotifs(request):
 def changepassword(request):
     user = authenticate(request, username=request.user.username, password=request.POST["current"])
     if user is not None:
-        if request.POST["new"] == request.POST["fun"]:
+        if request.POST["new"] == request.POST["fun"] and request.POST["new"] == "":
             request.user.set_password(request.POST["new"])
             request.user.save()
 
