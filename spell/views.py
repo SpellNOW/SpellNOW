@@ -1924,7 +1924,7 @@ def word_import(request):
                     "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                     "active": "import",
                     'nots': nots,
-                    'message1': "SpellNOW!&trade; was unable to add these words to your list:",
+                    'message1': "SpellNOW! was unable to add these words to your list:",
                     "download": True
                 })
             elif len(already) > 0 and not len(nots) > 0:
@@ -1933,7 +1933,7 @@ def word_import(request):
                     "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                     "active": "import",
                     'already': already,
-                    'message2': "SpellNOW!&trade; found these words already in your list:"
+                    'message2': "SpellNOW! found these words already in your list:"
                 })
             elif len(already) > 0 and len(nots) > 0:
                 return render(request, "spell/error.html", {
@@ -1942,8 +1942,8 @@ def word_import(request):
                     "active": "import",
                     'nots': nots,
                     'already': already,
-                    'message1': "SpellNOW!&trade; was unable to add these words to your list:",
-                    'message2': "SpellNOW!&trade; found these words already in your list:",
+                    'message1': "SpellNOW! was unable to add these words to your list:",
+                    'message2': "SpellNOW! found these words already in your list:",
                     "download": True
                 })
             else:
@@ -1999,7 +1999,7 @@ def word_import(request):
                     "active": "import",
                     'nots': [],
                     'already': already,
-                    'message2': "SpellNOW!&trade; found these words already in your list:",
+                    'message2': "SpellNOW! found these words already in your list:",
                 })
             else:
                 return HttpResponseRedirect(reverse("word_library"))
@@ -2036,7 +2036,7 @@ def word_import(request):
                     "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                     "active": "import",
                     'nots': nots,
-                    "message1": "SpellNOW!&trade; was unable to delete these words because they do not exist:"
+                    "message1": "SpellNOW! was unable to delete these words because they do not exist:"
                 })
             else:
                 return HttpResponseRedirect(reverse("word_library"))
@@ -2089,8 +2089,8 @@ def word_import(request):
                     "active": "import",
                     'already': already,
                     'nots': nots,
-                    "message1": "SpellNOW!&trade; was unable to tag these words because they do not exist:",
-                    "message2": "SpellNOW!&trade; was unable to tag these words because they are already tagged:",
+                    "message1": "SpellNOW! was unable to tag these words because they do not exist:",
+                    "message2": "SpellNOW! was unable to tag these words because they are already tagged:",
                     "download": True
                 })
             elif len(nots) > 0:
@@ -2099,7 +2099,7 @@ def word_import(request):
                     "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                     "active": "import",
                     'nots': nots,
-                    "message1": "SpellNOW!&trade; was unable to tag these words because they do not exist:",
+                    "message1": "SpellNOW! was unable to tag these words because they do not exist:",
                     "download": True
                 })
             elif len(already) > 0:
@@ -2108,7 +2108,7 @@ def word_import(request):
                     "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                     "active": "import",
                     'already': already,
-                    "message2": "SpellNOW!&trade; was unable to tag these words because they are already tagged:",
+                    "message2": "SpellNOW! was unable to tag these words because they are already tagged:",
                 })
             else:
                 return HttpResponseRedirect(reverse("tag_library"))
@@ -2147,7 +2147,7 @@ def word_import(request):
                     "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                     "active": "import",
                     'nots': nots,
-                    "message1": "SpellNOW!&trade; was unable to untag these words because they are not tagged:",
+                    "message1": "SpellNOW! was unable to untag these words because they are not tagged:",
                 })
             else:
                 return HttpResponseRedirect(reverse("tag_library"))
@@ -2200,8 +2200,8 @@ def word_import(request):
                     "active": "import",
                     'already': already,
                     'nots': nots,
-                    "message1": "SpellNOW!&trade; was unable to add a root to these words because they do not exist:",
-                    "message2": "SpellNOW!&trade; was unable to add a root to these words because they have already been added under the respective root:",
+                    "message1": "SpellNOW! was unable to add a root to these words because they do not exist:",
+                    "message2": "SpellNOW! was unable to add a root to these words because they have already been added under the respective root:",
                     "download": True
                 })
             elif len(nots) > 0:
@@ -2210,7 +2210,7 @@ def word_import(request):
                     "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                     "active": "import",
                     'nots': nots,
-                    "message1": "SpellNOW!&trade; was unable to add a root to these words because they do not exist:",
+                    "message1": "SpellNOW! was unable to add a root to these words because they do not exist:",
                     "download": True
                 })
             elif len(already) > 0:
@@ -2219,7 +2219,7 @@ def word_import(request):
                     "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                     "active": "import",
                     'already': already,
-                    "message2": "SpellNOW!&trade; was unable to add a root to these words because they have already been added under the respective root:",
+                    "message2": "SpellNOW! was unable to add a root to these words because they have already been added under the respective root:",
                 })
             else:
                 return HttpResponseRedirect(reverse("root_library"))
@@ -2258,7 +2258,7 @@ def word_import(request):
                     "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                     "active": "import",
                     'nots': nots,
-                    "message1": "SpellNOW!&trade; was unable to add a root to these words because they have not been added under the respective root:",
+                    "message1": "SpellNOW! was unable to add a root to these words because they have not been added under the respective root:",
                 })
             else:
                 return HttpResponseRedirect(reverse("root_library"))
