@@ -151,9 +151,6 @@
     var watch = 0;
     var stopwatch;
     stopwatch = setInterval(function () {if (document.getElementById("nothing").style.display == "none") {watch++;}}, 1000);
-
-    var alltags_inner = document.getElementById("alltags").innerHTML;
-    var allroots_inner = document.getElementById("allroots").innerHTML;
     
     function neword() {
         document.getElementById("nothing").style.display = "none";
@@ -298,16 +295,13 @@
         }
         else if (document.getElementById("check").innerHTML == "NEXT") {
             document.getElementById("response").style.display = "none";
-            console.log("1");
             try {
                 document.getElementById("tags").style.display = "none";
                 document.getElementById("roots").style.display = "none";
             }
             catch(err) {}
-            console.log("2");
             document.getElementById("spelling").value = "";
             document.getElementById("check").innerHTML = "CHECK"
-            console.log("3");
 
             try {
                 document.getElementById("alltags").innerHTML = alltags_inner;
@@ -333,8 +327,8 @@
         }
     }
 
-    document.addEventListener("keyup", function(event) {
-        if (event.keyCode === 13) {
+document.onkeydown = function(e) {
+    if (event.keyCode === 13) {
             if (document.activeElement.id == "spelling") {
                 spell();
             }
@@ -342,7 +336,22 @@
                 new_tag();
             }
         }
-    });
+  if(event.keyCode == 123) {
+     return false;
+  }
+  if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) {
+     return false;
+  }
+  if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) {
+     return false;
+  }
+  if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) {
+     return false;
+  }
+  if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) {
+     return false;
+  }
+}
 
     var arrayLength = words.length;
     for (var i = 0; i < arrayLength; i++) {
@@ -354,6 +363,8 @@
 
 {% if user.is_staff %}
 <script>
+    var alltags_inner = document.getElementById("alltags").innerHTML;
+    var allroots_inner = document.getElementById("allroots").innerHTML;
     var total_tags = "{{ final_tags }}";
     var g_alltags = "{{ alltags }}";
     const alltags = g_alltags.split("*..*");
@@ -385,8 +396,6 @@
             var thing = tag + "||" + words[global_count] + "[]";
             document.getElementById("add_words").innerHTML = (document.getElementById("add_words").innerHTML).replace(thing, '');
             const tester = lucky[global_count].split("&lt;&gt;");
-            console.log(tester);
-            console.log(tester.includes(tag));
             if (tester.includes(tag)) {
                 document.getElementById("add_words").innerHTML += ("---" + thing);
             }
@@ -470,24 +479,6 @@
             }
         }
     });
-
-    document.onkeydown = function(e) {
-  if(event.keyCode == 123) {
-     return false;
-  }
-  if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) {
-     return false;
-  }
-  if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) {
-     return false;
-  }
-  if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) {
-     return false;
-  }
-  if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) {
-     return false;
-  }
-}
 </script>
 {% endif %}
 {% endblock %}
