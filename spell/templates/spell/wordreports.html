@@ -81,6 +81,7 @@
                         {% endfor %}
                       </select>
                       <br>
+                      <input style="display: none;" name="child" value="{{ child }}">
                       <button style="margin-left: 50%; transform: translateX(-50%);" class="btn btn-primary">Filter</button>
                     </form>
                   </div>
@@ -181,6 +182,11 @@ function loadwords() {
                 }
             }
         }
+    });
+
+    window.addEventListener('load', (event) => {
+      var child = "pills-home-tab-{{ child }}";
+      document.getElementById(child).classList.add("active");
     });
   </script>
 {% endblock %}

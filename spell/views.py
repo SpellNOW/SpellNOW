@@ -3549,34 +3549,59 @@ def wordreports(request):
 
     if userusing.parent:
         if request.method == "POST":
-            totals = []
-            cool = 0
-            repdet = ReportDetail.objects.filter(report__user__id=int(request.POST["child"]), report__specific = False).values_list('word', flat=True).distinct()
+            reqs = request.POST.getlist("tags_request")
 
-            for word in repdet:
-                if len(ReportDetail.objects.filter(word=word)) > cool:
-                    cool = len(ReportDetail.objects.filter(word=word))
-                
-                thing = {"word": word, "records": list(ReportDetail.objects.filter(word=word).values_list('result', flat=True)), "tags": list(Word.objects.get(word=word).tags.all().values_list('pk', flat=True))}
-                totals.append(thing)
-    
-            alltags = ""
+            if len(reqs) != 0:
+                tags_request = []
+                for req in reqs:
+                    tags_request.append("Tag - " + req)
 
-            for tag in Tag.objects.all():
-                alltags += tag.name + "*..*"
+                repdet = list(ReportDetail.objects.filter(report__user=Account.objects.get(pk=request.POST["child"]), report__specific = False, identification__in=tags_request).values_list('word', flat=True).distinct())
+                alldets = list(ReportDetail.objects.filter(report__user=Account.objects.get(pk=request.POST["child"]), report__specific = False, identification__in=tags_request).values_list('word', flat=True))
+                allres = list(ReportDetail.objects.filter(report__user=Account.objects.get(pk=request.POST["child"]), report__specific = False, identification__in=tags_request).values_list('result', flat=True))
 
-            return render(request, "spell/wordreports.html", {
-                "bar": "fullreports",
-                "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
-                "active": "wordreports",
-                "ready": True,
-                "totals": totals,
-                "cool": cool,
-                "child": request.POST["child"],
-                "children": userusing.children.all(),
-                "tags": Tag.objects.all(),
-                "alltags": alltags,
-            })
+                alltags = ""
+
+                for tag in Tag.objects.all():
+                    alltags += tag.name + "*..*"
+
+                return render(request, "spell/wordreports.html", {
+                    "bar": "fullreports",
+                    "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+                    "active": "wordreports",
+                    "ready": True,
+                    "totals": repdet,
+                    "alldets": alldets,
+                    "allres": allres,
+                    "tags": Tag.objects.all().order_by('name'),
+                    "alltags": alltags,
+                    "tags_request": tags_request,
+                    "child": request.POST["child"],
+                    "children": userusing.children.all(),
+                })
+            else:
+                repdet = list(ReportDetail.objects.filter(report__user=Account.objects.get(pk=request.POST["child"]), report__specific = False).values_list('word', flat=True).distinct())
+                alldets = list(ReportDetail.objects.filter(report__user=Account.objects.get(pk=request.POST["child"]), report__specific = False).values_list('word', flat=True))
+                allres = list(ReportDetail.objects.filter(report__user=Account.objects.get(pk=request.POST["child"]), report__specific = False).values_list('result', flat=True))
+
+                alltags = ""
+
+                for tag in Tag.objects.all():
+                    alltags += tag.name + "*..*"
+
+                return render(request, "spell/wordreports.html", {
+                    "bar": "fullreports",
+                    "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+                    "active": "wordreports",
+                    "ready": True,
+                    "totals": repdet,
+                    "alldets": alldets,
+                    "allres": allres,
+                    "tags": Tag.objects.all().order_by('name'),
+                    "alltags": alltags,
+                    "child": request.POST["child"],
+                    "children": userusing.children.all(),
+                })
         else:
             userusing = Account.objects.get(username=request.user.username)
 
@@ -3593,8 +3618,6 @@ def wordreports(request):
             for req in reqs:
                 tags_request.append("Tag - " + req)
 
-            totals = []
-            cool = 0
             repdet = list(ReportDetail.objects.filter(report__user=request.user, report__specific = False, identification__in=tags_request).values_list('word', flat=True).distinct())
             alldets = list(ReportDetail.objects.filter(report__user=request.user, report__specific = False, identification__in=tags_request).values_list('word', flat=True))
             allres = list(ReportDetail.objects.filter(report__user=request.user, report__specific = False, identification__in=tags_request).values_list('result', flat=True))
@@ -3617,8 +3640,6 @@ def wordreports(request):
                 "tags_request": tags_request,
             })
         else:
-            totals = []
-            cool = 0
             repdet = list(ReportDetail.objects.filter(report__user=request.user, report__specific = False).values_list('word', flat=True).distinct())
             alldets = list(ReportDetail.objects.filter(report__user=request.user, report__specific = False).values_list('word', flat=True))
             allres = list(ReportDetail.objects.filter(report__user=request.user, report__specific = False).values_list('result', flat=True))
