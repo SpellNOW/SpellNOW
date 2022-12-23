@@ -3587,32 +3587,59 @@ def wordreports(request):
                 "children": userusing.children.all(),
             })
     else:
-        totals = []
-        cool = 0
-        repdet = ReportDetail.objects.filter(report__user=request.user, report__specific = False).values_list('word', flat=True).distinct()
+        if request.method == "POST":
+            reqs = request.POST.getlist("tags_request")
+            tags_request = []
+            for req in reqs:
+                tags_request.append("Tag - " + req)
 
-        for word in repdet:
-            if len(ReportDetail.objects.filter(word=word)) > cool:
-                cool = len(ReportDetail.objects.filter(word=word))
-            
-            thing = {"word": word, "records": list(ReportDetail.objects.filter(word=word).values_list('result', flat=True)), "tags": list(Word.objects.get(word=word).tags.all().values_list('pk', flat=True))}
-            totals.append(thing)
+            totals = []
+            cool = 0
+            repdet = list(ReportDetail.objects.filter(report__user=request.user, report__specific = False, identification__in=tags_request).values_list('word', flat=True).distinct())
+            alldets = list(ReportDetail.objects.filter(report__user=request.user, report__specific = False, identification__in=tags_request).values_list('word', flat=True))
+            allres = list(ReportDetail.objects.filter(report__user=request.user, report__specific = False, identification__in=tags_request).values_list('result', flat=True))
 
-        alltags = ""
+            alltags = ""
 
-        for tag in Tag.objects.all():
-            alltags += tag.name + "*..*"
+            for tag in Tag.objects.all():
+                alltags += tag.name + "*..*"
 
-        return render(request, "spell/wordreports.html", {
-            "bar": "fullreports",
-            "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
-            "active": "wordreports",
-            "ready": True,
-            "totals": totals,
-            "cool": cool,
-            "tags": Tag.objects.all(),
-            "alltags": alltags,
-        })
+            return render(request, "spell/wordreports.html", {
+                "bar": "fullreports",
+                "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+                "active": "wordreports",
+                "ready": True,
+                "totals": repdet,
+                "alldets": alldets,
+                "allres": allres,
+                "tags": Tag.objects.all().order_by('name'),
+                "alltags": alltags,
+                "tags_request": tags_request,
+            })
+        else:
+            totals = []
+            cool = 0
+            repdet = list(ReportDetail.objects.filter(report__user=request.user, report__specific = False).values_list('word', flat=True).distinct())
+            alldets = list(ReportDetail.objects.filter(report__user=request.user, report__specific = False).values_list('word', flat=True))
+            allres = list(ReportDetail.objects.filter(report__user=request.user, report__specific = False).values_list('result', flat=True))
+
+            alltags = ""
+
+            for tag in Tag.objects.all():
+                alltags += tag.name + "*..*"
+
+            return render(request, "spell/wordreports.html", {
+                "bar": "fullreports",
+                "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+                "active": "wordreports",
+                "ready": True,
+                "totals": repdet,
+                "alldets": alldets,
+                "allres": allres,
+                "tags": Tag.objects.all().order_by('name'),
+                "alltags": alltags,
+            })
+
 
 # Profile
 

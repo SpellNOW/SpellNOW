@@ -49,7 +49,20 @@
                   attempt the student made. The 'check' symbol indicates the student correctly spelled the word. The 'cross' symbol indicates
                   the student incorrectly spelled the word. You can even filter words by tags using the function below.</p>
                 <div style="width: 100%;" class="row g-3">
-                  <div style="width: 50%;" class="col-md-4" id="tablegoeshere">
+                  <div style="width: 50%;" class="col-md-4">
+                    <div style="width: 100%; height: 50px;" class="row g-3">
+                      <button style="margin-left: 50%; transform: translateX(-50%); width:30%;" class="btn btn-primary" id="starter" onclick="startprocess();">Load Words</button>
+                      <div id="loadingblock" style="display: none;">
+                        <button style="margin-left: 50%; transform: translateX(-50%); width:30%;" class="btn btn-primary" type="button" disabled>
+                          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                          Loading...
+                        </button>
+                        <br><br>
+                        <p style="text-align: center;"><i>This may take a few moments...Do <b>NOT</b> close this window...</i></p>
+                      </div>
+                    </div>
+                    <div style="width: 100%; height: 500px; overflow: scroll;" class="row g-3" id="tablegoeshere">
+                    </div>
                   </div>
                   <div style="width: 50%;" class="col-md-4">
                     <div style="width: 100%;" class="row g-3">
@@ -60,11 +73,16 @@
                         </div>
                       </div>
                     </div>
-                    <div id="alltags">
-                      {% for tag in tags %}
-                        <button style="color:rgb(13, 110, 253); background-color: rgb(255, 255, 255);" onclick="add_filt('{{ tag.id }}')" id="{{ tag.id }}" type="button" class="btn btn-primary rounded-pill tag">{{ tag.name }}</button>
-                      {% endfor %}
-                    </div>
+                    <form action="/wordreports" method="post">
+                      {% csrf_token %}
+                      <select style="height: 200px;" name="tags_request" class="form-select" multiple>
+                        {% for tag in tags %}
+                          <option id="Tag - {{ tag.name }}" value="{{ tag.name }}">{{ tag.name }}</option>
+                        {% endfor %}
+                      </select>
+                      <br>
+                      <button style="margin-left: 50%; transform: translateX(-50%);" class="btn btn-primary">Filter</button>
+                    </form>
                   </div>
                 </div>
               </div>
@@ -77,34 +95,74 @@
 
   <script>
     totals = "{{ totals|safe }}";
-    cool = "{{ cool }}";
     totals = totals.replace(/'/g, '"');
-    const total = JSON.parse(totals);
+    totals = totals.replace("\n", '');
+    const total = JSON.parse(totals).sort()
+    alldet = "{{ alldets|safe }}";
+    alldet = alldet.replace(/'/g, '"');
+    alldet = alldet.replace("\n", '');
+    const alldets = JSON.parse(alldet);
+    allre = "{{ allres|safe }}";
+    allre = allre.replace(/'/g, '"');
+    allre = allre.replace("\n", '');
+    const allres = JSON.parse(allre);
+    tags_requests = "{{ tags_request|safe }}";
+    tags_requests = tags_requests.replace(/'/g, '"');
+    if (tags_requests == "") {
+      tags_requests = "[]";
+    }
+    const tags_request = JSON.parse(tags_requests);
 
-    window.addEventListener('load', (event) => {
-      fool = '<table class="table datatable"><thead><tr><th scope="col">Word</th></tr></thead><tbody>'
-      
-      for (i = 0; i < total.length; i++) {
-        good = "<tr><td scope=\"row\">" + total[i].word + "</td>";
-        for (j = 0; j < total[i].records.length; j++) {
-          if (total[i].records[j] == "CORRECT") {
-            good += "<td>&check;</td>";
-          }
-          else {
-            good += "<td>&cross;</td>";
-          }
+    const chunkSize = 10; // adjust chunk size as needed
+
+function resolveAfter2Seconds() {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve('resolved');
+    }, 2000);
+  });
+}
+
+async function startprocess() {
+  document.getElementById("starter").style.display = "none";
+  document.getElementById("loadingblock").style.display = "block";
+  await resolveAfter2Seconds();
+  loadwords();
+}
+
+function loadwords() {
+  var full = '<table class="table"><thead><tr><th scope="col">Word</th></tr></thead><tbody id="bodyoftable">';
+  k = 0;
+  for (i = 0; i < total.length; i += chunkSize) {
+    // create a chunk of the total array with the current chunk size
+    var chunk = total.slice(i, i + chunkSize);
+    // loop through the chunk and add the rows to the table
+    for (j = 0; j < chunk.length; j++) {
+      full += "<tr><td scope=\"row\">" + chunk[j] + "</td>";
+      var index = alldets.indexOf(chunk[j]);
+      while (alldets.indexOf(chunk[j]) != -1) {
+        index = alldets.indexOf(chunk[j]);
+        if (allres[index] == "CORRECT") {
+          full += "<td>&check;</td>";
         }
-        good += "</tr>";
-
-        fool += good;
+        else {
+          full += "<td>&cross;</td>";
+        }
+        alldets.splice(index, 1);
+        allres.splice(index, 1);
       }
-      fool += "</tbody></table>";
-      document.getElementById("tablegoeshere").innerHTML = fool;
-    });
+      full += "</tr>";
+    }
+  }
+  full += "</tbody></table>";
+  document.getElementById("tablegoeshere").innerHTML = full;
+  document.getElementById("loadingblock").style.display = "none";
+};
 
     window.addEventListener('load', (event) => {
-      var child = "pills-home-tab-{{ child }}";
-      document.getElementById(child).classList.add("active");
+  for (i = 0; i < tags_request.length; i++) {
+    document.getElementById(tags_request[i]).selected = true;
+  }
     });
 
     var g_alltags = "{{ alltags }}";
@@ -114,83 +172,15 @@
 
     document.addEventListener("keyup", function(event) {
         if (document.activeElement.id == "search_tags") {
-            document.getElementById("alltags").innerHTML = "";
             for(var i = 0; i < alltags.length; i++) {
-                if ((alltags[i].toLowerCase()).startsWith(document.getElementById("search_tags").value.toLowerCase())) {
-                    document.getElementById("alltags").innerHTML += '<button style="color:rgb(13, 110, 253); background-color: rgb(255, 255, 255);" onclick="add_filt(\'' + alltags[i] + '\')" id="' + alltags[i] + '" type="button" class="btn btn-primary rounded-pill tag">' + alltags[i] + '</button>'
+                if (!((alltags[i].toLowerCase()).startsWith(document.getElementById("search_tags").value.toLowerCase()))) {
+                    document.getElementById("Tag - " + alltags[i]).style.display = "none";
+                }
+                else {
+                    document.getElementById("Tag - " + alltags[i]).style.display = "block";
                 }
             }
         }
     });
-
-    function add_filt(tag) {
-        if (document.getElementById(tag).style.color == "rgb(13, 110, 253)" || document.getElementById(tag).style.color == "") {
-          document.getElementById(tag).style.color = "rgb(255, 255, 255)";
-          document.getElementById(tag).style.backgroundColor = "rgb(13, 110, 253)";
-          filt.push(parseInt(tag));
-          fool = '<table class="table datatable"><thead><tr><th scope="col">Word</th></tr></thead><tbody>'
-          
-          for (i = 0; i < total.length; i++) {
-            init = true;
-            for (j = 0; j < filt.length; j++) {
-              if (!(total[i].tags.includes(filt[j]))) {
-                init = false;
-              }
-            }
-            
-            if (init == true) {
-              good = "<tr><td scope=\"row\">" + total[i].word + "</td>";
-              for (j = 0; j < total[i].records.length; j++) {
-                if (total[i].records[j] == "CORRECT") {
-                  good += "<td>&check;</td>";
-                }
-                else {
-                  good += "<td>&cross;</td>";
-                }
-              }
-              good += "</tr>";
-
-              fool += good;
-            }
-          }
-          
-          fool += "</tbody></table>";
-          document.getElementById("tablegoeshere").innerHTML = fool;
-        }
-        else {
-          document.getElementById(tag).style.color = "rgb(13, 110, 253)";
-          document.getElementById(tag).style.backgroundColor = "rgb(255, 255, 255)";
-
-          filt.pop(parseInt(tag));
-          fool = '<table class="table datatable"><thead><tr><th scope="col">Word</th></tr></thead><tbody>'
-          
-          for (i = 0; i < total.length; i++) {
-            init = true;
-            for (j = 0; j < filt.length; j++) {
-              if (!(total[i].tags.includes(filt[j]))) {
-                init = false;
-              }
-            }
-
-            if (init == true) {
-              good = "<tr><td scope=\"row\">" + total[i].word + "</td>";
-              for (j = 0; j < total[i].records.length; j++) {
-                if (total[i].records[j] == "CORRECT") {
-                  good += "<td>&check;</td>";
-                }
-                else {
-                  good += "<td>&cross;</td>";
-                }
-              }
-              good += "</tr>";
-
-              fool += good;
-            }
-          }
-
-          fool += "</tbody></table>";
-          document.getElementById("tablegoeshere").innerHTML = fool;
-        }
-    }
   </script>
 {% endblock %}
