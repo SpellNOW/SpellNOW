@@ -3935,6 +3935,7 @@ def privacy(request):
     })
 
 def terms(request):
+    # returns the terms.html file
     return render(request, "spell/terms.html", {
         "bar": "",
         "active": "terms",
