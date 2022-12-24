@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 from pathlib import Path
 import pymysql
+import config
 
 pymysql.install_as_MySQLdb()
 
@@ -20,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-iy)-sr&$8!%$96ost@g#ch_bg^1o*dn1m%r-39o3l7)e58pb$b'
+SECRET_KEY = config.django_secret_key
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
@@ -83,9 +84,9 @@ DATABASES = {
     'default': {  
         'ENGINE': 'django.db.backends.mysql',  
         'NAME': 'SpellNOW',  
-        'USER': 'dbmasteruser',  
-        'PASSWORD': 'lucky1106',  
-        'HOST': 'ls-5e7f1be99d63ee15f23a57f83f8b62ed5ca8a925.cifnnfubjcpo.us-east-1.rds.amazonaws.com',  
+        'USER': config.db_username,  
+        'PASSWORD': config.db_password,  
+        'HOST': config.db_HOST,  
         'PORT': '3306',
     }  
 }

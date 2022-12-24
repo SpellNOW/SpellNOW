@@ -23,6 +23,7 @@ from captcha.fields import CaptchaField
 import datetime
 from bs4 import BeautifulSoup
 import re
+import config
 
 languages = ["Middle English","Latin", "French","German","Italian", "Greek", "Spanish", "Hebrew"]
 
@@ -261,7 +262,7 @@ def dictionarydotcom_scrape(word_to_scrape):
     return 1
 
 def merriammedialapi_scrape(word_to_scrape):
-    r = requests.get('https://www.dictionaryapi.com/api/v3/references/medical/json/' + word_to_scrape + '?key=49fe6b68-417a-44fc-99bd-349b04acca2e')
+    r = requests.get('https://www.dictionaryapi.com/api/v3/references/medical/json/' + word_to_scrape + '?key=' + config.merriammedialapi_key)
     info = r.json()
     data = []
     
@@ -392,7 +393,7 @@ def merriammedialapi_scrape(word_to_scrape):
 
 def oxfordapi(word_to_scrape):
     app_id = "ad49f899"
-    app_key = "01622cb742e08d73a16cb360e1b4a581"
+    app_key = config.oxfordapi_key
     endpoint = "entries"
     language_code = "en-us"
 
@@ -487,7 +488,7 @@ def is_word(word):
     error = False
     info = ""
 
-    r = requests.get('https://dictionaryapi.com/api/v3/references/collegiate/json/' + word + '?key=e115f2c9-c50e-4fc0-9711-f5264280ecff')
+    r = requests.get('https://dictionaryapi.com/api/v3/references/collegiate/json/' + word + '?key=' + config.merriamapi_key)
 
     try:
         info = r.json()
@@ -712,7 +713,7 @@ def contact(request):
         smtp_obj.ehlo()
         smtp_obj.starttls()
         smtp_obj.ehlo()
-        smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
+        smtp_obj.login("support@spellnow.org", config.smtp_pass)
         smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
     
     return HttpResponseRedirect(reverse("index"))
@@ -3960,7 +3961,7 @@ def subscribe(request):
 
 @login_required(login_url='/login')
 def payment(request, sessionid):
-    stripe.api_key = 'sk_test_51LQUbqGjGQJlNWoiV9Y3tyReZKx8VQtVSGpOOdCiRKk9O69AQvtxRN4Lzu8z5a1MrkMLSYbTWVAKH7UBuywsAlw0009eisFzdi'
+    stripe.api_key = config.stripe_api_key
     try:
         session = stripe.checkout.Session.retrieve(sessionid)
         userusing = Account.objects.get(username=request.user.username)
