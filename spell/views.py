@@ -24,6 +24,7 @@ import datetime
 from bs4 import BeautifulSoup
 import re
 
+# this is a fun little change
 languages = ["Middle English","Latin", "French","German","Italian", "Greek", "Spanish", "Hebrew"]
 
 def merriamweb_scrape(word_to_scrape):
