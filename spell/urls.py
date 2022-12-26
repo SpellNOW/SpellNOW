@@ -76,11 +76,4 @@ urlpatterns = [
 
     path("privacy", views.privacy, name="privacy"),
     path("terms", views.terms, name="terms"),
-
-    # -------------DO NOT USE BELOW THIS LINE----------------- #
-    # Subscribe
-    path("subscribe", views.subscribe, name="subscribe"),
-
-    # Payment
-    path("payment/<str:sessionid>", views.payment, name="payment"),
 ]

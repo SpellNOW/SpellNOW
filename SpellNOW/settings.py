@@ -21,11 +21,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config.django_secret_key
+SECRET_KEY = config.DJANGO_SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 AUTO_LOGOUT = {'IDLE_TIME': 7200}
@@ -76,7 +76,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'SpellNOW.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
@@ -84,9 +83,9 @@ DATABASES = {
     'default': {  
         'ENGINE': 'django.db.backends.mysql',  
         'NAME': 'SpellNOW',  
-        'USER': config.db_username,  
-        'PASSWORD': config.db_password,  
-        'HOST': config.db_HOST,  
+        'USER': config.DB_USER,
+        'PASSWORD': config.DB_PASSWORD,
+        'HOST': config.DB_HOST,  
         'PORT': '3306',
     }  
 }

@@ -262,7 +262,7 @@ def dictionarydotcom_scrape(word_to_scrape):
     return 1
 
 def merriammedialapi_scrape(word_to_scrape):
-    r = requests.get('https://www.dictionaryapi.com/api/v3/references/medical/json/' + word_to_scrape + '?key=' + config.merriammedialapi_key)
+    r = requests.get('https://www.dictionaryapi.com/api/v3/references/medical/json/' + word_to_scrape + '?key=' + config.MERRIAMMEDIALAPI_KEY)
     info = r.json()
     data = []
     
@@ -393,7 +393,7 @@ def merriammedialapi_scrape(word_to_scrape):
 
 def oxfordapi(word_to_scrape):
     app_id = "ad49f899"
-    app_key = config.oxfordapi_key
+    app_key = config.OXFORDAPI_KEY
     endpoint = "entries"
     language_code = "en-us"
 
@@ -488,7 +488,7 @@ def is_word(word):
     error = False
     info = ""
 
-    r = requests.get('https://dictionaryapi.com/api/v3/references/collegiate/json/' + word + '?key=' + config.merriamapi_key)
+    r = requests.get('https://dictionaryapi.com/api/v3/references/collegiate/json/' + word + '?key=' + config.MERRIAMAPI_KEY)
 
     try:
         info = r.json()
@@ -713,7 +713,7 @@ def contact(request):
         smtp_obj.ehlo()
         smtp_obj.starttls()
         smtp_obj.ehlo()
-        smtp_obj.login("support@spellnow.org", config.smtp_pass)
+        smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
         smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
     
     return HttpResponseRedirect(reverse("index"))
@@ -779,7 +779,7 @@ def register(request):
                     smtp_obj.ehlo()
                     smtp_obj.starttls()
                     smtp_obj.ehlo()
-                    smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
+                    smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
                     smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
             except:
                 pass
@@ -813,7 +813,7 @@ def register(request):
                     smtp_obj.ehlo()
                     smtp_obj.starttls()
                     smtp_obj.ehlo()
-                    smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
+                    smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
                     smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
             except:
                 pass
@@ -869,7 +869,7 @@ def single_register(request):
                         smtp_obj.ehlo()
                         smtp_obj.starttls()
                         smtp_obj.ehlo()
-                        smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
+                        smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
                         smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
                 except:
                     pass
@@ -922,7 +922,7 @@ def student_register(request):
                     smtp_obj.ehlo()
                     smtp_obj.starttls()
                     smtp_obj.ehlo()
-                    smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
+                    smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
                     smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
             except:
                 pass
@@ -946,9 +946,9 @@ def uservalidate(request, userit, lockit1, lockit2):
         # Attempt to create new user
         if (valid.parent == None) and (ConfirmReq.objects.filter(parent=valid.id).exists()):
             student = ConfirmReq.objects.get(parent=valid.id)
-            user = Account.objects.create_user(valid.username, valid.email, valid.password, subscribed=False, locked=False, daysleft=30, trigger=True, repsub=True, changenotifs=True, newsletter=True, parent=True, parents=None)
+            user = Account.objects.create_user(valid.username, valid.email, valid.password, subscribed=True, locked=False, daysleft=30, trigger=True, repsub=True, changenotifs=True, newsletter=True, parent=True, parents=None)
         else:
-            user = Account.objects.create_user(valid.username, valid.email, valid.password, subscribed=False, locked=False, daysleft=30, trigger=True, repsub=True, changenotifs=True, newsletter=True, parent=False)
+            user = Account.objects.create_user(valid.username, valid.email, valid.password, subscribed=True, locked=False, daysleft=30, trigger=True, repsub=True, changenotifs=True, newsletter=True, parent=False)
         
         user.first_name = valid.fname
         user.last_name = valid.lname
@@ -2789,7 +2789,7 @@ def finish(request):
                 smtp_obj.ehlo()
                 smtp_obj.starttls()
                 smtp_obj.ehlo()
-                smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
+                smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
                 smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
     except:
         pass
@@ -3410,7 +3410,7 @@ def vocab_finish(request):
                 smtp_obj.ehlo()
                 smtp_obj.starttls()
                 smtp_obj.ehlo()
-                smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
+                smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
                 smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
     except:
         pass
@@ -3753,7 +3753,7 @@ def changedetails(request):
             smtp_obj.ehlo()
             smtp_obj.starttls()
             smtp_obj.ehlo()
-            smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
+            smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
             smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
 
     if userusing.email != request.POST["email"] and request.POST["email"] != "":
@@ -3774,7 +3774,7 @@ def changedetails(request):
                 smtp_obj.ehlo()
                 smtp_obj.starttls()
                 smtp_obj.ehlo()
-                smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
+                smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
                 smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
         except:
             pass
@@ -3847,7 +3847,7 @@ def changenotifs(request):
             smtp_obj.ehlo()
             smtp_obj.starttls()
             smtp_obj.ehlo()
-            smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
+            smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
             smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
 
     return HttpResponseRedirect(reverse("profile"))
@@ -3872,7 +3872,7 @@ def changepassword(request):
                 smtp_obj.ehlo()
                 smtp_obj.starttls()
                 smtp_obj.ehlo()
-                smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
+                smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
                 smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
             
             return HttpResponseRedirect(reverse("profile"))
@@ -3919,7 +3919,7 @@ def validatemail(request, userit, lockit1, lockit2):
                 smtp_obj.ehlo()
                 smtp_obj.starttls()
                 smtp_obj.ehlo()
-                smtp_obj.login("support@spellnow.org", "3BGV6@7*X-2Yi/e")
+                smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
                 smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
 
         userusing.email = valid.email
@@ -3940,36 +3940,3 @@ def terms(request):
         "bar": "",
         "active": "terms",
     })
-
-@user_passes_test(lambda u: u.is_staff)
-@login_required(login_url='/login')
-def allusers():
-    pass
-
-# Subscribe
-
-@login_required(login_url='/login')
-def subscribe(request):
-    if not request.user.is_superuser:
-        userusing = Account.objects.get(username=request.user.username)
-        if userusing.locked == True:
-            return render(request, "spell/subscribe.html", {})
-        else:
-            return render(request, "spell/error_404.html", {})
-    else:
-        return render(request, "spell/error_404.html", {})
-
-@login_required(login_url='/login')
-def payment(request, sessionid):
-    stripe.api_key = config.stripe_api_key
-    try:
-        session = stripe.checkout.Session.retrieve(sessionid)
-        userusing = Account.objects.get(username=request.user.username)
-        userusing.subscribed = True
-        userusing.locked = False
-        userusing.trigger = True
-        userusing.save()
-    except:
-        return render(request, "spell/error_404.html", {})
-    
-    return HttpResponseRedirect(reverse("admin_panel"))
