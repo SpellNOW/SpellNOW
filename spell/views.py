@@ -641,38 +641,6 @@ def create_word(word):
     new = Word(word=word, speech = final_parts, origin1 = final_origin[0], origin2 = final_origin[1], origin3 = final_origin[2], definition1 = final_right[0], definition2 = final_right[1], definition3 = final_right[2], pronounce = final_audio, tagged = False, rooted=False)
     new.save()
 
-def locked(user):
-    if not user.is_superuser:
-        account = Account.objects.get(username=user.username)
-        if not account.parent:
-            account = Account.objects.get(username=user.username)
-            gen = str(account.date_joined).split("+")[0]
-            day = gen.split(" ")[0]
-            time = gen.split(" ")[1]
-            opyear = int(day.split("-")[0])
-            opmonth = int(day.split("-")[1])
-            opday = int(day.split("-")[2])
-            ophour = int(time.split(":")[0])
-            opmin = int(time.split(":")[1])
-            opsec = int((time.split(":")[2]).split(".")[0])
-            tv = datetime.datetime(opyear, opmonth, opday, ophour, opmin, opsec)
-            if (account.subscribed == False) and ((datetime.datetime.now() - tv) > datetime.timedelta(days=30)):
-                account.locked = True
-                account.save()
-            elif account.subscribed == False:
-                account.daysleft = 30 - ((datetime.datetime.now() - tv).days)
-                account.save()
-        else:
-            account.daysleft = 30
-            account.save()
-
-    if user.is_superuser:
-        return True
-    elif Account.objects.get(username=user.username).locked == True:
-        return False
-    else:
-        return True
-
 def is_child(user):
     account = Account.objects.get(username=user.username)
 
@@ -829,7 +797,6 @@ def register(request):
         return render(request, "spell/register.html", {"form": form})
 
 @login_required(login_url='/login')
-@user_passes_test(locked, login_url='/subscribe')
 def single_register(request):
     if request.method == "POST":
         userusing = Account.objects.get(username=request.user.username)
@@ -946,9 +913,9 @@ def uservalidate(request, userit, lockit1, lockit2):
         # Attempt to create new user
         if (valid.parent == None) and (ConfirmReq.objects.filter(parent=valid.id).exists()):
             student = ConfirmReq.objects.get(parent=valid.id)
-            user = Account.objects.create_user(valid.username, valid.email, valid.password, subscribed=True, locked=False, daysleft=30, trigger=True, repsub=True, changenotifs=True, newsletter=True, parent=True, parents=None)
+            user = Account.objects.create_user(valid.username, valid.email, valid.password, trigger=True, repsub=True, changenotifs=True, newsletter=True, parent=True, parents=None)
         else:
-            user = Account.objects.create_user(valid.username, valid.email, valid.password, subscribed=True, locked=False, daysleft=30, trigger=True, repsub=True, changenotifs=True, newsletter=True, parent=False)
+            user = Account.objects.create_user(valid.username, valid.email, valid.password, trigger=True, repsub=True, changenotifs=True, newsletter=True, parent=False)
         
         user.first_name = valid.fname
         user.last_name = valid.lname
@@ -1003,7 +970,6 @@ def logout(request):
 
 # Dashboard
 @login_required(login_url='/login')
-@user_passes_test(locked, login_url='/subscribe')
 def admin_panel(request):
     if request.method == "POST":
         parent = Account.objects.get(username=request.user.username)
@@ -1309,7 +1275,6 @@ def admin_panel(request):
 # Libraries
 @user_passes_test(lambda u: u.is_staff)
 @login_required(login_url='/login')
-@user_passes_test(locked, login_url='/subscribe')
 def word_library(request):
     if request.method == "POST":
         exact = False
@@ -1565,7 +1530,6 @@ def word_library(request):
 
 @user_passes_test(lambda u: u.is_staff)
 @login_required(login_url='/login')
-@user_passes_test(locked, login_url='/subscribe')
 def tag_library(request):
     if request.method == "POST":
         try:
@@ -1629,7 +1593,6 @@ def tag_library(request):
 
 @user_passes_test(lambda u: u.is_staff)
 @login_required(login_url='/login')
-@user_passes_test(locked, login_url='/subscribe')
 def partag(request):
     thing = request.POST["tag"]
     if not (("---" in thing) or ('"' in thing) or ("'" in thing) or ("*..*" in thing) or (", " in thing) or (thing in Tag.objects.all().values_list("name", flat=True))):
@@ -1649,7 +1612,6 @@ def partag(request):
 
 @user_passes_test(lambda u: u.is_staff)
 @login_required(login_url='/login')
-@user_passes_test(locked, login_url='/subscribe')
 def save_tag(request, tagid):
     thing = int(request.POST["parent"])
     child = Tag.objects.get(id=tagid)
@@ -1661,7 +1623,6 @@ def save_tag(request, tagid):
 
 @user_passes_test(lambda u: u.is_staff)
 @login_required(login_url='/login')
-@user_passes_test(locked, login_url='/subscribe')
 def root_library(request):
     if request.method == "POST":
         try:
@@ -1713,7 +1674,6 @@ def root_library(request):
 
 # Word Changes
 @user_passes_test(lambda u: u.is_staff)
-@user_passes_test(locked, login_url='/subscribe')
 def update_words(request):
     updates = request.POST["changes"]
     updates = updates.split("|||")
@@ -1773,7 +1733,6 @@ def update_words(request):
 
 # Tag Changes
 @user_passes_test(lambda u: u.is_staff)
-@user_passes_test(locked, login_url='/subscribe')
 def delete_tag(request, id):
     tag = Tag.objects.get(pk=id)
 
@@ -1786,7 +1745,6 @@ def delete_tag(request, id):
 
 # Root Changes
 @user_passes_test(lambda u: u.is_staff)
-@user_passes_test(locked, login_url='/subscribe')
 def update_root(request):
     root = Root.objects.get(pk=int(request.POST["id"]))
     
@@ -1804,7 +1762,6 @@ def update_root(request):
 
 @user_passes_test(lambda u: u.is_staff)
 @login_required(login_url='/login')
-@user_passes_test(locked, login_url='/subscribe')
 def delete_root(request, id):
     root = Root.objects.get(pk=id)
     root.delete()
@@ -1813,7 +1770,6 @@ def delete_root(request, id):
 # Import
 @user_passes_test(lambda u: u.is_staff)
 @login_required(login_url='/login')
-@user_passes_test(locked, login_url='/subscribe')
 def word_import(request):
     if request.method == "POST":
         request_id = request.POST["request-id"]
@@ -2276,7 +2232,6 @@ def word_import(request):
 
 # Spelling
 @login_required(login_url='/login')
-@user_passes_test(locked, login_url='/subscribe')
 @user_passes_test(is_child, login_url='/error_404')
 def start(request):
     total = []
@@ -2296,7 +2251,6 @@ def start(request):
         "others": Root.objects.all().exclude(Q(origin="Latin") | Q(origin="International Scientific Vocabulary") | Q(origin="New Latin") | Q(origin="Greek") | Q(origin="Italian") | Q(origin="Spanish") | Q(origin="French") | Q(origin="German") | Q(origin="Portuguese") | Q(origin="Middle English"))
     })
 
-@user_passes_test(locked, login_url='/subscribe')
 @user_passes_test(is_child, login_url='/error_404')
 def spell(request):
     if request.method == "POST":
@@ -2803,7 +2757,6 @@ def finish(request):
 
 # Spelling
 @login_required(login_url='/login')
-@user_passes_test(locked, login_url='/subscribe')
 @user_passes_test(is_child, login_url='/error_404')
 def vocab_start(request):
     total = []
@@ -2823,7 +2776,6 @@ def vocab_start(request):
         "others": Root.objects.all().exclude(Q(origin="Latin") | Q(origin="International Scientific Vocabulary") | Q(origin="New Latin") | Q(origin="Greek") | Q(origin="Italian") | Q(origin="Spanish") | Q(origin="French") | Q(origin="German") | Q(origin="Portuguese") | Q(origin="Middle English"))
     })
 
-@user_passes_test(locked, login_url='/subscribe')
 @user_passes_test(is_child, login_url='/error_404')
 def vocab(request):
     if request.method == "POST":
@@ -3424,7 +3376,6 @@ def vocab_finish(request):
 
 # Reports
 @login_required(login_url='/login')
-@user_passes_test(locked, login_url='/subscribe')
 def reports(request):
     userusing = Account.objects.get(username=request.user.username)
 
@@ -3461,7 +3412,6 @@ def reports(request):
         })
 
 @login_required(login_url='/login')
-@user_passes_test(locked, login_url='/subscribe')
 def report(request, id):
     great = Account.objects.get(username=request.user.username)
 
@@ -3544,7 +3494,6 @@ def report(request, id):
             return render(request, "spell/error_404.html", {})
 
 @login_required(login_url='/login')
-@user_passes_test(locked, login_url='/subscribe')
 def wordreports(request):
     userusing = Account.objects.get(username=request.user.username)
 
@@ -3662,7 +3611,6 @@ def wordreports(request):
                 "alltags": alltags,
             })
 
-
 # Profile
 
 @login_required(login_url='/login')
@@ -3671,23 +3619,6 @@ def profile(request):
     actualparent = False
     if account.parent:
         for account in Account.objects.filter(parents=account.id):
-            gen = str(account.date_joined).split("+")[0]
-            day = gen.split(" ")[0]
-            time = gen.split(" ")[1]
-            opyear = int(day.split("-")[0])
-            opmonth = int(day.split("-")[1])
-            opday = int(day.split("-")[2])
-            ophour = int(time.split(":")[0])
-            opmin = int(time.split(":")[1])
-            opsec = int((time.split(":")[2]).split(".")[0])
-            tv = datetime.datetime(opyear, opmonth, opday, ophour, opmin, opsec)
-            if (account.subscribed == False) and ((datetime.datetime.now() - tv) > datetime.timedelta(days=30)):
-                account.locked = True
-                account.save()
-            elif account.subscribed == False:
-                account.daysleft = 30 - ((datetime.datetime.now() - tv).days)
-                account.save()
-            
             actualparent = True
     
     if account.parent or ConfirmReq.objects.filter(username=account.username, parent=None) or ((not ConfirmReq.objects.filter(username=account.username).exists()) and (not Account.objects.filter(children__in=[account]).exists())):

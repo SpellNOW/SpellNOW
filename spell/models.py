@@ -5,11 +5,7 @@ from django import forms
 
 # Create your models here.
 class Account(User):
-    subscribed = models.BooleanField()
-    locked = models.BooleanField()
-    daysleft = models.IntegerField()
     trigger = models.BooleanField()
-    customer_id = models.TextField(max_length=300, null=True, blank=True)
     changenotifs = models.BooleanField()
     newsletter = models.BooleanField()
     parent = models.BooleanField()
