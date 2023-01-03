@@ -3708,8 +3708,8 @@ def deleteuser(request, id):
                 }
                 simple_public_object_input = SimplePublicObjectInput(properties=properties)
                 client.crm.contacts.basic_api.update(contact_id=str(student.contactid), simple_public_object_input=simple_public_object_input)
-                
-                userusing.contactid = student.contactid
+
+                new.contactid = student.contactid
                 userusing.save()
                 student.delete()
             else:
