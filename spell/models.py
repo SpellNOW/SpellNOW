@@ -7,12 +7,12 @@ from django import forms
 class Account(User):
     trigger = models.BooleanField()
     changenotifs = models.BooleanField()
-    newsletter = models.BooleanField()
     parent = models.BooleanField()
     children = models.ManyToManyField("Account", blank=True)
     parents = models.IntegerField(null=True, blank=True)
     repsub = models.BooleanField()
     haschild = models.BooleanField(null=True, blank=True)
+    contactid = models.IntegerField(null=True, blank=True)
 
 class ConfirmReq(models.Model):
     fname = models.TextField(max_length=300)

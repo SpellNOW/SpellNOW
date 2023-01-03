@@ -24,6 +24,11 @@ import datetime
 from bs4 import BeautifulSoup
 import re
 import config
+import requests
+import hubspot
+from pprint import pprint
+from hubspot.crm.contacts import PublicGdprDeleteInput, SimplePublicObjectInput, ApiException
+import json
 
 languages = ["Middle English","Latin", "French","German","Italian", "Greek", "Spanish", "Hebrew"]
 
@@ -913,9 +918,53 @@ def uservalidate(request, userit, lockit1, lockit2):
         # Attempt to create new user
         if (valid.parent == None) and (ConfirmReq.objects.filter(parent=valid.id).exists()):
             student = ConfirmReq.objects.get(parent=valid.id)
-            user = Account.objects.create_user(valid.username, valid.email, valid.password, trigger=True, repsub=True, changenotifs=True, newsletter=True, parent=True, parents=None)
+
+            client = hubspot.Client.create(access_token=config.HUBSPOT_API_KEY)
+
+            properties = {
+                "email": valid.email,
+                "firstname": valid.fname,
+                "lastname": valid.lname,
+                "username": valid.username,
+                "lifecyclestage": "customer",
+                "user_type": "Parent",
+            }
+            simple_public_object_input = SimplePublicObjectInput(properties=properties)
+
+            try:
+                response = client.crm.contacts.basic_api.create(simple_public_object_input=simple_public_object_input)
+                response = str(response)
+                response = (response.split(" 'id': '"))[1]
+                response = (response.split("'"))[0]
+
+                user = Account.objects.create_user(valid.username, valid.email, valid.password, trigger=True, repsub=True, changenotifs=True, parent=True, parents=None, contactid = int(response))
+            except:
+                response = None
+                user = Account.objects.create_user(valid.username, valid.email, valid.password, trigger=True, repsub=True, changenotifs=True, parent=True, parents=None, contactid = None)
+
         else:
-            user = Account.objects.create_user(valid.username, valid.email, valid.password, trigger=True, repsub=True, changenotifs=True, newsletter=True, parent=False)
+            client = hubspot.Client.create(access_token=config.HUBSPOT_API_KEY)
+
+            properties = {
+                "email": valid.email,
+                "firstname": valid.fname,
+                "lastname": valid.lname,
+                "username": valid.username,
+                "lifecyclestage": "customer",
+                "user_type": "Student",
+            }
+            simple_public_object_input = SimplePublicObjectInput(properties=properties)
+
+            try:
+                response = client.crm.contacts.basic_api.create(simple_public_object_input=simple_public_object_input)
+                response = str(response)
+                response = (response.split(" 'id': '"))[1]
+                response = (response.split("'"))[0]
+
+                user = Account.objects.create_user(valid.username, valid.email, valid.password, trigger=True, repsub=True, changenotifs=True, parent=True, parents=None, contactid = int(response))
+            except:
+                response = None
+                user = Account.objects.create_user(valid.username, valid.email, valid.password, trigger=True, repsub=True, changenotifs=True, parent=True, parents=None, contactid = None)
         
         user.first_name = valid.fname
         user.last_name = valid.lname
@@ -3638,7 +3687,36 @@ def deleteuser(request, id):
 
     if userusing.parent:
         if student in userusing.children.all():
-            student.delete()
+            # check if account of the same email exists
+            if Account.objects.filter(email=student.email).exists():
+                new = Account.objects.filter(email=student.email).exclude(pk=student.id).first()
+
+                if new.parent == False:
+                    user_type = "Student"
+                else:
+                    user_type = "Parent"
+
+                client = hubspot.Client.create(access_token=config.HUBSPOT_API_KEY)
+
+                properties = {
+                    "email": new.email,
+                    "firstname": new.first_name,
+                    "lastname": new.last_name,
+                    "username": new.username,
+                    "lifecyclestage": "customer",
+                    "user_type": user_type,
+                }
+                simple_public_object_input = SimplePublicObjectInput(properties=properties)
+                client.crm.contacts.basic_api.update(contact_id=str(student.contactid), simple_public_object_input=simple_public_object_input)
+
+                student.delete()
+            else:
+                client = hubspot.Client.create(access_token=config.HUBSPOT_API_KEY)
+                
+                public_gdpr_delete_input = PublicGdprDeleteInput(object_id=str(student.contactid))
+                client.crm.contacts.gdpr_api.purge(public_gdpr_delete_input=public_gdpr_delete_input)
+                
+                student.delete()
             return HttpResponseRedirect(reverse("profile"))
         else:
             return render(request, "spell/error_404.html", {})
@@ -3751,17 +3829,6 @@ def changenotifs(request):
         if userusing.changenotifs == True:
             total += "Email Notifications: Off"
             userusing.changenotifs = False
-
-    try:
-        cool = request.POST["newsletter"]
-        if cool == "checked":
-            if userusing.newsletter == False:
-                total += "SpellNOW! Newsletter Subscription: On"
-                userusing.newsletter = True
-    except:
-        if userusing.newsletter == True:
-                total += "SpellNOW! Newsletter Subscription: Off"
-                userusing.newsletter = False
 
     userusing.save()
 
