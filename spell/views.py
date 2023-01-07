@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate, logout as auth_logout, login as auth_login
 from django.shortcuts import render
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.urls import reverse
 from django.db.models import Count
 from .models import Account, Word, Tag, Report, Root, ReportDetail, EmailValidate, ConfirmReq, VocabReportDetail
@@ -674,20 +674,23 @@ def contactrender(request):
     })
 
 def contact(request):
-    msg = MIMEMultipart()
-    msg['Subject'] = 'SpellNOW! Contact Notification'
-    msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
-    msg["To"] = "support@spellnow.org"
-    body_text = """Hello!\n\nThis is an official SpellNOW! Notification. The following details a contact request from a user.\n\n""" + "Name: " + request.POST["name"] + "\nEmail: " + request.POST["email"] + "\nSubject: " + request.POST["subject"] + "\n\nMessage:\n\n" + request.POST["message"] + """\n\nBe sure to contact them back, and have a great day!\n\nSincerely,\nSpellNOW! Support Team"""
+    try:
+        msg = MIMEMultipart()
+        msg['Subject'] = 'SpellNOW! Contact Notification'
+        msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
+        msg["To"] = "support@spellnow.org"
+        body_text = """Hello!\n\nThis is an official SpellNOW! Notification. The following details a contact request from a user.\n\n""" + "Name: " + request.POST["name"] + "\nEmail: " + request.POST["email"] + "\nSubject: " + request.POST["subject"] + "\n\nMessage:\n\n" + request.POST["message"] + """\n\nBe sure to contact them back, and have a great day!\n\nSincerely,\nSpellNOW! Support Team"""
 
-    body_part = MIMEText(body_text, 'plain')
-    msg.attach(body_part)
-    with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
-        smtp_obj.ehlo()
-        smtp_obj.starttls()
-        smtp_obj.ehlo()
-        smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
-        smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
+        body_part = MIMEText(body_text, 'plain')
+        msg.attach(body_part)
+        with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
+            smtp_obj.ehlo()
+            smtp_obj.starttls()
+            smtp_obj.ehlo()
+            smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
+            smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
+    except:
+        pass
     
     return HttpResponseRedirect(reverse("index"))
 
@@ -719,12 +722,18 @@ def login(request):
 
 def register(request):
     if request.method == "POST":
-        pfname = request.POST["pfname"]
-        plname = request.POST["plname"]
-        pusername = request.POST["pusername"]
-        pemail = request.POST["pemail"]
-        ppasswordi = request.POST["ppassword"]
-        pparentid = 0
+        parent_fname = request.POST["pfname"]
+        parent_lname = request.POST["plname"]
+        parent_username = request.POST["pusername"]
+        parent_email = request.POST["pemail"]
+        parent_password = request.POST["ppassword"]
+        
+        student_fname = request.POST["fname"]
+        student_lname = request.POST["lname"]
+        student_username = request.POST["username"]
+        student_email = request.POST["email"]
+        student_password = request.POST["password"]
+
         form=MyForm(request.POST)
 
         if not form.is_valid():
@@ -733,19 +742,39 @@ def register(request):
                 "message": "Invalid captcha."
             })
 
-        if not Account.objects.filter(username=pusername).exists():
-            it1 = random.randint(10000, 99999)
-            it2 = random.randint(10000, 99999)
-            confreq = ConfirmReq(fname = pfname, lname = plname, username = pusername, email = pemail, password = ppasswordi, lock1 = it1, lock2 = it2, parent=None)
-            confreq.save()
-            parentid = confreq.id
+        if (not Account.objects.filter(username=parent_username).exists()) and (not Account.objects.filter(username=student_username).exists()):
+            pit1 = random.randint(10000, 99999)
+            pit2 = random.randint(10000, 99999)
+
+            puser = Account.objects.create_user(parent_username, parent_email, parent_password, trigger=True, repsub=True, changenotifs=True, parent=True, parents=None)
+            puser.first_name = parent_fname
+            puser.last_name = parent_lname
+            puser.is_active = False
+            puser.save()
+
+            pconfreq = ConfirmReq(user = puser, lock1 = pit1, lock2 = pit2)
+            pconfreq.save()
+
+            cit1 = random.randint(10000, 99999)
+            cit2 = random.randint(10000, 99999)
+
+            user = Account.objects.create_user(student_username, student_email, student_password, trigger=True, repsub=True, changenotifs=True, parent=False, parents=Account.objects.get(username=parent_username).id)
+            user.first_name = student_fname
+            user.last_name = student_lname
+            user.is_active = False
+            user.save()
+            puser.children.add(user)
+            puser.save()
+
+            cconfreq = ConfirmReq(user = user, lock1 = cit1, lock2 = cit2)
+            cconfreq.save()
 
             try:
                 msg = MIMEMultipart()
                 msg['Subject'] = 'Official SpellNOW! Notification! -- Validate Email'
                 msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
                 msg["To"] = request.POST["email"]
-                body_text = """Hello!\n\nThis is an official SpellNOW! Notification. You have recently attempted to register for a SpellNOW! account. As per SpellNOW! policy you must click the link below to validate your email address in order to complete account setup.\n\nhttps://spellnow.org/uservalidate/""" + str(confreq.id) + """-""" + str(it1) + """-""" + str(it2) + """\n\nThank you, and we hope you enjoy your continued use of SpellNOW!\n\nSincerely,\nSpellNOW! Support Team"""
+                body_text = """Hello!\n\nThis is an official SpellNOW! Notification. You have recently attempted to register for a SpellNOW! account. As per SpellNOW! policy you must click the link below to validate your email address in order to complete account setup.\n\nhttps://spellnow.org/uservalidate/""" + str(pconfreq.id) + """-""" + str(pit1) + """-""" + str(pit2) + """\n\nThank you, and we hope you enjoy your continued use of SpellNOW!\n\nSincerely,\nSpellNOW! Support Team"""
                 body_part = MIMEText(body_text, 'plain')
                 msg.attach(body_part)
                 with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
@@ -756,42 +785,30 @@ def register(request):
                     smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
             except:
                 pass
-        else:
+
+            try:
+                msg = MIMEMultipart()
+                msg['Subject'] = 'Official SpellNOW! Notification! -- Validate Email'
+                msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
+                msg["To"] = request.POST["email"]
+                body_text = """Hello!\n\nThis is an official SpellNOW! Notification. Your parent recently attempted to register for a SpellNOW! account. As per SpellNOW! policy you must click the link below to validate your email address in order to complete account setup.\n\nhttps://spellnow.org/uservalidate/""" + str(cconfreq.id) + """-""" + str(cit1) + """-""" + str(cit2) + """\n\nThank you, and we hope you enjoy your continued use of SpellNOW!\n\nSincerely,\nSpellNOW! Support Team"""
+                body_part = MIMEText(body_text, 'plain')
+                msg.attach(body_part)
+                with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
+                    smtp_obj.ehlo()
+                    smtp_obj.starttls()
+                    smtp_obj.ehlo()
+                    smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
+                    smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
+            except:
+                pass
+
+            return HttpResponseRedirect(reverse("informvalidation"))
+        elif Account.objects.filter(username=parent_username).exists():
             return render(request, "spell/register.html", {
                 "form": MyForm(),
                 "message": "Parent username already taken."
             })
-        
-        fname = request.POST["fname"]
-        lname = request.POST["lname"]
-        username = request.POST["username"]
-        email = request.POST["email"]
-        passwordi = request.POST["password"]
-
-        if (not Account.objects.filter(username=username).exists()) and (not ConfirmReq.objects.filter(username=username).exists()):
-            it1 = random.randint(10000, 99999)
-            it2 = random.randint(10000, 99999)
-            confreq = ConfirmReq(fname = fname, lname = lname, username = username, email = email, password = passwordi, lock1 = it1, lock2 = it2, parent=parentid)
-            confreq.save()
-
-            try:
-                msg = MIMEMultipart()
-                msg['Subject'] = 'Official SpellNOW! Notification! -- Validate Email'
-                msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
-                msg["To"] = request.POST["email"]
-                body_text = """Hello!\n\nThis is an official SpellNOW! Notification. Your parent recently attempted to register for a SpellNOW! account. As per SpellNOW! policy you must click the link below to validate your email address in order to complete account setup.\n\nhttps://spellnow.org/uservalidate/""" + str(confreq.id) + """-""" + str(it1) + """-""" + str(it2) + """\n\nThank you, and we hope you enjoy your continued use of SpellNOW!\n\nSincerely,\nSpellNOW! Support Team"""
-                body_part = MIMEText(body_text, 'plain')
-                msg.attach(body_part)
-                with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
-                    smtp_obj.ehlo()
-                    smtp_obj.starttls()
-                    smtp_obj.ehlo()
-                    smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
-                    smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
-            except:
-                pass
-            
-            return HttpResponseRedirect(reverse("informvalidation"))
         else:
             return render(request, "spell/register.html", {
                 "form": MyForm(),
@@ -806,35 +823,41 @@ def single_register(request):
     if request.method == "POST":
         userusing = Account.objects.get(username=request.user.username)
         if userusing.parent:
-            fname = request.POST["fname"]
-            lname = request.POST["lname"]
-            username = request.POST["username"]
-            email = request.POST["email"]
-            passwordi = request.POST["password"]
+            student_fname = request.POST["fname"]
+            student_lname = request.POST["lname"]
+            student_username = request.POST["username"]
+            student_email = request.POST["email"]
+            student_password = request.POST["password"]
 
             form=MyForm(request.POST)
 
             if not form.is_valid():
-                return render(request, "spell/single_register.html", {
+                return render(request, "spell/register.html", {
                     "form": MyForm(),
-                    "message": "Invalid captcha.",
-                    "student": False
+                    "message": "Invalid captcha."
                 })
 
-            if (not Account.objects.filter(username=username).exists()) and (not ConfirmReq.objects.filter(username=username).exists()):
-                it1 = random.randint(10000, 99999)
-                it2 = random.randint(10000, 99999)
-                confreq = ConfirmReq(fname = request.user.first_name, lname = request.user.last_name, username = request.user.username, email = request.user.email, password = request.user.password, lock1 = 1, lock2 = 1, parent=None)
-                confreq.save()
-                confreq = ConfirmReq(fname = fname, lname = lname, username = username, email = email, password = passwordi, lock1 = it1, lock2 = it2, parent=confreq.id)
-                confreq.save()
+            if (not Account.objects.filter(username=student_username).exists()):
+                cit1 = random.randint(10000, 99999)
+                cit2 = random.randint(10000, 99999)
+
+                user = Account.objects.create_user(student_username, student_email, student_password, trigger=True, repsub=True, changenotifs=True, parent=False, parents=userusing.id)
+                user.first_name = student_fname
+                user.last_name = student_lname
+                user.is_active = False
+                user.save()
+                userusing.children.add(user)
+                userusing.save()
+
+                cconfreq = ConfirmReq(user = user, lock1 = cit1, lock2 = cit2)
+                cconfreq.save()
 
                 try:
                     msg = MIMEMultipart()
                     msg['Subject'] = 'Official SpellNOW! Notification! -- Validate Email'
                     msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
                     msg["To"] = request.POST["email"]
-                    body_text = """Hello!\n\nThis is an official SpellNOW! Notification. Your parent recently attempted to register for a SpellNOW! account. As per SpellNOW! policy you must click the link below to validate your email address in order to complete account setup.\n\nhttps://spellnow.org/uservalidate/""" + str(confreq.id) + """-""" + str(it1) + """-""" + str(it2) + """\n\nThank you, and we hope you enjoy your continued use of SpellNOW!\n\nSincerely,\nSpellNOW! Support Team"""
+                    body_text = """Hello!\n\nThis is an official SpellNOW! Notification. Your parent recently attempted to register for a SpellNOW! account. As per SpellNOW! policy you must click the link below to validate your email address in order to complete account setup.Z\n\nhttps://spellnow.org/uservalidate/""" + str(cconfreq.id) + """-""" + str(cit1) + """-""" + str(cit2) + """\n\nThank you, and we hope you enjoy your continued use of SpellNOW!\n\nSincerely,\nSpellNOW! Support Team"""
                     body_part = MIMEText(body_text, 'plain')
                     msg.attach(body_part)
                     with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
@@ -845,10 +868,10 @@ def single_register(request):
                         smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
                 except:
                     pass
-                
+
                 return HttpResponseRedirect(reverse("informvalidation"))
             else:
-                return render(request, "spell/single_register.html", {
+                return render(request, "spell/register.html", {
                     "form": MyForm(),
                     "message": "Student username already taken.",
                     "student": False
@@ -860,72 +883,77 @@ def single_register(request):
         return render(request, "spell/single_register.html", {"form": form, "student": False})
 
 def student_register(request):
-    if request.method == "POST":
-        fname = request.POST["fname"]
-        lname = request.POST["lname"]
-        username = request.POST["username"]
-        email = request.POST["email"]
-        passwordi = request.POST["password"]
+    student_fname = request.POST["fname"]
+    student_lname = request.POST["lname"]
+    student_username = request.POST["username"]
+    student_email = request.POST["email"]
+    student_password = request.POST["password"]
 
-        form=MyForm(request.POST)
+    form=MyForm(request.POST)
 
-        if not form.is_valid():
-            return render(request, "spell/register.html", {
-                "form": MyForm(),
-                "message": "Invalid captcha.",
-                "student": True
-            })
+    if not form.is_valid():
+        return render(request, "spell/register.html", {
+            "form": MyForm(),
+            "message": "Invalid captcha."
+        })
 
-        if not Account.objects.filter(username=username).exists():
-            it1 = random.randint(10000, 99999)
-            it2 = random.randint(10000, 99999)
-            confreq = ConfirmReq(fname = fname, lname = lname, username = username, email = email, password = passwordi, lock1 = it1, lock2 = it2, parent=None)
-            confreq.save()
+    if (not Account.objects.filter(username=student_username).exists()):
+        cit1 = random.randint(10000, 99999)
+        cit2 = random.randint(10000, 99999)
 
-            try:
-                msg = MIMEMultipart()
-                msg['Subject'] = 'Official SpellNOW! Notification! -- Validate Email'
-                msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
-                msg["To"] = request.POST["email"]
-                body_text = """Hello!\n\nThis is an official SpellNOW! Notification. Your recently attempted to register for a SpellNOW! account. As per SpellNOW! policy you must click the link below to validate your email address in order to complete account setup.\n\nhttps://spellnow.org/uservalidate/""" + str(confreq.id) + """-""" + str(it1) + """-""" + str(it2) + """\n\nThank you, and we hope you enjoy your continued use of SpellNOW!\n\nSincerely,\nSpellNOW! Support Team"""
-                body_part = MIMEText(body_text, 'plain')
-                msg.attach(body_part)
-                with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
-                    smtp_obj.ehlo()
-                    smtp_obj.starttls()
-                    smtp_obj.ehlo()
-                    smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
-                    smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
-            except:
-                pass
-            
-            return HttpResponseRedirect(reverse("informvalidation"))
-        else:
-            return render(request, "spell/register.html", {
-                "form": MyForm(),
-                "message": "Student username already taken.",
-                "student": True
-            })
+        user = Account.objects.create_user(student_username, student_email, student_password, trigger=True, repsub=True, changenotifs=True, newsletter=True, parent=False, parents=None)
+        user.first_name = student_fname
+        user.last_name = student_lname
+        user.is_active = False
+        user.save()
+
+        cconfreq = ConfirmReq(user = user, lock1 = cit1, lock2 = cit2)
+        cconfreq.save()
+
+        try:
+            msg = MIMEMultipart()
+            msg['Subject'] = 'Official SpellNOW! Notification! -- Validate Email'
+            msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
+            msg["To"] = request.POST["email"]
+            body_text = """Hello!\n\nThis is an official SpellNOW! Notification. You have recently attempted to register for a SpellNOW! account. As per SpellNOW! policy you must click the link below to validate your email address in order to complete account setup.\n\nhttps://spellnow.org/uservalidate/""" + str(cconfreq.id) + """-""" + str(cit1) + """-""" + str(cit2) + """\n\nThank you, and we hope you enjoy your continued use of SpellNOW!\n\nSincerely,\nSpellNOW! Support Team"""
+            body_part = MIMEText(body_text, 'plain')
+            msg.attach(body_part)
+            with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
+                smtp_obj.ehlo()
+                smtp_obj.starttls()
+                smtp_obj.ehlo()
+                smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
+                smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
+        except:
+            pass
+
+        return HttpResponseRedirect(reverse("informvalidation"))
+    else:
+        return render(request, "spell/register.html", {
+            "form": MyForm(),
+            "message": "Student username already taken.",
+            "student": True
+        })
 
 def uservalidate(request, userit, lockit1, lockit2):
-    idofuser=userit
+    confid=userit
     lock1=lockit1
     lock2=lockit2
 
-    try:
-        valid = ConfirmReq.objects.get(pk=idofuser, lock1=lock1, lock2=lock2)
-    
-        # Attempt to create new user
-        if (valid.parent == None) and (ConfirmReq.objects.filter(parent=valid.id).exists()):
-            student = ConfirmReq.objects.get(parent=valid.id)
+    if (ConfirmReq.objects.filter(pk=confid, lock1=lock1, lock2=lock2).exists()):
+        user = (ConfirmReq.objects.get(pk=confid, lock1=lock1, lock2=lock2)).user
+        user.is_active = True
+        user.save()
 
+        # Attempt to create new user
+        if user.parent == True:
             client = hubspot.Client.create(access_token=config.HUBSPOT_API_KEY)
 
             properties = {
-                "email": valid.email,
-                "firstname": valid.fname,
-                "lastname": valid.lname,
-                "username": valid.username,
+                "email": user.email,
+                "firstname": user.first_name,
+                "lastname": user.last_name,
+                "username": user.username,
                 "lifecyclestage": "customer",
                 "user_type": "Parent",
             }
@@ -936,20 +964,20 @@ def uservalidate(request, userit, lockit1, lockit2):
                 response = str(response)
                 response = (response.split(" 'id': '"))[1]
                 response = (response.split("'"))[0]
-
-                user = Account.objects.create_user(valid.username, valid.email, valid.password, trigger=True, repsub=True, changenotifs=True, parent=True, parents=None, contactid = int(response))
+                user.contactid = int(response)
+                user.save()
             except:
-                response = None
-                user = Account.objects.create_user(valid.username, valid.email, valid.password, trigger=True, repsub=True, changenotifs=True, parent=True, parents=None, contactid = None)
+                user.contactid = None
+                user.save()
 
         else:
             client = hubspot.Client.create(access_token=config.HUBSPOT_API_KEY)
 
             properties = {
-                "email": valid.email,
-                "firstname": valid.fname,
-                "lastname": valid.lname,
-                "username": valid.username,
+                "email": user.email,
+                "firstname": user.first_name,
+                "lastname": user.last_name,
+                "username": user.username,
                 "lifecyclestage": "customer",
                 "user_type": "Student",
             }
@@ -960,56 +988,16 @@ def uservalidate(request, userit, lockit1, lockit2):
                 response = str(response)
                 response = (response.split(" 'id': '"))[1]
                 response = (response.split("'"))[0]
-
-                user = Account.objects.create_user(valid.username, valid.email, valid.password, trigger=True, repsub=True, changenotifs=True, parent=True, parents=None, contactid = int(response))
-            except:
-                response = None
-                user = Account.objects.create_user(valid.username, valid.email, valid.password, trigger=True, repsub=True, changenotifs=True, parent=True, parents=None, contactid = None)
-        
-        user.first_name = valid.fname
-        user.last_name = valid.lname
-        user.save()
-
-        if user.parent:
-            try:
-                iguy = Account.objects.get(username=student.username)
-                iguy.parents = user.id
-                iguy.haschild = False
-                iguy.save()
-                user.children.add(iguy)
-                user.date_joined = iguy.date_joined
-                user.haschild = True
+                user.contactid = int(response)
                 user.save()
-                student.delete()
-                valid.delete()
             except:
-                pass
-        else:
-            try:
-                kool = ConfirmReq.objects.get(pk=idofuser, lock1=lock1, lock2=lock2)
-                par = Account.objects.get(username = (ConfirmReq.objects.get(pk=kool.parent)).username)
-                par.haschild = True
-                par.save()
-                user.haschild = False
-                par.children.add(user)
-                par.save()
-                user.parents = par.id
-                if par.haschild:
-                    user.date_joined = par.date_joined
+                user.contactid = None
                 user.save()
-                
-                (ConfirmReq.objects.get(pk=kool.parent)).delete()
-                
-                kool.delete()
-            except:
-                try:
-                    fun = (ConfirmReq.objects.get(pk=kool.parent))
-                except:
-                    kool.delete()
         
+        ConfirmReq.objects.get(pk=confid, lock1=lock1, lock2=lock2).delete()
         auth_login(request, user)
-        return HttpResponseRedirect(reverse("admin_panel"))
-    except:
+        return HttpResponseRedirect(reverse("index"))
+    else:
         return render(request, "spell/error_404.html", {})
 
 @login_required(login_url='/login')
@@ -3665,19 +3653,12 @@ def wordreports(request):
 @login_required(login_url='/login')
 def profile(request):
     account = Account.objects.get(username=request.user.username)
-    actualparent = False
-    if account.parent:
-        for account in Account.objects.filter(parents=account.id):
-            actualparent = True
     
-    if account.parent or ConfirmReq.objects.filter(username=account.username, parent=None) or ((not ConfirmReq.objects.filter(username=account.username).exists()) and (not Account.objects.filter(children__in=[account]).exists())):
-        actualparent = True
-
     return render(request, "spell/profile.html", {
         "bar": "",
         "active": "profilit",
         "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
-        "actualparent": actualparent,
+        "actualparent": (account.parent or (account.parents == None)),
     })
 
 @login_required(login_url='/login')
@@ -3690,24 +3671,27 @@ def deleteuser(request, id):
             # check if account of the same email exists
             if Account.objects.filter(email=student.email).exists():
                 new = Account.objects.filter(email=student.email).exclude(pk=student.id).first()
+                
+                try:
+                    if new.parent == False:
+                        user_type = "Student"
+                    else:
+                        user_type = "Parent"
 
-                if new.parent == False:
-                    user_type = "Student"
-                else:
-                    user_type = "Parent"
+                    client = hubspot.Client.create(access_token=config.HUBSPOT_API_KEY)
 
-                client = hubspot.Client.create(access_token=config.HUBSPOT_API_KEY)
-
-                properties = {
-                    "email": new.email,
-                    "firstname": new.first_name,
-                    "lastname": new.last_name,
-                    "username": new.username,
-                    "lifecyclestage": "customer",
-                    "user_type": user_type,
-                }
-                simple_public_object_input = SimplePublicObjectInput(properties=properties)
-                client.crm.contacts.basic_api.update(contact_id=str(student.contactid), simple_public_object_input=simple_public_object_input)
+                    properties = {
+                        "email": new.email,
+                        "firstname": new.first_name,
+                        "lastname": new.last_name,
+                        "username": new.username,
+                        "lifecyclestage": "customer",
+                        "user_type": user_type,
+                    }
+                    simple_public_object_input = SimplePublicObjectInput(properties=properties)
+                    client.crm.contacts.basic_api.update(contact_id=str(student.contactid), simple_public_object_input=simple_public_object_input)
+                except:
+                    pass
 
                 new.contactid = student.contactid
                 userusing.save()
@@ -3905,25 +3889,49 @@ def validatemail(request, userit, lockit1, lockit2):
     try:
         valid = EmailValidate.objects.get(userid=idofuser, lock1=lock1, lock2=lock2)
         userusing = Account.objects.get(pk=idofuser)
-
-        if userusing.changenotifs:
-            msg = MIMEMultipart()
-            msg['Subject'] = 'Official SpellNOW! Notification! -- Changes Made to Your Account'
-            msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
-            msg["To"] = valid.email
-            body_text = """Hello!\n\nThis is an official SpellNOW! Notification. The following email is to inform you as to the recent change(s) made to your SpellNOW! account.\n\n""" + "Email: " + userusing.username + " -> " + valid.email + """\n\nThank you, and we hope you enjoy your continued use of SpellNOW!\n\nSincerely,\nSpellNOW! Support Team"""
-
-            body_part = MIMEText(body_text, 'plain')
-            msg.attach(body_part)
-            with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
-                smtp_obj.ehlo()
-                smtp_obj.starttls()
-                smtp_obj.ehlo()
-                smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
-                smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
-
         userusing.email = valid.email
         userusing.save()
+        
+        try:
+            if userusing.parent == False:
+                user_type = "Student"
+            else:
+                user_type = "Parent"
+
+            client = hubspot.Client.create(access_token=config.HUBSPOT_API_KEY)
+
+            properties = {
+                "email": userusing.email,
+                "firstname": userusing.first_name,
+                "lastname": userusing.last_name,
+                "username": userusing.username,
+                "lifecyclestage": "customer",
+                "user_type": user_type,
+            }
+            simple_public_object_input = SimplePublicObjectInput(properties=properties)
+            client.crm.contacts.basic_api.update(contact_id=str(userusing.contactid), simple_public_object_input=simple_public_object_input)
+        except:
+            pass
+
+        if userusing.changenotifs:
+            try:
+                msg = MIMEMultipart()
+                msg['Subject'] = 'Official SpellNOW! Notification! -- Changes Made to Your Account'
+                msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
+                msg["To"] = valid.email
+                body_text = """Hello!\n\nThis is an official SpellNOW! Notification. The following email is to inform you as to the recent change(s) made to your SpellNOW! account.\n\n""" + "Email: " + userusing.username + " -> " + valid.email + """\n\nThank you, and we hope you enjoy your continued use of SpellNOW!\n\nSincerely,\nSpellNOW! Support Team"""
+
+                body_part = MIMEText(body_text, 'plain')
+                msg.attach(body_part)
+                with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
+                    smtp_obj.ehlo()
+                    smtp_obj.starttls()
+                    smtp_obj.ehlo()
+                    smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
+                    smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
+            except:
+                pass
+
         valid.delete()
         return HttpResponseRedirect(reverse("profile"))
     except:
