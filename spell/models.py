@@ -11,16 +11,10 @@ class Account(User):
     children = models.ManyToManyField("Account", blank=True)
     parents = models.IntegerField(null=True, blank=True)
     repsub = models.BooleanField()
-    haschild = models.BooleanField(null=True, blank=True)
     contactid = models.IntegerField(null=True, blank=True)
 
 class ConfirmReq(models.Model):
-    fname = models.TextField(max_length=300)
-    lname = models.TextField(max_length=300)
-    username = models.TextField(max_length=300)
-    email = models.TextField(max_length=300)
-    password = models.CharField(max_length=255)
-    parent = models.IntegerField(null=True, blank=True)
+    user = models.ForeignKey(Account, on_delete=models.CASCADE)
     lock1 = models.IntegerField()
     lock2 = models.IntegerField()
 
