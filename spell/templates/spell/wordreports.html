@@ -47,7 +47,7 @@
                 <h5 class="card-title">Word Report</h5>
                 <p>The following report populates all words attempted by a student <i>in a spelling activity</i>. Each 'check' and 'cross' symbol indicates each
                   attempt the student made. The 'check' symbol indicates the student correctly spelled the word. The 'cross' symbol indicates
-                  the student incorrectly spelled the word. You can even filter words by tags using the function below.</p>
+                  the student incorrectly spelled the word. You can even filter words by identifiers using the function below.</p>
                 <div style="width: 100%;" class="row g-3">
                   <div style="width: 50%;" class="col-md-4">
                     <div style="width: 100%; height: 50px;" class="row g-3">
@@ -65,6 +65,7 @@
                     </div>
                   </div>
                   <div style="width: 50%;" class="col-md-4">
+                    <p><b>Tags (Ctrl + click)</b></p>
                     <div style="width: 100%;" class="row g-3">
                       <div style="width: 100%;" class="col-md-4">
                         <div class="form-floating mb-3">
@@ -78,6 +79,21 @@
                       <select style="height: 200px;" name="tags_request" class="form-select" multiple>
                         {% for tag in tags %}
                           <option id="Tag - {{ tag.name }}" value="{{ tag.name }}">{{ tag.name }}</option>
+                        {% endfor %}
+                      </select>
+                      <br>
+                      <p><b>Roots (Ctrl + click)</b></p>
+                      <div style="width: 100%;" class="row g-3">
+                        <div style="width: 100%;" class="col-md-4">
+                          <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="search_roots" spellcheck="false" autocomplete="off" name="search" placeholder="Search...">
+                            <label for="search_roots">Search Roots</label>
+                          </div>
+                        </div>
+                      </div>
+                      <select style="height: 200px;" name="roots_request" class="form-select" multiple>
+                        {% for root in roots %}
+                          <option id="Root - {{ root.name }}" value="{{ root.name }}">{{ root.name }}</option>
                         {% endfor %}
                       </select>
                       <br>
@@ -113,6 +129,13 @@
       tags_requests = "[]";
     }
     const tags_request = JSON.parse(tags_requests);
+
+    roots_requests = "{{ roots_request|safe }}";
+    roots_requests = roots_requests.replace(/'/g, '"');
+    if (roots_requests == "") {
+      roots_requests = "[]";
+    }
+    const roots_request = JSON.parse(roots_requests);
 
     const chunkSize = 10; // adjust chunk size as needed
 
@@ -162,14 +185,21 @@ function loadwords() {
 
     window.addEventListener('load', (event) => {
   for (i = 0; i < tags_request.length; i++) {
-    document.getElementById(tags_request[i]).selected = true;
+    document.getElementById("Tag - " + tags_request[i]).selected = true;
+  }
+
+  for (i = 0; i < roots_request.length; i++) {
+    document.getElementById("Root - " + roots_request[i]).selected = true;
   }
     });
 
     var g_alltags = "{{ alltags }}";
     const alltags = g_alltags.split("*..*");
     alltags.pop();
-    var filt = [];
+
+    var g_allroots = "{{ allroots }}";
+    const allroots = g_allroots.split("*..*");
+    allroots.pop();
 
     document.addEventListener("keyup", function(event) {
         if (document.activeElement.id == "search_tags") {
@@ -179,6 +209,16 @@ function loadwords() {
                 }
                 else {
                     document.getElementById("Tag - " + alltags[i]).style.display = "block";
+                }
+            }
+        }
+        else if(document.activeElement.id == "search_roots") {
+            for(var i = 0; i < allroots.length; i++) {
+                if (!((allroots[i].toLowerCase()).startsWith(document.getElementById("search_roots").value.toLowerCase()))) {
+                    document.getElementById("Root - " + allroots[i]).style.display = "none";
+                }
+                else {
+                    document.getElementById("Root - " + allroots[i]).style.display = "block";
                 }
             }
         }

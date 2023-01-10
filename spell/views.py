@@ -1323,6 +1323,7 @@ def word_library(request):
         
         word = request.POST["word"]
         tag_list = request.POST.getlist('*..*tags*..*')
+        root_list = request.POST.getlist('*..*roots*..*')
         which = request.POST["which"]
 
         if not word == "":
@@ -1337,7 +1338,7 @@ def word_library(request):
                         "bar": "libraries",
                         "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                         "active": "coolwords",
-                        "tags": Tag.objects.filter(parent=None),
+                        "tags": Tag.objects.all().exclude(parent=None),
                         "roots": Root.objects.all(),
                         "results": results
                     })
@@ -1346,12 +1347,12 @@ def word_library(request):
                         "bar": "libraries",
                         "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                         "active": "coolwords",
-                        "tags": Tag.objects.filter(parent=None),
+                        "tags": Tag.objects.all().exclude(parent=None),
                         "roots": Root.objects.all(),
                         "message": True
                     })
             else:
-                if len(tag_list) > 0:
+                if len(tag_list) > 0 or len(root_list) > 0:
                     if which == "ALL":
                         results = []
                         fun = []
@@ -1360,6 +1361,12 @@ def word_library(request):
                                 fun.append(Word.objects.filter(tagged=False))
                             else:
                                 fun.append(Word.objects.filter(word__contains=word, tags__id=int(id)))
+                        
+                        for id in root_list:
+                            if id == "*..*":
+                                fun.append(Word.objects.filter(rooted=False))
+                            else:
+                                fun.append(Word.objects.filter(word__contains=word, roots__id=int(id)))
                         
                         for i in range(len(fun)):
                             if not i == 0:
@@ -1373,7 +1380,7 @@ def word_library(request):
                                 "bar": "libraries",
                                 "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                                 "active": "coolwords",
-                                "tags": Tag.objects.filter(parent=None),
+                                "tags": Tag.objects.all().exclude(parent=None),
                                 "roots": Root.objects.all(),
                                 "results": results
                             })
@@ -1382,7 +1389,7 @@ def word_library(request):
                                 "bar": "libraries",
                                 "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                                 "active": "coolwords",
-                                "tags": Tag.objects.filter(parent=None),
+                                "tags": Tag.objects.all().exclude(parent=None),
                                 "roots": Root.objects.all(),
                                 "message": True
                             })
@@ -1394,6 +1401,12 @@ def word_library(request):
                             else:
                                 stuff.append(Word.objects.filter(word__contains=word, tags__id=int(id)))
                         
+                        for id in root_list:
+                            if id == "*..*":
+                                fun.append(Word.objects.filter(rooted=False))
+                            else:
+                                fun.append(Word.objects.filter(word__contains=word, roots__id=int(id)))
+                        
                             results = []
                             for thingy in stuff:
                                 for i in thingy:
@@ -1404,7 +1417,7 @@ def word_library(request):
                                     "bar": "libraries",
                                     "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                                     "active": "coolwords",
-                                    "tags": Tag.objects.filter(parent=None),
+                                    "tags": Tag.objects.all().exclude(parent=None),
                                     "roots": Root.objects.all(),
                                     "results": set(results)
                                 })
@@ -1413,7 +1426,7 @@ def word_library(request):
                                     "bar": "libraries",
                                     "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                                     "active": "coolwords",
-                                    "tags": Tag.objects.filter(parent=None),
+                                    "tags": Tag.objects.all().exclude(parent=None),
                                     "roots": Root.objects.all(),
                                     "message": True
                                 })
@@ -1429,12 +1442,17 @@ def word_library(request):
                         else:
                             results.extend(list((Word.objects.filter(tags__id__in=fun, word__contains=word)).distinct()))
                         
+                        if "*..*" in root_list:
+                            results.extend(list((Word.objects.filter((Q(roots__id__in=fun) | Q(rooted=False)) & Q(word__contains=word))).distinct()))
+                        else:
+                            results.extend(list((Word.objects.filter(roots__id__in=fun, word__contains=word)).distinct()))
+                        
                         if len(results) > 0:
                             return render(request, "spell/word_library.html", {
                                 "bar": "libraries",
                                 "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                                 "active": "coolwords",
-                                "tags": Tag.objects.filter(parent=None),
+                                "tags": Tag.objects.all().exclude(parent=None),
                                 "roots": Root.objects.all(),
                                 "results": results
                             })
@@ -1443,7 +1461,7 @@ def word_library(request):
                                 "bar": "libraries",
                                 "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                                 "active": "coolwords",
-                                "tags": Tag.objects.filter(parent=None),
+                                "tags": Tag.objects.all().exclude(parent=None),
                                 "roots": Root.objects.all(),
                                 "message": True
                             })
@@ -1455,7 +1473,7 @@ def word_library(request):
                             "bar": "libraries",
                             "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                             "active": "coolwords",
-                            "tags": Tag.objects.filter(parent=None),
+                            "tags": Tag.objects.all().exclude(parent=None),
                             "roots": Root.objects.all(),
                             "results": results
                         })
@@ -1464,12 +1482,12 @@ def word_library(request):
                             "bar": "libraries",
                             "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                             "active": "coolwords",
-                            "tags": Tag.objects.filter(parent=None),
+                            "tags": Tag.objects.all().exclude(parent=None),
                             "roots": Root.objects.all(),
                             "message": True
                         })
         else:
-            if len(tag_list) > 0:
+            if len(tag_list) > 0 or len(root_list) > 0:
                 if which == "ALL":
                     results = []
                     fun = []
@@ -1478,6 +1496,12 @@ def word_library(request):
                             fun.append(Word.objects.filter(tagged=False))
                         else:
                             fun.append(Word.objects.filter(tags__id=int(id)))
+                    
+                    for id in root_list:
+                        if id == "*..*":
+                            fun.append(Word.objects.filter(rooted=False))
+                        else:
+                            fun.append(Word.objects.filter(word__contains=word, roots__id=int(id)))
                     
                     for i in range(len(fun)):
                         if not i == 0:
@@ -1491,7 +1515,7 @@ def word_library(request):
                             "bar": "libraries",
                             "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                             "active": "coolwords",
-                            "tags": Tag.objects.filter(parent=None),
+                            "tags": Tag.objects.all().exclude(parent=None),
                             "roots": Root.objects.all(),
                             "results": results
                         })
@@ -1500,7 +1524,7 @@ def word_library(request):
                             "bar": "libraries",
                             "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                             "active": "coolwords",
-                            "tags": Tag.objects.filter(parent=None),
+                            "tags": Tag.objects.all().exclude(parent=None),
                             "roots": Root.objects.all(),
                             "message": True
                         })
@@ -1516,13 +1540,23 @@ def word_library(request):
                         results.extend(list((Word.objects.filter(Q(tags__id__in=fun) | Q(tagged=False))).distinct()))
                     else:
                         results.extend(list((Word.objects.filter(tags__id__in=fun)).distinct()))
+
+                    fun = []
+                    for i in root_list:
+                        if not i == "*..*":
+                            fun.append(int(i))
+                    
+                    if "*..*" in root_list:
+                        results.extend(list((Word.objects.filter(Q(roots__id__in=fun) | Q(rooted=False))).distinct()))
+                    else:
+                        results.extend(list((Word.objects.filter(roots__id__in=fun)).distinct()))
                     
                     if len(results) > 0:
                         return render(request, "spell/word_library.html", {
                             "bar": "libraries",
                             "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                             "active": "coolwords",
-                            "tags": Tag.objects.filter(parent=None),
+                            "tags": Tag.objects.all().exclude(parent=None),
                             "roots": Root.objects.all(),
                             "results": results
                         })
@@ -1531,7 +1565,7 @@ def word_library(request):
                             "bar": "libraries",
                             "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                             "active": "coolwords",
-                            "tags": Tag.objects.filter(parent=None),
+                            "tags": Tag.objects.all().exclude(parent=None),
                             "roots": Root.objects.all(),
                             "message": True
                         })
@@ -1543,7 +1577,7 @@ def word_library(request):
                         "bar": "libraries",
                         "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                         "active": "coolwords",
-                        "tags": Tag.objects.filter(parent=None),
+                        "tags": Tag.objects.all().exclude(parent=None),
                         "roots": Root.objects.all(),
                         "results": results
                     })
@@ -1552,7 +1586,7 @@ def word_library(request):
                         "bar": "libraries",
                         "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
                         "active": "coolwords",
-                        "tags": Tag.objects.filter(parent=None),
+                        "tags": Tag.objects.all().exclude(parent=None),
                         "roots": Root.objects.all(),
                         "message": True
                     })
@@ -1561,7 +1595,7 @@ def word_library(request):
             "bar": "libraries",
             "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
             "active": "coolwords",
-            "tags": Tag.objects.filter(parent=None),
+            "tags": Tag.objects.all().exclude(parent=None),
             "roots": Root.objects.all()
         })
 
@@ -3537,15 +3571,22 @@ def wordreports(request):
     if userusing.parent:
         if request.method == "POST":
             reqs = request.POST.getlist("tags_request")
+            reqs.extend(request.POST.getlist("roots_request"))
 
             if len(reqs) != 0:
-                tags_request = []
+                reqs = request.POST.getlist("tags_request")
+                id_request = []
                 for req in reqs:
-                    tags_request.append("Tag - " + req)
+                    id_request.append("Tag - " + req)
+                
+                reqs = request.POST.getlist("roots_request")
+                id_request = []
+                for req in reqs:
+                    id_request.append("Root - " + req)
 
-                repdet = list(ReportDetail.objects.filter(report__user=Account.objects.get(pk=request.POST["child"]), report__specific = False, identification__in=tags_request).values_list('word', flat=True).distinct())
-                alldets = list(ReportDetail.objects.filter(report__user=Account.objects.get(pk=request.POST["child"]), report__specific = False, identification__in=tags_request).values_list('word', flat=True))
-                allres = list(ReportDetail.objects.filter(report__user=Account.objects.get(pk=request.POST["child"]), report__specific = False, identification__in=tags_request).values_list('result', flat=True))
+                repdet = list(ReportDetail.objects.filter(report__user=Account.objects.get(pk=request.POST["child"]), report__specific = False, identification__in=id_request).values_list('word', flat=True).distinct())
+                alldets = list(ReportDetail.objects.filter(report__user=Account.objects.get(pk=request.POST["child"]), report__specific = False, identification__in=id_request).values_list('word', flat=True))
+                allres = list(ReportDetail.objects.filter(report__user=Account.objects.get(pk=request.POST["child"]), report__specific = False, identification__in=id_request).values_list('result', flat=True))
 
                 alltags = ""
 
@@ -3561,8 +3602,11 @@ def wordreports(request):
                     "alldets": alldets,
                     "allres": allres,
                     "tags": Tag.objects.all().order_by('name'),
+                    "roots": Root.objects.all().order_by('name'),
                     "alltags": alltags,
-                    "tags_request": tags_request,
+                    "allroots": allroots,
+                    "tags_request": request.POST.getlist("tags_request"),
+                    "roots_request": request.POST.getlist("roots_request"),
                     "child": request.POST["child"],
                     "children": userusing.children.all(),
                 })
@@ -3575,6 +3619,11 @@ def wordreports(request):
 
                 for tag in Tag.objects.all():
                     alltags += tag.name + "*..*"
+                
+                allroots = ""
+
+                for root in Root.objects.all():
+                    allroots += root.name + "*..*"
 
                 return render(request, "spell/wordreports.html", {
                     "bar": "fullreports",
@@ -3585,7 +3634,9 @@ def wordreports(request):
                     "alldets": alldets,
                     "allres": allres,
                     "tags": Tag.objects.all().order_by('name'),
+                    "roots": Root.objects.all().order_by('name'),
                     "alltags": alltags,
+                    "allroots": allroots,
                     "child": request.POST["child"],
                     "children": userusing.children.all(),
                 })
@@ -3601,18 +3652,27 @@ def wordreports(request):
     else:
         if request.method == "POST":
             reqs = request.POST.getlist("tags_request")
-            tags_request = []
+            id_request = []
             for req in reqs:
-                tags_request.append("Tag - " + req)
+                id_request.append("Tag - " + req)
+            
+            reqs = request.POST.getlist("roots_request")
+            for req in reqs:
+                id_request.append("Root - " + req)
 
-            repdet = list(ReportDetail.objects.filter(report__user=request.user, report__specific = False, identification__in=tags_request).values_list('word', flat=True).distinct())
-            alldets = list(ReportDetail.objects.filter(report__user=request.user, report__specific = False, identification__in=tags_request).values_list('word', flat=True))
-            allres = list(ReportDetail.objects.filter(report__user=request.user, report__specific = False, identification__in=tags_request).values_list('result', flat=True))
+            repdet = list(ReportDetail.objects.filter(report__user=request.user, report__specific = False, identification__in=id_request).values_list('word', flat=True).distinct())
+            alldets = list(ReportDetail.objects.filter(report__user=request.user, report__specific = False, identification__in=id_request).values_list('word', flat=True))
+            allres = list(ReportDetail.objects.filter(report__user=request.user, report__specific = False, identification__in=id_request).values_list('result', flat=True))
 
             alltags = ""
 
             for tag in Tag.objects.all():
                 alltags += tag.name + "*..*"
+
+            allroots = ""
+
+            for root in Root.objects.all():
+                allroots += root.name + "*..*"
 
             return render(request, "spell/wordreports.html", {
                 "bar": "fullreports",
@@ -3623,8 +3683,11 @@ def wordreports(request):
                 "alldets": alldets,
                 "allres": allres,
                 "tags": Tag.objects.all().order_by('name'),
+                "roots": Root.objects.all().order_by('name'),
                 "alltags": alltags,
-                "tags_request": tags_request,
+                "allroots": allroots,
+                "tags_request": request.POST.getlist("tags_request"),
+                "roots_request": request.POST.getlist("roots_request"),
             })
         else:
             repdet = list(ReportDetail.objects.filter(report__user=request.user, report__specific = False).values_list('word', flat=True).distinct())
@@ -3635,6 +3698,11 @@ def wordreports(request):
 
             for tag in Tag.objects.all():
                 alltags += tag.name + "*..*"
+            
+            allroots = ""
+
+            for root in Root.objects.all():
+                allroots += root.name + "*..*"
 
             return render(request, "spell/wordreports.html", {
                 "bar": "fullreports",
@@ -3645,7 +3713,9 @@ def wordreports(request):
                 "alldets": alldets,
                 "allres": allres,
                 "tags": Tag.objects.all().order_by('name'),
+                "roots": Root.objects.all().order_by('name'),
                 "alltags": alltags,
+                "allroots": allroots,
             })
 
 # Profile
