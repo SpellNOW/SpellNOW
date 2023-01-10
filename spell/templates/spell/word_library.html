@@ -40,13 +40,22 @@
                     </label>
                   </div>
                 </div>
-                <div class="col-md-4">
+                <div style="width:15%;" class="col-md-4">
                   <label for="validationDefault04" class="form-label">Tags (Ctrl + click)</label>
                   <select style="width:100%;" class="form-select" id="validationDefault04" multiple name="*..*tags*..*">
                     {% for tag in tags %}
                       <option value="{{ tag.id }}">{{ tag.name }}</option>
                     {% endfor %}
                       <option value="*..*">Untagged</option>
+                  </select>
+                </div>
+                <div style="width:15%;" class="col-md-4">
+                  <label for="validationDefault07" class="form-label">Roots (Ctrl + click)</label>
+                  <select style="width:100%;" class="form-select" id="validationDefault07" multiple name="*..*roots*..*">
+                    {% for root in roots %}
+                      <option value="{{ root.id }}">{{ root.name }}</option>
+                    {% endfor %}
+                      <option value="*..*">No Roots</option>
                   </select>
                 </div>
                 <div class="col-md-4">
