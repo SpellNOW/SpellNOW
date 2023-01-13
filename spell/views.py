@@ -28,7 +28,7 @@ import requests
 import hubspot
 from pprint import pprint
 from hubspot.crm.contacts import PublicGdprDeleteInput, SimplePublicObjectInput, ApiException
-import json
+from imgurpython import ImgurClient
 
 languages = ["Middle English","Latin", "French","German","Italian", "Greek", "Spanish", "Hebrew"]
 
@@ -4018,3 +4018,45 @@ def terms(request):
         "bar": "",
         "active": "terms",
     })
+
+def ischauhan(user):
+    if user.is_superuser:
+        return True
+    elif user.username == "anjalic123":
+        return True
+    else:
+        return False
+
+@user_passes_test(ischauhan, login_url='/login')
+@login_required(login_url='/login')
+def socialpost(request):
+    if request.method == "POST":
+        file = request.FILES["picture"]
+        fs = FileSystemStorage()
+        fs.save("spell/static/spell/post.jpg", file)
+        date = str(datetime.date.today().strftime("%m/%d/%Y"))
+        caption = "Word of the day..." + date + ".\nTo learn more words like this, visit https://spellnow.org. #WordOfTheDay #SpellNOW"
+        
+        payload = {
+            "post": caption,
+            "platforms": ["facebook", "twitter", "instagram", "linkedin"],
+            "mediaUrls": ["https://spellnow.org/static/spell/post.jpg"],
+        }
+        
+        # Live API Key
+        headers = {'Content-Type': 'application/json', 
+                'Authorization': 'Bearer ' + config.AYRSHARE_API_KEY}
+        
+        r = requests.post('https://app.ayrshare.com/api/post', 
+            json=payload, 
+            headers=headers)
+        
+        os.remove("spell/static/spell/post.jpg")
+        
+        return HttpResponseRedirect(reverse("socialpost"))     
+    else:
+        return render(request, "spell/socialpost.html", {
+            "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+            "bar": "",
+            "active": "socialpost",
+        })
