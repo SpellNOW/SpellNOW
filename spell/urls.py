@@ -76,4 +76,7 @@ urlpatterns = [
 
     path("privacy", views.privacy, name="privacy"),
     path("terms", views.terms, name="terms"),
+
+    # Social
+    path("socialpost", views.socialpost, name="socialpost"),
 ]

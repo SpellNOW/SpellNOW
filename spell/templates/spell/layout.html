@@ -178,6 +178,14 @@
         </li><!-- End Components Nav -->
 
         <li class="nav-heading">Pages</li>
+        {% if request.user.is_superuser or request.user.username == "anjalic123" %}
+          <li class="nav-item">
+            <a id="socialpost" class="nav-link collapsed" href="/socialpost">
+              <i class="ri ri-broadcast-fill"></i>
+              <span>Word of the Day</span>
+            </a>
+          </li><!-- End Dashboard Nav -->
+        {% endif %}
         <li class="nav-item">
           <a id="profilit" class="nav-link collapsed" href="/profile">
             <i class="bi bi-person"></i>
