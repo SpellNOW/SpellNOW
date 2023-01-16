@@ -4053,7 +4053,7 @@ def socialpost(request):
         
         # Live API Key
         headers = {'Content-Type': 'application/json', 
-                'Authorization': 'Bearer ' + config.AYRSHARE_API_KEY}
+                'Authorization': 'Bearer ' + config.ARYSHARE_API_KEY}
         
         r = requests.post('https://app.ayrshare.com/api/post', 
             json=payload, 
