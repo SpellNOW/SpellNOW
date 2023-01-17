@@ -10,6 +10,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 from pathlib import Path
 import pymysql
 import config
+from spell.customconf import GoogleCrawlerMiddleware
 
 pymysql.install_as_MySQLdb()
 
@@ -32,10 +33,8 @@ AUTO_LOGOUT = {'IDLE_TIME': 7200}
 
 
 # Application definition
-
 INSTALLED_APPS = [
     'sslserver',
-    'spell',
     'captcha',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -43,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'spell',
 ]
 
 MIDDLEWARE = [
@@ -54,6 +54,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_auto_logout.middleware.auto_logout',
+    'spell.customconf.GoogleCrawlerMiddleware',
 ]
 
 ROOT_URLCONF = 'SpellNOW.urls'

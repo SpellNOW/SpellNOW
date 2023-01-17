@@ -696,14 +696,6 @@ def contact(request):
 
 # Authorization pages
 def login(request):
-    if request.META.get('HTTP_USER_AGENT', '') == "Mediapartners-Google":
-        username = "crawler"
-        password = "bot"
-        user = authenticate(request, username=username, password=password)
-        form=MyForm(request.POST)
-        
-        auth_login(request, user)
-        return HttpResponseRedirect(reverse("admin_panel"))
     if request.method == "POST":
         # Attempt to sign user in
         username = request.POST["username"]
@@ -3461,7 +3453,6 @@ def reports(request):
     if userusing.parent:
         if request.method == "POST":
             fun = Account.objects.get(pk=int(request.POST["child"]))
-            print(fun)
 
             return render(request, "spell/reports.html", {
                 "bar": "fullreports",
@@ -4041,7 +4032,7 @@ def socialpost(request):
     if request.method == "POST":
         file = request.FILES["picture"]
         fs = FileSystemStorage()
-        fs.save("spell/static/spell/post.jpg", file)
+        fs.save("/home/ubuntu/SpellNOW/spell/static/spell/post.jpg", file)
         date = str(datetime.date.today().strftime("%m/%d/%Y"))
         caption = "Word of the day..." + date + ".\nTo learn more words like this, visit https://spellnow.org. #WordOfTheDay #SpellNOW"
         
@@ -4050,16 +4041,15 @@ def socialpost(request):
             "platforms": ["facebook", "twitter", "instagram", "linkedin"],
             "mediaUrls": ["https://spellnow.org/static/spell/post.jpg"],
         }
-        
         # Live API Key
         headers = {'Content-Type': 'application/json', 
-                'Authorization': 'Bearer ' + config.ARYSHARE_API_KEY}
+                'Authorization': 'Bearer ' + config.AYRSHARE_API_KEY}
         
         r = requests.post('https://app.ayrshare.com/api/post', 
             json=payload, 
             headers=headers)
         
-        os.remove("spell/static/spell/post.jpg")
+        os.remove("/home/ubuntu/SpellNOW/spell/static/spell/post.jpg")
         
         return HttpResponseRedirect(reverse("socialpost"))     
     else:
