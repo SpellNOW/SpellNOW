@@ -26,7 +26,7 @@
               <p>Spell the words you hear and type your answer in the box below.
                 Add tags to words after you have spelled them for review.</p>
               <div id="nothing">
-                <button onclick="neword()" style="display: block;" class="btn btn-primary" type="button">Click to Launch Activity</button>
+                <button onclick="neword(false)" style="display: block;" class="btn btn-primary" type="button">Click to Launch Activity</button>
               </div>
               
               <div id="everything" style="display:none;">
@@ -42,7 +42,8 @@
                             </div>
                           </div>
                           <div style="width:20%;" class="col-md-4">
-                            <button type="button" class="btn btn-primary" id="check" onclick="spell()">CHECK</button>
+                            <button style="width: 100%; font-size: 12px;" type="button" class="btn btn-primary" id="check" onclick="spell()">CHECK</button>
+                            <button style="width: 100%; font-size: 12px;" type="button" class="btn btn-info" id="goback" onclick="back()" disabled>BACK</button>
                           </div>
                         </div>
                         <p><b style="display: none;" id="response"></b></p>
@@ -144,6 +145,7 @@
     const prons = g_prons.split(' || ');
 
     var global_count = 0;
+    var actual_count = 1;
     var correct = 0;
     var progress = 0;
     var word_count = words.length;
@@ -152,45 +154,116 @@
     var stopwatch;
     stopwatch = setInterval(function () {if (document.getElementById("nothing").style.display == "none") {watch++;}}, 1000);
     
-    function neword() {
-        document.getElementById("nothing").style.display = "none";
-        document.getElementById("everything").style.display = "block";
-        if (speech.length != 0) {
-            document.getElementById("speech").innerHTML = ("<b>Part of Speech: </b>" + speech[global_count])
+    function back() {
+        global_count -= 1;
+        document.getElementById("spelling").disabled = true;
+        document.getElementById("check").innerHTML = "NEXT";
+        document.getElementById("response").style.display = "none";
+        if (global_count == 0) {
+            document.getElementById("goback").disabled = true;
         }
-        if (origins.length != 0) {
-            var funny = origins[global_count].split("--++--");
-            document.getElementById("origin").innerHTML = "<ol>"
-            for (var i = 0; i < 3; i++) {
-                if (funny[i] != "-||-") {
-                    document.getElementById("origin").innerHTML += ("<li>" + funny[i] + "</li>");
-                }
-                document.getElementById("origin").innerHTML += "</ol>"
-            }
+        try {
+            document.getElementById("tags").style.display = "block";
+            document.getElementById("roots").style.display = "block";
         }
-        if (definition.length != 0) {
-            var funny = definition[global_count].split("--++--");
-            document.getElementById("def").innerHTML = "<ol>"
-            for (var i = 0; i < 3; i++) {
-                if (funny[i] != "-||-") {
-                    document.getElementById("def").innerHTML += ("<li>" + funny[i] + "</li>");
-                }
-                document.getElementById("def").innerHTML += "</ol>"
-            }
+        catch(err) {}
+        try {
+            document.getElementById("alltags").innerHTML = alltags_inner;
+            document.getElementById("allroots").innerHTML = allroots_inner;
+            document.getElementById("search_tags").value = ""
+            document.getElementById("search_roots").value = ""
         }
-        var prons_test = prons[global_count];
-        prons_test = prons_test.replaceAll("'", '"');
+        catch(err) {}
 
-        if (prons_test.includes("*--*")) {
-            var snd = new Audio("/static/spell/sounds/" + words[global_count] + ".mp3");
-            snd.play();
+        try {
+            const tester = lalith[global_count].split("&lt;&gt;");
+            for (let i = 0; i < tester.length; i++) {
+                document.getElementById(tester[i]).style.color = "rgb(255, 255, 255)";
+                document.getElementById(tester[i]).style.backgroundColor = "rgb(13, 110, 253)";
+            }
+
+            const bob = rahil[global_count].split("&lt;&gt;");
+            for (let i = 0; i < bob.length; i++) {
+                document.getElementById("|--|" + bob[i]).style.color = "rgb(255, 255, 255)";
+                document.getElementById("|--|" + bob[i]).style.backgroundColor = "rgb(37, 207, 242)";
+            }
+        }
+        catch(err) {}
+        neword(true);
+    }
+
+    function neword(back) {
+        if (!back) {
+            document.getElementById("nothing").style.display = "none";
+            document.getElementById("everything").style.display = "block";
+            if (speech.length != 0) {
+                document.getElementById("speech").innerHTML = ("<b>Part of Speech: </b>" + speech[global_count])
+            }
+            if (origins.length != 0) {
+                var funny = origins[global_count].split("--++--");
+                document.getElementById("origin").innerHTML = "<ol>"
+                for (var i = 0; i < 3; i++) {
+                    if (funny[i] != "-||-") {
+                        document.getElementById("origin").innerHTML += ("<li>" + funny[i] + "</li>");
+                    }
+                    document.getElementById("origin").innerHTML += "</ol>"
+                }
+            }
+            if (definition.length != 0) {
+                var funny = definition[global_count].split("--++--");
+                document.getElementById("def").innerHTML = "<ol>"
+                for (var i = 0; i < 3; i++) {
+                    if (funny[i] != "-||-") {
+                        document.getElementById("def").innerHTML += ("<li>" + funny[i] + "</li>");
+                    }
+                    document.getElementById("def").innerHTML += "</ol>"
+                }
+            }
+            var prons_test = prons[global_count];
+            prons_test = prons_test.replaceAll("'", '"');
+
+            if (prons_test.includes("*--*")) {
+                var snd = new Audio("/static/spell/sounds/" + words[global_count] + ".mp3");
+                snd.play();
+            }
+            else {
+                obj = JSON.parse(prons_test)
+                for (var i = 0; i < obj.length; i++) {
+                    pron_link = obj[i];
+                    const myTimeout = setTimeout(pronounce, 1000);
+                }
+            }
         }
         else {
-            obj = JSON.parse(prons_test)
-            for (var i = 0; i < obj.length; i++) {
-                pron_link = obj[i];
-                const myTimeout = setTimeout(pronounce, 1000);
+            document.getElementById("nothing").style.display = "none";
+            document.getElementById("everything").style.display = "block";
+            if (speech.length != 0) {
+                document.getElementById("speech").innerHTML = ("<b>Part of Speech: </b>" + speech[global_count])
             }
+            if (origins.length != 0) {
+                var funny = origins[global_count].split("--++--");
+                document.getElementById("origin").innerHTML = "<ol>"
+                for (var i = 0; i < 3; i++) {
+                    if (funny[i] != "-||-") {
+                        document.getElementById("origin").innerHTML += ("<li>" + funny[i] + "</li>");
+                    }
+                    document.getElementById("origin").innerHTML += "</ol>"
+                }
+            }
+            if (definition.length != 0) {
+                var funny = definition[global_count].split("--++--");
+                document.getElementById("def").innerHTML = "<ol>"
+                for (var i = 0; i < 3; i++) {
+                    if (funny[i] != "-||-") {
+                        document.getElementById("def").innerHTML += ("<li>" + funny[i] + "</li>");
+                    }
+                    document.getElementById("def").innerHTML += "</ol>"
+                }
+            }
+            var attempt = document.getElementById("attempts").value;
+            attempt = attempt.split(", ");
+            attempt = attempt[global_count];
+            document.getElementById("spelling").value = attempt;
         }
     }
 
@@ -256,6 +329,8 @@
                     }
                 }
                 catch(err) {}
+
+                document.getElementById("spelling").disabled = false;
             }
             else {
                 document.getElementById("response").style.display = "block";
@@ -294,14 +369,7 @@
             }
         }
         else if (document.getElementById("check").innerHTML == "NEXT") {
-            document.getElementById("response").style.display = "none";
-            try {
-                document.getElementById("tags").style.display = "none";
-                document.getElementById("roots").style.display = "none";
-            }
-            catch(err) {}
-            document.getElementById("spelling").value = "";
-            document.getElementById("check").innerHTML = "CHECK"
+            global_count += 1;
 
             try {
                 document.getElementById("alltags").innerHTML = alltags_inner;
@@ -311,12 +379,69 @@
             }
             catch(err) {}
 
-            global_count += 1;
-            
-            document.getElementById("time").innerHTML += (watch + ", ");
-            watch = 0;
+            try {
+                const tester = lalith[global_count].split("&lt;&gt;");
+                for (let i = 0; i < tester.length; i++) {
+                    document.getElementById(tester[i]).style.color = "rgb(255, 255, 255)";
+                    document.getElementById(tester[i]).style.backgroundColor = "rgb(13, 110, 253)";
+                }
 
-            neword();
+                const bob = rahil[global_count].split("&lt;&gt;");
+                for (let i = 0; i < bob.length; i++) {
+                    document.getElementById("|--|" + bob[i]).style.color = "rgb(255, 255, 255)";
+                    document.getElementById("|--|" + bob[i]).style.backgroundColor = "rgb(37, 207, 242)";
+                }
+            }
+            catch(err) {}
+            
+            if (global_count + 1 <= actual_count && global_count + 1 <= (document.getElementById("attempts").value.split(", ").length - 1)) {
+                document.getElementById("spelling").disabled = true;
+                document.getElementById("goback").disabled = false;
+                if (global_count + 1 == word_count) {
+                    document.getElementById("check").innerHTML = "FINISH";
+                }
+                else {
+                    document.getElementById("check").innerHTML = "NEXT";
+                }
+                document.getElementById("response").style.display = "none";
+                if (global_count == 0) {
+                    document.getElementById("goback").disabled = true;
+                }
+                neword(true);
+            }
+            else if (actual_count == (document.getElementById("attempts").value.split(", ").length - 1)) {
+                document.getElementById("response").style.display = "none";
+                try {
+                    document.getElementById("tags").style.display = "none";
+                    document.getElementById("roots").style.display = "none";
+                }
+                catch(err) {}
+                document.getElementById("spelling").value = "";
+                document.getElementById("check").innerHTML = "CHECK"
+
+                try {
+                    document.getElementById("alltags").innerHTML = alltags_inner;
+                    document.getElementById("allroots").innerHTML = allroots_inner;
+                    document.getElementById("search_tags").value = ""
+                    document.getElementById("search_roots").value = ""
+                }
+                catch(err) {}
+                
+                document.getElementById("time").innerHTML += (watch + ", ");
+                watch = 0;
+                actual_count += 1;
+                document.getElementById("goback").disabled = false;
+                document.getElementById("spelling").disabled = false;
+                neword(false);
+            }
+            else {
+                document.getElementById("spelling").disabled = false;
+                document.getElementById("spelling").value = "";
+                document.getElementById("goback").disabled = false;
+                document.getElementById("check").innerHTML = "CHECK";
+                document.getElementById("response").style.display = "none";
+                neword(true);
+            }
         }
         else {
             document.getElementById("time").innerHTML += (watch + ", ");
