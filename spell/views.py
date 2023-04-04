@@ -23,7 +23,7 @@ from captcha.fields import CaptchaField
 import datetime
 from bs4 import BeautifulSoup
 import re
-import config
+import config_file
 import requests
 import hubspot
 from pprint import pprint
@@ -267,7 +267,7 @@ def dictionarydotcom_scrape(word_to_scrape):
     return 1
 
 def merriammedialapi_scrape(word_to_scrape):
-    r = requests.get('https://www.dictionaryapi.com/api/v3/references/medical/json/' + word_to_scrape + '?key=' + config.MERRIAMMEDIALAPI_KEY)
+    r = requests.get('https://www.dictionaryapi.com/api/v3/references/medical/json/' + word_to_scrape + '?key=' + config_file.MERRIAMMEDIALAPI_KEY)
     info = r.json()
     data = []
     
@@ -398,7 +398,7 @@ def merriammedialapi_scrape(word_to_scrape):
 
 def oxfordapi(word_to_scrape):
     app_id = "ad49f899"
-    app_key = config.OXFORDAPI_KEY
+    app_key = config_file.OXFORDAPI_KEY
     endpoint = "entries"
     language_code = "en-us"
 
@@ -493,7 +493,7 @@ def is_word(word):
     error = False
     info = ""
 
-    r = requests.get('https://dictionaryapi.com/api/v3/references/collegiate/json/' + word + '?key=' + config.MERRIAMAPI_KEY)
+    r = requests.get('https://dictionaryapi.com/api/v3/references/collegiate/json/' + word + '?key=' + config_file.MERRIAMAPI_KEY)
 
     try:
         info = r.json()
@@ -687,7 +687,7 @@ def contact(request):
             smtp_obj.ehlo()
             smtp_obj.starttls()
             smtp_obj.ehlo()
-            smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
+            smtp_obj.login("support@spellnow.org", config_file.SMTP_PASS)
             smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
     except:
         pass
@@ -789,7 +789,7 @@ def register(request):
                     smtp_obj.ehlo()
                     smtp_obj.starttls()
                     smtp_obj.ehlo()
-                    smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
+                    smtp_obj.login("support@spellnow.org", config_file.SMTP_PASS)
                     smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
             except:
                 pass
@@ -806,7 +806,7 @@ def register(request):
                     smtp_obj.ehlo()
                     smtp_obj.starttls()
                     smtp_obj.ehlo()
-                    smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
+                    smtp_obj.login("support@spellnow.org", config_file.SMTP_PASS)
                     smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
             except:
                 pass
@@ -872,7 +872,7 @@ def single_register(request):
                         smtp_obj.ehlo()
                         smtp_obj.starttls()
                         smtp_obj.ehlo()
-                        smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
+                        smtp_obj.login("support@spellnow.org", config_file.SMTP_PASS)
                         smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
                 except:
                     pass
@@ -930,7 +930,7 @@ def student_register(request):
                 smtp_obj.ehlo()
                 smtp_obj.starttls()
                 smtp_obj.ehlo()
-                smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
+                smtp_obj.login("support@spellnow.org", config_file.SMTP_PASS)
                 smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
         except:
             pass
@@ -955,7 +955,7 @@ def uservalidate(request, userit, lockit1, lockit2):
 
         # Attempt to create new user
         if user.parent == True:
-            client = hubspot.Client.create(access_token=config.HUBSPOT_API_KEY)
+            client = hubspot.Client.create(access_token=config_file.HUBSPOT_API_KEY)
 
             properties = {
                 "email": user.email,
@@ -979,7 +979,7 @@ def uservalidate(request, userit, lockit1, lockit2):
                 user.save()
 
         else:
-            client = hubspot.Client.create(access_token=config.HUBSPOT_API_KEY)
+            client = hubspot.Client.create(access_token=config_file.HUBSPOT_API_KEY)
 
             properties = {
                 "email": user.email,
@@ -2822,7 +2822,7 @@ def finish(request):
                 smtp_obj.ehlo()
                 smtp_obj.starttls()
                 smtp_obj.ehlo()
-                smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
+                smtp_obj.login("support@spellnow.org", config_file.SMTP_PASS)
                 smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
     except:
         pass
@@ -3441,7 +3441,7 @@ def vocab_finish(request):
                 smtp_obj.ehlo()
                 smtp_obj.starttls()
                 smtp_obj.ehlo()
-                smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
+                smtp_obj.login("support@spellnow.org", config_file.SMTP_PASS)
                 smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
     except:
         pass
@@ -3756,7 +3756,7 @@ def deleteuser(request, id):
                     else:
                         user_type = "Parent"
 
-                    client = hubspot.Client.create(access_token=config.HUBSPOT_API_KEY)
+                    client = hubspot.Client.create(access_token=config_file.HUBSPOT_API_KEY)
 
                     properties = {
                         "email": new.email,
@@ -3775,7 +3775,7 @@ def deleteuser(request, id):
                 userusing.save()
                 student.delete()
             else:
-                client = hubspot.Client.create(access_token=config.HUBSPOT_API_KEY)
+                client = hubspot.Client.create(access_token=config_file.HUBSPOT_API_KEY)
                 
                 public_gdpr_delete_input = PublicGdprDeleteInput(object_id=str(student.contactid))
                 client.crm.contacts.gdpr_api.purge(public_gdpr_delete_input=public_gdpr_delete_input)
@@ -3826,7 +3826,7 @@ def changedetails(request):
             smtp_obj.ehlo()
             smtp_obj.starttls()
             smtp_obj.ehlo()
-            smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
+            smtp_obj.login("support@spellnow.org", config_file.SMTP_PASS)
             smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
 
     if userusing.email != request.POST["email"] and request.POST["email"] != "":
@@ -3847,7 +3847,7 @@ def changedetails(request):
                 smtp_obj.ehlo()
                 smtp_obj.starttls()
                 smtp_obj.ehlo()
-                smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
+                smtp_obj.login("support@spellnow.org", config_file.SMTP_PASS)
                 smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
         except:
             pass
@@ -3909,7 +3909,7 @@ def changenotifs(request):
             smtp_obj.ehlo()
             smtp_obj.starttls()
             smtp_obj.ehlo()
-            smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
+            smtp_obj.login("support@spellnow.org", config_file.SMTP_PASS)
             smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
 
     return HttpResponseRedirect(reverse("profile"))
@@ -3934,7 +3934,7 @@ def changepassword(request):
                 smtp_obj.ehlo()
                 smtp_obj.starttls()
                 smtp_obj.ehlo()
-                smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
+                smtp_obj.login("support@spellnow.org", config_file.SMTP_PASS)
                 smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
             
             return HttpResponseRedirect(reverse("profile"))
@@ -3976,7 +3976,7 @@ def validatemail(request, userit, lockit1, lockit2):
             else:
                 user_type = "Parent"
 
-            client = hubspot.Client.create(access_token=config.HUBSPOT_API_KEY)
+            client = hubspot.Client.create(access_token=config_file.HUBSPOT_API_KEY)
 
             properties = {
                 "email": userusing.email,
@@ -4005,7 +4005,7 @@ def validatemail(request, userit, lockit1, lockit2):
                     smtp_obj.ehlo()
                     smtp_obj.starttls()
                     smtp_obj.ehlo()
-                    smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
+                    smtp_obj.login("support@spellnow.org", config_file.SMTP_PASS)
                     smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
             except:
                 pass
@@ -4053,7 +4053,7 @@ def socialpost(request):
         
         # Live API Key
         headers = {'Content-Type': 'application/json', 
-                'Authorization': 'Bearer ' + config.AYRSHARE_API_KEY}
+                'Authorization': 'Bearer ' + config_file.AYRSHARE_API_KEY}
         
         r = requests.post('https://app.ayrshare.com/api/post', 
             json=payload, 
