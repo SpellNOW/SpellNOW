@@ -9,8 +9,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 from pathlib import Path
 import pymysql
-import config_file
-from spell.customconf import GoogleCrawlerMiddleware
+import config
 
 pymysql.install_as_MySQLdb()
 
@@ -22,19 +21,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config_file.DJANGO_SECRET_KEY
+SECRET_KEY = config.DJANGO_SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-DEBUG = config_file.DEBUG
+DEBUG = config.DEBUG
 
 ALLOWED_HOSTS = ['*']
 AUTO_LOGOUT = {'IDLE_TIME': 7200}
 
 
 # Application definition
+
 INSTALLED_APPS = [
     'sslserver',
+    'spell',
     'captcha',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -42,7 +43,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'spell',
 ]
 
 MIDDLEWARE = [
@@ -54,7 +54,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_auto_logout.middleware.auto_logout',
-    'spell.customconf.GoogleCrawlerMiddleware',
 ]
 
 ROOT_URLCONF = 'SpellNOW.urls'
@@ -84,9 +83,9 @@ DATABASES = {
     'default': {  
         'ENGINE': 'django.db.backends.mysql',  
         'NAME': 'SpellNOW',  
-        'USER': config_file.DB_USER,
-        'PASSWORD': config_file.DB_PASSWORD,
-        'HOST': config_file.DB_HOST,  
+        'USER': config.DB_USER,
+        'PASSWORD': config.DB_PASSWORD,
+        'HOST': config.DB_HOST,  
         'PORT': '3306',
     }  
 }
