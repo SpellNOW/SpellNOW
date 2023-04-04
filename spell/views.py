@@ -268,7 +268,10 @@ def dictionarydotcom_scrape(word_to_scrape):
 
 def merriammedialapi_scrape(word_to_scrape):
     r = requests.get('https://www.dictionaryapi.com/api/v3/references/medical/json/' + word_to_scrape + '?key=' + config.MERRIAMMEDIALAPI_KEY)
-    info = r.json()
+    try:
+        info = r.json()
+    except:
+        return -1
     data = []
     
     if r.status_code != 200:

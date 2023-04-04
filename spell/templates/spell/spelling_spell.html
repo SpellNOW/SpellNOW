@@ -264,6 +264,22 @@
             attempt = attempt.split(", ");
             attempt = attempt[global_count];
             document.getElementById("spelling").value = attempt;
+
+            var result = correct_array;
+            result = result.split(", ");
+            result = result[global_count];
+            var word = document.getElementById("words").value;
+            word = word.split(", ");
+            word = word[global_count];
+            if (result == "0") {
+                document.getElementById("response").style.color = "red";
+                document.getElementById("response").innerHTML = "INCORRECT: The correct spelling is '" + word + "'.";
+            }
+            else {
+                document.getElementById("response").style.color = "green";
+                document.getElementById("response").innerHTML = "CORRECT!";
+            }
+            document.getElementById("response").style.display = "block";
         }
     }
 

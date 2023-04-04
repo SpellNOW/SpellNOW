@@ -38,25 +38,25 @@
                             <p id="question">My amazing question</p>
                             <fieldset class="row mb-3">
                                 <div class="col-sm-10">
-                                  <div class="form-check">
+                                  <div class="form-check" id="form-checkA">
                                     <input class="form-check-input" type="radio" name="gridRadios" id="gridRadiosA" value="option1">
                                     <label class="form-check-label" id="optionA" for="gridRadiosA">
                                       First radio
                                     </label>
                                   </div>
-                                  <div class="form-check">
+                                  <div class="form-check" id="form-checkB">
                                     <input class="form-check-input" type="radio" name="gridRadios" id="gridRadiosB" value="option2">
                                     <label class="form-check-label" id="optionB" for="gridRadiosB">
                                       Second radio
                                     </label>
                                   </div>
-                                  <div class="form-check">
+                                  <div class="form-check" id="form-checkC">
                                     <input class="form-check-input" type="radio" name="gridRadios" id="gridRadiosC" value="option">
                                     <label class="form-check-label" id="optionC" for="gridRadiosC">
                                       Third radio
                                     </label>
                                   </div>
-                                  <div class="form-check">
+                                  <div class="form-check" id="form-checkD">
                                     <input class="form-check-input" type="radio" name="gridRadios" id="gridRadiosD" value="option">
                                     <label class="form-check-label" id="optionD" for="gridRadiosD">
                                       Fourth radio
@@ -68,6 +68,7 @@
                         <p><b style="display: none;" id="response"></b></p>
                           <div style="width:20%;" class="col-md-4">
                             <button type="button" class="btn btn-primary" id="check" onclick="spell()">CHECK</button>
+                            <button type="button" class="btn btn-info" id="goback" onclick="back()" disabled>BACK</button>
                           </div>
                         </div>
                     </div>
@@ -108,6 +109,7 @@
     answers.pop();
 
     var global_count = 0;
+    var actual_count = 1;
     var correct = 0;
     var progress = 0;
     var word_count = words.length;
@@ -116,7 +118,29 @@
     var stopwatch;
     stopwatch = setInterval(function () {if (document.getElementById("nothing").style.display == "none") {watch++;}}, 1000);
     
-    function neword() {
+    function back() {
+        global_count -= 1;
+        actual_count -= 1;
+        document.getElementById("form-checkA").classList.add("disabled");
+        document.getElementById("form-checkB").classList.add("disabled");
+        document.getElementById("form-checkC").classList.add("disabled");
+        document.getElementById("form-checkD").classList.add("disabled");
+
+        document.getElementById("gridRadiosA").disabled = true;
+        document.getElementById("gridRadiosB").disabled = true;
+        document.getElementById("gridRadiosC").disabled = true;
+        document.getElementById("gridRadiosD").disabled = true;
+
+        document.getElementById("check").innerHTML = "NEXT";
+        document.getElementById("response").style.display = "none";
+        if (global_count == 0) {
+            document.getElementById("goback").disabled = true;
+        }
+        neword(true);
+    }
+
+    function neword(back) {
+      if (!back) {
         document.getElementById("nothing").style.display = "none";
         document.getElementById("everything").style.display = "block";
         var coolio = options[global_count].split("--00--");
@@ -126,6 +150,82 @@
         document.getElementById("optionB").innerHTML = coolio[1];
         document.getElementById("optionC").innerHTML = coolio[2];
         document.getElementById("optionD").innerHTML = coolio[3];
+      }
+      else {
+        document.getElementById("gridRadiosA").checked = false;
+            document.getElementById("gridRadiosB").checked = false;
+            document.getElementById("gridRadiosC").checked = false;
+            document.getElementById("gridRadiosD").checked = false;
+
+            document.getElementById("optionA").style.color = "#444444";
+            document.getElementById("optionB").style.color = "#444444";
+            document.getElementById("optionC").style.color = "#444444";
+            document.getElementById("optionD").style.color = "#444444";
+
+            document.getElementById("optionA").style.fontWeight = "normal";
+            document.getElementById("optionB").style.fontWeight = "normal";
+            document.getElementById("optionC").style.fontWeight = "normal";
+            document.getElementById("optionD").style.fontWeight = "normal";
+
+        var coolio = options[global_count].split("--00--");
+        
+        document.getElementById("question").innerHTML = questions[global_count];
+        document.getElementById("optionA").innerHTML = coolio[0];
+        document.getElementById("optionB").innerHTML = coolio[1];
+        document.getElementById("optionC").innerHTML = coolio[2];
+        document.getElementById("optionD").innerHTML = coolio[3];
+
+        var thing_answers = document.getElementById("attempts").value.split("9009");
+        thing_answers.pop();
+        
+        if (document.getElementById("optionA").innerHTML == thing_answers[global_count]) {
+            document.getElementById("gridRadiosA").checked = true;
+        } 
+        else if (document.getElementById("optionB").innerHTML == thing_answers[global_count]) {
+            document.getElementById("gridRadiosB").checked = true;
+        }
+        else if (document.getElementById("optionC").innerHTML == thing_answers[global_count]) {
+            document.getElementById("gridRadiosC").checked = true;
+        } 
+        else {
+            document.getElementById("optionD").checked = true;
+        }
+        
+        if (document.getElementById("gridRadios" + answers[global_count]).checked != true) {
+            var chosen = "";
+
+            if (document.getElementById("gridRadiosA").checked) {
+                chosen = "A";
+            } 
+            else if (document.getElementById("gridRadiosB").checked) {
+                chosen = "B";
+            } 
+            else if (document.getElementById("gridRadiosC").checked) {
+                chosen = "C";
+            } 
+            else {
+                chosen = "D";
+            }
+
+            document.getElementById("option" + chosen).style.fontWeight = "bold";
+            document.getElementById("option" + chosen).style.color = "red";
+
+            document.getElementById("option" + answers[global_count]).style.fontWeight = "bold";
+            document.getElementById("option" + answers[global_count]).style.color = "green";
+            
+            document.getElementById("response").style.display = "block";
+            document.getElementById("response").style.color = "red";
+            document.getElementById("response").innerHTML = "INCORRECT! The correct answer is " + answers[global_count] + ".";
+        }
+        else {
+            document.getElementById("option" + answers[global_count]).style.fontWeight = "bold";
+            document.getElementById("option" + answers[global_count]).style.color = "green";
+            
+            document.getElementById("response").style.display = "block";
+            document.getElementById("response").style.color = "green";
+            document.getElementById("response").innerHTML = "CORRECT!";
+        }
+      }
     }
 
     function spell() {
@@ -215,8 +315,78 @@
             
             document.getElementById("time").innerHTML += (watch + ", ");
             watch = 0;
+            actual_count += 1;
 
-            neword();
+            if (global_count + 1 <= actual_count && global_count + 1 <= (document.getElementById("attempts").value.split("9009").length - 1)) {
+              document.getElementById("form-checkA").classList.add("disabled");
+              document.getElementById("form-checkB").classList.add("disabled");
+              document.getElementById("form-checkC").classList.add("disabled");
+              document.getElementById("form-checkD").classList.add("disabled");
+
+              document.getElementById("gridRadiosA").disabled = true;
+              document.getElementById("gridRadiosB").disabled = true;
+              document.getElementById("gridRadiosC").disabled = true;
+              document.getElementById("gridRadiosD").disabled = true;
+                document.getElementById("goback").disabled = false;
+                if (global_count + 1 == word_count) {
+                    document.getElementById("check").innerHTML = "FINISH";
+                }
+                else {
+                    document.getElementById("check").innerHTML = "NEXT";
+                }
+                document.getElementById("response").style.display = "none";
+                if (global_count == 0) {
+                    document.getElementById("goback").disabled = true;
+                }
+                neword(true);
+            }
+            else if (actual_count == (document.getElementById("attempts").value.split("9009").length - 1)) {
+                document.getElementById("response").style.display = "none";
+                try {
+                    document.getElementById("tags").style.display = "none";
+                    document.getElementById("roots").style.display = "none";
+                }
+                catch(err) {}
+                document.getElementById("check").innerHTML = "CHECK"
+
+                try {
+                    document.getElementById("alltags").innerHTML = alltags_inner;
+                    document.getElementById("allroots").innerHTML = allroots_inner;
+                    document.getElementById("search_tags").value = ""
+                    document.getElementById("search_roots").value = ""
+                }
+                catch(err) {}
+                
+                document.getElementById("time").innerHTML += (watch + ", ");
+                watch = 0;
+                actual_count += 1;
+                document.getElementById("goback").disabled = false;
+                document.getElementById("form-checkA").classList.remove("disabled");
+                document.getElementById("form-checkB").classList.remove("disabled");
+                document.getElementById("form-checkC").classList.remove("disabled");
+                document.getElementById("form-checkD").classList.remove("disabled");
+
+                document.getElementById("gridRadiosA").disabled = false;
+                document.getElementById("gridRadiosB").disabled = false;
+                document.getElementById("gridRadiosC").disabled = false;
+                document.getElementById("gridRadiosD").disabled = false;
+                neword(false);
+            }
+            else {
+                document.getElementById("form-checkA").classList.remove("disabled");
+                document.getElementById("form-checkB").classList.remove("disabled");
+                document.getElementById("form-checkC").classList.remove("disabled");
+                document.getElementById("form-checkD").classList.remove("disabled");
+
+                document.getElementById("gridRadiosA").disabled = false;
+                document.getElementById("gridRadiosB").disabled = false;
+                document.getElementById("gridRadiosC").disabled = false;
+                document.getElementById("gridRadiosD").disabled = false;
+                document.getElementById("goback").disabled = false;
+                document.getElementById("check").innerHTML = "CHECK";
+                document.getElementById("response").style.display = "none";
+                neword(false);
+            }
         }
         else {
             document.getElementById("time").innerHTML += (watch + ", ");
