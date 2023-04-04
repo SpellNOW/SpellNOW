@@ -9,7 +9,7 @@ urlpatterns = [
     path("contactrender", views.contactrender, name="contactrender"),
 
     # Authorization pages
-    path("login", views.login, name="login"),
+    path("login/", views.login, name="login"),
     path("register", views.register, name="register"),
     path("single_register", views.single_register, name="single_register"),
     path("student_register", views.student_register, name="student_register"),
