@@ -135,7 +135,7 @@ def merriamweb_scrape(word_to_scrape):
     except:
         data.append("")
 
-    with open('wordsscraped.csv', 'a', newline='', encoding='utf-8') as csvfile:
+    with open(config.FILES_LOC + 'spell/static/spell/wordsscraped.csv', 'a', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(data)
     return 1
@@ -261,7 +261,7 @@ def dictionarydotcom_scrape(word_to_scrape):
     except:
         data.append("")
     
-    with open('wordsscraped.csv', 'a', newline='', encoding='utf-8') as csvfile:
+    with open(config.FILES_LOC + 'spell/static/spell/wordsscraped.csv', 'a', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(data)
     return 1
@@ -392,7 +392,7 @@ def merriammedialapi_scrape(word_to_scrape):
         data.append(final_origin[2])        
         data.append(audio)        
 
-        with open('wordsscraped.csv', 'a', newline='', encoding='utf-8') as csvfile:
+        with open(config.FILES_LOC + 'spell/static/spell/wordsscraped.csv', 'a', newline='', encoding='utf-8') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(data)
         
@@ -482,7 +482,7 @@ def oxfordapi(word_to_scrape):
             except Exception as e: 
                 data.append("")
 
-        with open('wordsscraped.csv', 'a', newline='', encoding='utf-8') as csvfile:
+        with open(config.FILES_LOC + 'spell/static/spell/wordsscraped.csv', 'a', newline='', encoding='utf-8') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(data)
         return 1
@@ -1857,14 +1857,14 @@ def word_import(request):
         request_id = request.POST["request-id"]
 
         if request_id == "new-words":
-            if exists("spell/static/spell/words.csv"):
-                os.remove("spell/static/spell/words.csv")
+            if exists(config.FILES_LOC + "spell/static/spell/words.csv"):
+                os.remove(config.FILES_LOC + "spell/static/spell/words.csv")
             nots = []
             already = []
             file = request.FILES["csv"]
             fs = FileSystemStorage()
-            fs.save("spell/static/spell/words.csv", file)
-            f = open("spell/static/spell/words.csv", "r")
+            fs.save(config.FILES_LOC + "spell/static/spell/words.csv", file)
+            f = open(config.FILES_LOC + "spell/static/spell/words.csv", "r")
             reader = csv.reader(f)
             next(reader)
             for row in reader:
@@ -1881,15 +1881,15 @@ def word_import(request):
                 else:
                     already.append(new_word)
             f.close()
-            os.remove("spell/static/spell/words.csv")
+            os.remove(config.FILES_LOC + "spell/static/spell/words.csv")
 
-            if exists("wordsscraped.csv"):
-                os.remove("wordsscraped.csv")
+            if exists(config.FILES_LOC + "spell/static/spell/wordsscraped.csv"):
+                os.remove(config.FILES_LOC + "spell/static/spell/wordsscraped.csv")
 
             if len(nots) > 0:
                 header = ['word', 'def1','def2','def3', 'pos', 'loo1','loo2','loo3', 'soundfile']
 
-                with open('wordsscraped.csv', 'a', newline='', encoding='utf-8') as csvfile:
+                with open(config.FILES_LOC + 'spell/static/spell/wordsscraped.csv', 'a', newline='', encoding='utf-8') as csvfile:
                     writer = csv.writer(csvfile)
                     writer.writerow(header)
 
@@ -1910,11 +1910,11 @@ def word_import(request):
                                 if li_ret <= 0:
                                     data.append(my_word)
                                     data.append("WORD NOT FOUND")
-                                    with open('wordsscraped.csv', 'a', newline='', encoding='utf-8') as csvfile:
+                                    with open(config.FILES_LOC + 'spell/static/spell/wordsscraped.csv', 'a', newline='', encoding='utf-8') as csvfile:
                                         writer = csv.writer(csvfile)
                                         writer.writerow(data)
 
-                with open('wordsscraped.csv', 'r', encoding='utf-8') as csvfile:
+                with open(config.FILES_LOC + 'spell/static/spell/wordsscraped.csv', 'r', encoding='utf-8') as csvfile:
                     reader = csv.reader(csvfile)
                     next(reader)
                     
@@ -1951,7 +1951,7 @@ def word_import(request):
                         except:
                             pass
             
-            os.remove("wordsscraped.csv")
+            os.remove(config.FILES_LOC + "spell/static/spell/wordsscraped.csv")
 
             for duplicate in Word.objects.values("word").annotate(records=Count("word")).filter(records__gt=1):
                 for word in Word.objects.filter(word=duplicate["word"])[1:]:
@@ -1988,13 +1988,13 @@ def word_import(request):
             else:
                 return HttpResponseRedirect(reverse("word_library"))
         elif request_id == "custom-words":
-            if exists("spell/static/spell/custom.csv"):
-                os.remove("spell/static/spell/custom.csv")
+            if exists(config.FILES_LOC + "spell/static/spell/custom.csv"):
+                os.remove(config.FILES_LOC + "spell/static/spell/custom.csv")
             already = []
             file = request.FILES["csv"]
             fs = FileSystemStorage()
-            fs.save("spell/static/spell/custom.csv", file)
-            f = open("spell/static/spell/custom.csv", "r")
+            fs.save(config.FILES_LOC + "spell/static/spell/custom.csv", file)
+            f = open(config.FILES_LOC + "spell/static/spell/custom.csv", "r")
             reader = csv.reader(f)
             next(reader)
             for row in reader:
@@ -2043,13 +2043,13 @@ def word_import(request):
             else:
                 return HttpResponseRedirect(reverse("word_library"))
         elif request_id == "del-words":
-            if exists("spell/static/spell/delete-words.csv"):
-                os.remove("spell/static/spell/delete-words.csv")
+            if exists(config.FILES_LOC + "spell/static/spell/delete-words.csv"):
+                os.remove(config.FILES_LOC + "spell/static/spell/delete-words.csv")
             nots = []
             file = request.FILES["csv"]
             fs = FileSystemStorage()
-            fs.save("spell/static/spell/delete-words.csv", file)
-            f = open("spell/static/spell/delete-words.csv", "r")
+            fs.save(config.FILES_LOC + "spell/static/spell/delete-words.csv", file)
+            f = open(config.FILES_LOC + "spell/static/spell/delete-words.csv", "r")
             reader = csv.reader(f)
             next(reader)
             for row in reader:
@@ -2064,10 +2064,10 @@ def word_import(request):
                     word = Word.objects.get(word=final)
                     word.delete()
 
-                    if exists("spell/static/spell/sounds/" + final + ".mp3"):
-                        os.remove("spell/static/spell/sounds/" + final + ".mp3")
+                    if exists(config.FILES_LOC + "spell/static/spell/sounds/" + final + ".mp3"):
+                        os.remove(config.FILES_LOC + "spell/static/spell/sounds/" + final + ".mp3")
             f.close()
-            os.remove("spell/static/spell/delete-words.csv")
+            os.remove(config.FILES_LOC + "spell/static/spell/delete-words.csv")
 
             if len(nots) > 0:
                 return render(request, "spell/error.html", {
@@ -2080,14 +2080,14 @@ def word_import(request):
             else:
                 return HttpResponseRedirect(reverse("word_library"))
         elif "add-tag" in request_id:
-            if exists("spell/static/spell/insert-tags.csv"):
-                os.remove("spell/static/spell/insert-tags.csv")
+            if exists(config.FILES_LOC + "spell/static/spell/insert-tags.csv"):
+                os.remove(config.FILES_LOC + "spell/static/spell/insert-tags.csv")
             nots = []
             already = []
             file = request.FILES["csv"]
             fs = FileSystemStorage()
-            fs.save("spell/static/spell/insert-tags.csv", file)
-            f = open("spell/static/spell/insert-tags.csv", "r")
+            fs.save(config.FILES_LOC + "spell/static/spell/insert-tags.csv", file)
+            f = open(config.FILES_LOC + "spell/static/spell/insert-tags.csv", "r")
             reader = csv.reader(f)
             next(reader)
             tag = Tag.objects.get(pk=(request_id.split("-"))[2])
@@ -2107,13 +2107,13 @@ def word_import(request):
                     word.tagged = True
                     word.save()
             f.close()
-            os.remove("spell/static/spell/insert-tags.csv")
+            os.remove(config.FILES_LOC + "spell/static/spell/insert-tags.csv")
 
             if len(nots) > 0:
                 fields = ['Words']
                     
                 # writing to csv file 
-                with open("spell/static/spell/CustomTemplate.csv", 'w', newline="") as csvfile:
+                with open(config.FILES_LOC + "spell/static/spell/CustomTemplate.csv", 'w', newline="") as csvfile:
                     csvwriter = csv.writer(csvfile) 
                     csvwriter.writerow(fields)
                     
@@ -2152,13 +2152,13 @@ def word_import(request):
             else:
                 return HttpResponseRedirect(reverse("tag_library"))
         elif "del-tag" in request_id:
-            if exists("spell/static/spell/delete-tags.csv"):
-                os.remove("spell/static/spell/delete-tags.csv")
+            if exists(config.FILES_LOC + "spell/static/spell/delete-tags.csv"):
+                os.remove(config.FILES_LOC + "spell/static/spell/delete-tags.csv")
             nots = []
             file = request.FILES["csv"]
             fs = FileSystemStorage()
-            fs.save("spell/static/spell/delete-tags.csv", file)
-            f = open("spell/static/spell/delete-tags.csv", "r")
+            fs.save(config.FILES_LOC + "spell/static/spell/delete-tags.csv", file)
+            f = open(config.FILES_LOC + "spell/static/spell/delete-tags.csv", "r")
             reader = csv.reader(f)
             next(reader)
             tag = Tag.objects.get(pk=(request_id.split("-"))[2])
@@ -2178,7 +2178,7 @@ def word_import(request):
                         word.tagged = False
                         word.save()
             f.close()
-            os.remove("spell/static/spell/delete-tags.csv")
+            os.remove(config.FILES_LOC + "spell/static/spell/delete-tags.csv")
 
             if len(nots) > 0:
                 return render(request, "spell/error.html", {
@@ -2191,14 +2191,14 @@ def word_import(request):
             else:
                 return HttpResponseRedirect(reverse("tag_library"))
         elif "add-root" in request_id:
-            if exists("spell/static/spell/add-roots.csv"):
-                os.remove("spell/static/spell/add-roots.csv")
+            if exists(config.FILES_LOC + "spell/static/spell/add-roots.csv"):
+                os.remove(config.FILES_LOC + "spell/static/spell/add-roots.csv")
             nots = []
             already = []
             file = request.FILES["csv"]
             fs = FileSystemStorage()
-            fs.save("spell/static/spell/add-roots.csv", file)
-            f = open("spell/static/spell/add-roots.csv", "r")
+            fs.save(config.FILES_LOC + "spell/static/spell/add-roots.csv", file)
+            f = open(config.FILES_LOC + "spell/static/spell/add-roots.csv", "r")
             reader = csv.reader(f)
             next(reader)
             roots = Root.objects.get(pk=(request_id.split("-"))[2])
@@ -2218,13 +2218,13 @@ def word_import(request):
                     word.rooted = True
                     word.save()
             f.close()
-            os.remove("spell/static/spell/add-roots.csv")
+            os.remove(config.FILES_LOC + "spell/static/spell/add-roots.csv")
 
             if len(nots) > 0:
                 fields = ['Words']
                     
                 # writing to csv file
-                with open("spell/static/spell/CustomTemplate.csv", 'w', newline="") as csvfile:
+                with open(config.FILES_LOC + "spell/static/spell/CustomTemplate.csv", 'w', newline="") as csvfile:
                     csvwriter = csv.writer(csvfile) 
                     csvwriter.writerow(fields)
                     
@@ -2263,13 +2263,13 @@ def word_import(request):
             else:
                 return HttpResponseRedirect(reverse("root_library"))
         elif "del-root" in request_id:
-            if exists("spell/static/spell/del-roots.csv"):
-                os.remove("spell/static/spell/del-roots.csv")
+            if exists(config.FILES_LOC + "spell/static/spell/del-roots.csv"):
+                os.remove(config.FILES_LOC + "spell/static/spell/del-roots.csv")
             nots = []
             file = request.FILES["csv"]
             fs = FileSystemStorage()
-            fs.save("spell/static/spell/del-roots.csv", file)
-            f = open("spell/static/spell/del-roots.csv", "r")
+            fs.save(config.FILES_LOC + "spell/static/spell/del-roots.csv", file)
+            f = open(config.FILES_LOC + "spell/static/spell/del-roots.csv", "r")
             reader = csv.reader(f)
             next(reader)
             root = Root.objects.get(pk=(request_id.split("-"))[2])
@@ -2289,7 +2289,7 @@ def word_import(request):
                     word.save()
             
             f.close()
-            os.remove("spell/static/spell/del-roots.csv")
+            os.remove(config.FILES_LOC + "spell/static/spell/del-roots.csv")
 
             if len(nots) > 0:
                 return render(request, "spell/error.html", {
@@ -4044,7 +4044,7 @@ def socialpost(request):
     if request.method == "POST":
         file = request.FILES["picture"]
         fs = FileSystemStorage()
-        fs.save("spell/static/spell/post.jpg", file)
+        fs.save(config.FILES_LOC + "spell/static/spell/post.jpg", file)
         date = str(datetime.date.today().strftime("%m/%d/%Y"))
         caption = "Word of the day..." + date + ".\nTo learn more words like this, visit https://spellnow.org. #WordOfTheDay #SpellNOW"
         
@@ -4062,7 +4062,7 @@ def socialpost(request):
             json=payload, 
             headers=headers)
         
-        os.remove("spell/static/spell/post.jpg")
+        os.remove(config.FILES_LOC + "spell/static/spell/post.jpg")
         
         return HttpResponseRedirect(reverse("socialpost"))     
     else:
