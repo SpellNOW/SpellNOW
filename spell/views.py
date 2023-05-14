@@ -784,7 +784,7 @@ def register(request):
                 msg = MIMEMultipart()
                 msg['Subject'] = 'Official SpellNOW! Notification! -- Validate Email'
                 msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
-                msg["To"] = request.POST["email"]
+                msg["To"] = request.POST["pemail"]
                 body_text = """Hello!\n\nThis is an official SpellNOW! Notification. You have recently attempted to register for a SpellNOW! account. As per SpellNOW! policy you must click the link below to validate your email address in order to complete account setup.\n\nhttps://spellnow.org/uservalidate/""" + str(pconfreq.id) + """-""" + str(pit1) + """-""" + str(pit2) + """\n\nThank you, and we hope you enjoy your continued use of SpellNOW!\n\nSincerely,\nSpellNOW! Support Team"""
                 body_part = MIMEText(body_text, 'plain')
                 msg.attach(body_part)
