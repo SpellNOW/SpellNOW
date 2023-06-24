@@ -1,0 +1,693 @@
+{% extends "spell/layout.html" %}
+
+{% block title %}SpellNOW! -- Spelling Activity{% endblock %}
+
+{% block function %}
+  <main id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Spelling Activity</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item">Activities</li>
+          <li class="breadcrumb-item active">Spelling</li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
+
+    
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Spelling</h5>
+              <p>Spell the words you hear and type your answer in the box below.
+                Add tags to words after you have spelled them for review.</p>
+              <div id="nothing">
+                <button onclick="neword(false)" style="display: block;" class="btn btn-primary" type="button">Click to Launch Activity</button>
+              </div>
+              
+              <div id="everything" style="display:none;">
+                <div style="width:100%" class="row g-3">
+                    <div style="width:50%;" class="col-md-4">
+                        <p style="color: #4d4d4d;" id="progress"></p>
+                        <p style="color: #2dab26;" id="correct"></p>
+                        <button id="startsave" style="width: 100%; font-size: 12px;" type="button" class="btn btn-warning" onclick="save()">Save Activity</button>
+                        <br><br>
+                        <div style="width: 100%;" class="row g-3">
+                          <div style="width:80%;" class="col-md-4">
+                            <div class="form-floating mb-3">
+                              <input type="text" class="form-control" id="spelling" spellcheck="false" autocomplete="off" name="tag" placeholder="Spelling...">
+                              <label for="spelling">Spelling</label>
+                            </div>
+                          </div>
+                          <div style="width:20%;" class="col-md-4">
+                            <button style="width: 100%; font-size: 12px;" type="button" class="btn btn-primary" id="check" onclick="spell()">CHECK</button>
+                            <button style="width: 100%; font-size: 12px;" type="button" class="btn btn-info" id="goback" onclick="back()" disabled>BACK</button>
+                          </div>
+                        </div>
+                        <p><b style="display: none;" id="response"></b></p>
+                        <button onclick="repron()" type="button" class="btn btn-secondary">Pronounce</button>
+                        <br><br>
+                        <p id="speech"></p>
+                        <p><b>Language of Origin:</b></p>
+                        <div id="origin">
+                        </div>
+                        <br>
+                        <p><b>Definition:</b></p>
+                        <div id="def">
+                        </div>
+                    </div>
+                    {% if user.is_staff %}
+                        <div style="width:25%; display: none;" id="tags" class="col-md-4">
+                            <div style="width: 100%;" class="row g-3">
+                                <div style="width: 50%;" class="col-md-4">
+                                    <div class="form-floating mb-3">
+                                        <input style="font-size: 10px;" type="text" class="form-control" id="tag_value" spellcheck="false" autocomplete="off" name="tag" placeholder="New Tag...">
+                                        <label for="tag_value">New Tag</label>
+                                    </div>
+                                </div>
+                                <div style="width: 50%;" class="col-md-4">
+                                    <button onclick="new_tag()" type="button" class="btn btn-primary" value="Create">Create</button>
+                                </div>
+                            </div>
+                            <p><b style="display: none;" style="color:red" id="id_response">Invalid Tag Name: The tag contains three dashes (---), a quotation mark ("), a apostrophe ('), a star followed by two dots followed by a star (*..*), a comma followed by a space (, ), or already exists.</b></p>
+                            <div style="width: 100%;" class="row g-3">
+                                <div style="width: 100%;" class="col-md-4">
+                                    <div class="form-floating mb-3">
+                                        <input type="text" class="form-control" id="search_tags" spellcheck="false" autocomplete="off" name="search" placeholder="Search...">
+                                        <label for="search_tags">Search Tags</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="alltags">
+                                {% for tag in tags %}
+                                    <button style="color:rgb(13, 110, 253); background-color: rgb(255, 255, 255);" onclick="add_word('{{ tag.name }}')" id="{{ tag.name }}" type="button" class="btn btn-primary rounded-pill tag">{{ tag.name }}</button>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div style="width:25%; display: none;" id="roots" class="col-md-4">
+                            <div style="width: 100%;" class="row g-3">
+                                <div style="width: 100%;" class="col-md-4">
+                                    <div class="form-floating mb-3">
+                                        <input type="text" class="form-control" id="search_roots" spellcheck="false" autocomplete="off" name="search" placeholder="Search...">
+                                        <label for="search_roots">Search Roots</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="allroots">
+                                {% for root in roots %}
+                                    <button style="color:rgb(37, 207, 242); background-color: rgb(255, 255, 255);" onclick="add_word_root('|--|{{ root.name }}')" id="|--|{{ root.name }}" type="button" class="btn btn-info rounded-pill tag">{{ root.name }}</button>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <form style="display: none;" enctype="multipart/form-data" action="/activity/{{ activity.id }}" method="post">
+        {% csrf_token %}
+        <textarea name="words" id="words"></textarea>
+        <textarea name="ids_used" id="ids_used">{{ ids_used }}</textarea>
+        <textarea name="order" id="order">{{ order }}</textarea>
+        <textarea name="correct_array" id="correct_array"></textarea>
+        <textarea name="attempts" id="attempts">{{ attempts }}</textarea>
+        <textarea name="time" id="time">{{ times }}</textarea>
+        <input name="score" id="score">
+        <input name="user" id="user" value="{{ request.user.id }}">
+        {% if user.is_staff %}
+            <textarea name="new_tags" id="new_tags"></textarea>
+            <textarea name="add_words" id="add_words"></textarea>
+            <textarea name="add_words_roots" id="add_words_roots"></textarea>
+        {% endif %}
+        <input id="stop" type="submit">
+    </form>
+    <form style="display: none;" enctype="multipart/form-data" action="/activity/{{ activity.id }}" method="post">
+        {% csrf_token %}
+        <textarea name="words" id="save_words"></textarea>
+        <textarea name="ids_used" id="save_ids_used"></textarea>
+        <textarea name="order" id="save_order"></textarea>
+        <textarea name="correct_array" id="save_correct_array"></textarea>
+        <textarea name="attempts" id="save_attempts"></textarea>
+        <input name="user" id="save_user" value="{{ request.user.id }}">
+        {% if user.is_staff %}
+            <textarea name="new_tags" id="save_new_tags"></textarea>
+            <textarea name="add_words" id="save_add_words"></textarea>
+            <textarea name="add_words_roots" id="save_add_words_roots"></textarea>
+        {% endif %}
+        <input name="global_count" id="glob_count">
+        <input name="actual_count" id="acc_count">
+        <input name="correct" id="corrs">
+        <input name="progress" id="progs">
+        <input name="total" id="saved_total">
+        <textarea name="speech" id="save_speech"></textarea>
+        <textarea name="origin" id="save_origin"></textarea>
+        <textarea name="definition" id="save_definition"></textarea>
+        <textarea name="prons" id="save_prons"></textarea>
+        <textarea name="time" id="save_time"></textarea>
+        <textarea name="final_tags" id="final_tags">{{ final_tags }}</textarea>
+        <textarea name="final_roots" id="final_roots">{{ final_roots }}</textarea>
+        <input name="score" id="save_score">
+        <input id="save" type="submit">
+    </form>
+    </section>
+  </main><!-- End #main -->
+  <script>
+    var g_words = "{{ words|safe }}";
+    var g_speech = '{{ speech|safe }}';
+    var g_origin = "{{ origin }}";
+    var g_definition = "{{ definition }}";
+    var g_prons = "{{ prons|safe }}";
+    var correct_array = "{{ correct_array }}";
+    g_speech = g_speech.replaceAll("'", '"');
+    const words = g_words.split(", ");
+    words.pop();
+    const speech = JSON.parse(g_speech);
+    const origins = g_origin.split("|=[]=|");
+    origins.pop();
+    const definition = g_definition.split("|=[]=|");
+    definition.pop();
+    const prons = g_prons.split(' || ');
+
+    var global_count = parseInt("{{ global_count }}");
+    var actual_count = parseInt("{{ acc_count }}");
+    var correct = parseInt("{{ correct }}");
+    var progress = parseInt("{{ progress }}");
+    var word_count = words.length;
+    var pron_link = "";
+    var watch = 0;
+    var stopwatch;
+    stopwatch = setInterval(function () {if (document.getElementById("nothing").style.display == "none") {watch++;}}, 1000);
+
+    if (progress > 0) {
+        document.getElementById("goback").disabled = false;
+    }
+
+    function save() {
+        if (document.getElementById("check").innerHTML == "NEXT") {
+            document.getElementById("check").click();
+        }
+
+        document.getElementById("glob_count").value = global_count;
+        document.getElementById("acc_count").value = actual_count;
+        document.getElementById("corrs").value = correct;
+        document.getElementById("progs").value = progress;
+        document.getElementById("saved_total").value = word_count;
+        document.getElementById("save_words").value = document.getElementById("words").value;
+        document.getElementById("save_ids_used").value = document.getElementById("ids_used").value;
+        document.getElementById("save_order").value = document.getElementById("order").value;
+        document.getElementById("save_attempts").value = document.getElementById("attempts").value;
+        document.getElementById("save_user").value = document.getElementById("user").value;
+        document.getElementById("save_speech").value = g_speech;
+        document.getElementById("save_origin").value = g_origin;
+        document.getElementById("save_definition").value = g_definition;
+        document.getElementById("save_prons").value = g_prons;
+        try {
+            document.getElementById("save_new_tags").value = document.getElementById("new_tags").innerHTML;
+            document.getElementById("save_add_words").value = document.getElementById("add_words").innerHTML;
+            document.getElementById("save_add_words_roots").value = document.getElementById("add_words_roots").innerHTML;
+        } catch(err) {}
+        document.getElementById("save_time").innerHTML += (document.getElementById("time").innerHTML + (watch + ", "));
+
+        document.getElementById("save_correct_array").innerHTML = correct_array;
+        document.getElementById("save_score").value = (correct + "/" + progress);
+        document.getElementById('save').click();
+    }
+    
+    function back() {
+        global_count -= 1;
+        document.getElementById("spelling").disabled = true;
+        document.getElementById("check").innerHTML = "NEXT";
+        document.getElementById("response").style.display = "none";
+        if (global_count == 0) {
+            document.getElementById("goback").disabled = true;
+        }
+        try {
+            document.getElementById("tags").style.display = "block";
+            document.getElementById("roots").style.display = "block";
+        }
+        catch(err) {}
+        try {
+            document.getElementById("alltags").innerHTML = alltags_inner;
+            document.getElementById("allroots").innerHTML = allroots_inner;
+            document.getElementById("search_tags").value = ""
+            document.getElementById("search_roots").value = ""
+        }
+        catch(err) {}
+
+        try {
+            const tester = lalith[global_count].split("&lt;&gt;");
+            for (let i = 0; i < tester.length; i++) {
+                document.getElementById(tester[i]).style.color = "rgb(255, 255, 255)";
+                document.getElementById(tester[i]).style.backgroundColor = "rgb(13, 110, 253)";
+            }
+
+            const bob = rahil[global_count].split("&lt;&gt;");
+            for (let i = 0; i < bob.length; i++) {
+                document.getElementById("|--|" + bob[i]).style.color = "rgb(255, 255, 255)";
+                document.getElementById("|--|" + bob[i]).style.backgroundColor = "rgb(37, 207, 242)";
+            }
+        }
+        catch(err) {}
+        neword(true);
+    }
+
+    function neword(back) {
+        if (!back) {
+            document.getElementById("nothing").style.display = "none";
+            document.getElementById("everything").style.display = "block";
+            if (speech.length != 0) {
+                document.getElementById("speech").innerHTML = ("<b>Part of Speech: </b>" + speech[global_count])
+            }
+            if (origins.length != 0) {
+                var funny = origins[global_count].split("--++--");
+                document.getElementById("origin").innerHTML = "<ol>"
+                for (var i = 0; i < 3; i++) {
+                    if (funny[i] != "-||-") {
+                        document.getElementById("origin").innerHTML += ("<li>" + funny[i] + "</li>");
+                    }
+                    document.getElementById("origin").innerHTML += "</ol>"
+                }
+            }
+            if (definition.length != 0) {
+                var funny = definition[global_count].split("--++--");
+                document.getElementById("def").innerHTML = "<ol>"
+                for (var i = 0; i < 3; i++) {
+                    if (funny[i] != "-||-") {
+                        document.getElementById("def").innerHTML += ("<li>" + funny[i] + "</li>");
+                    }
+                    document.getElementById("def").innerHTML += "</ol>"
+                }
+            }
+            var prons_test = prons[global_count];
+            prons_test = prons_test.replaceAll("'", '"');
+
+            if (prons_test.includes("*--*")) {
+                var snd = new Audio("/static/spell/sounds/" + words[global_count] + ".mp3");
+                snd.play();
+            }
+            else {
+                obj = JSON.parse(prons_test)
+                for (var i = 0; i < obj.length; i++) {
+                    pron_link = obj[i];
+                    const myTimeout = setTimeout(pronounce, 1000);
+                }
+            }
+        }
+        else {
+            document.getElementById("nothing").style.display = "none";
+            document.getElementById("everything").style.display = "block";
+            if (speech.length != 0) {
+                document.getElementById("speech").innerHTML = ("<b>Part of Speech: </b>" + speech[global_count])
+            }
+            if (origins.length != 0) {
+                var funny = origins[global_count].split("--++--");
+                document.getElementById("origin").innerHTML = "<ol>"
+                for (var i = 0; i < 3; i++) {
+                    if (funny[i] != "-||-") {
+                        document.getElementById("origin").innerHTML += ("<li>" + funny[i] + "</li>");
+                    }
+                    document.getElementById("origin").innerHTML += "</ol>"
+                }
+            }
+            if (definition.length != 0) {
+                var funny = definition[global_count].split("--++--");
+                document.getElementById("def").innerHTML = "<ol>"
+                for (var i = 0; i < 3; i++) {
+                    if (funny[i] != "-||-") {
+                        document.getElementById("def").innerHTML += ("<li>" + funny[i] + "</li>");
+                    }
+                    document.getElementById("def").innerHTML += "</ol>"
+                }
+            }
+            var attempt = document.getElementById("attempts").value;
+            attempt = attempt.split(", ");
+            attempt = attempt[global_count];
+            document.getElementById("spelling").value = attempt;
+
+            var result = correct_array;
+            result = result.split(", ");
+            result = result[global_count];
+            var word = document.getElementById("words").value;
+            word = word.split(", ");
+            word = word[global_count];
+            if (result == "0") {
+                document.getElementById("response").style.color = "red";
+                document.getElementById("response").innerHTML = "INCORRECT: The correct spelling is '" + word + "'.";
+            }
+            else {
+                document.getElementById("response").style.color = "green";
+                document.getElementById("response").innerHTML = "CORRECT!";
+            }
+            document.getElementById("response").style.display = "block";
+        }
+    }
+
+    function pronounce() {
+        var snd = new Audio(pron_link);
+        snd.play();
+    }
+
+    function repron() {
+        var prons_test = prons[global_count];
+        prons_test = prons_test.replaceAll("'", '"');
+
+        if (prons_test.includes("*--*")) {
+            var snd = new Audio("/static/spell/sounds/" + words[global_count] + ".mp3");
+            snd.play();
+        }
+        else {
+            obj = JSON.parse(prons_test)
+            for (var i = 0; i < obj.length; i++) {
+                pron_link = obj[i];
+                const myTimeout = setTimeout(pronounce, 1000);
+            }
+        }
+    }
+
+    function spell() {
+        if (document.getElementById("check").innerHTML == "CHECK") {
+            if (document.getElementById("spelling").value == "") {
+                document.getElementById("response").style.display = "block";
+                document.getElementById("response").style.color = "#b5ae00";
+                document.getElementById("response").innerHTML = "WARNING: Please input a valid spelling into the input area.";
+            }
+            else if (document.getElementById("spelling").value.toLowerCase() != words[global_count]) {
+                document.getElementById("response").style.display = "block";
+                document.getElementById("response").style.color = "red";
+                document.getElementById("response").innerHTML = "INCORRECT: The correct spelling is '" + words[global_count] + "'.";
+                try {
+                    document.getElementById("tags").style.display = "block";
+                    document.getElementById("roots").style.display = "block";
+                }
+                catch(err) {}
+                document.getElementById("check").innerHTML = "NEXT";
+                if (global_count + 1 == word_count) {
+                    document.getElementById("check").innerHTML = "FINISH";
+                    document.getElementById("startsave").style.display = "none";
+
+                }
+                progress += 1;
+                correct_array += "0, ";
+                document.getElementById("progress").innerHTML = ("<b>Progress: </b>" + progress + "/" + word_count);
+                document.getElementById("correct").innerHTML = ("<b>Correct: </b>" + correct + "/" + progress);
+                document.getElementById("attempts").innerHTML += (document.getElementById("spelling").value.toLowerCase() + ", ");
+                
+                try {
+                    const tester = lalith[global_count].split("&lt;&gt;");
+                    for (let i = 0; i < tester.length; i++) {
+                        document.getElementById(tester[i]).style.color = "rgb(255, 255, 255)";
+                        document.getElementById(tester[i]).style.backgroundColor = "rgb(13, 110, 253)";
+                    }
+
+                    const bob = rahil[global_count].split("&lt;&gt;");
+                    for (let i = 0; i < bob.length; i++) {
+                        document.getElementById("|--|" + bob[i]).style.color = "rgb(255, 255, 255)";
+                        document.getElementById("|--|" + bob[i]).style.backgroundColor = "rgb(37, 207, 242)";
+                    }
+                }
+                catch(err) {}
+
+                document.getElementById("spelling").disabled = false;
+            }
+            else {
+                document.getElementById("response").style.display = "block";
+                document.getElementById("response").style.color = "green";
+                document.getElementById("response").innerHTML = "CORRECT!";
+                try {
+                    document.getElementById("tags").style.display = "block";
+                    document.getElementById("roots").style.display = "block";
+                }
+                catch(err) {}
+                document.getElementById("check").innerHTML = "NEXT";
+                if (global_count + 1 == word_count) {
+                    document.getElementById("check").innerHTML = "FINISH";
+                    document.getElementById("startsave").style.display = "none";
+                }
+                correct_array += "1, ";
+                correct += 1;
+                progress += 1;
+                document.getElementById("progress").innerHTML = ("<b>Progress: </b>" + progress + "/" + word_count);
+                document.getElementById("correct").innerHTML = ("<b>Correct: </b>" + correct + "/" + progress);
+                document.getElementById("attempts").innerHTML += (document.getElementById("spelling").value.toLowerCase() + ", ");
+
+                try {
+                    const tester = lalith[global_count].split("&lt;&gt;");
+                    for (let i = 0; i < tester.length; i++) {
+                        document.getElementById(tester[i]).style.color = "rgb(255, 255, 255)";
+                        document.getElementById(tester[i]).style.backgroundColor = "rgb(13, 110, 253)";
+                    }
+
+                    const bob = rahil[global_count].split("&lt;&gt;");
+                    for (let i = 0; i < tester.length; i++) {
+                        document.getElementById("|--|" + bob[i]).style.color = "rgb(255, 255, 255)";
+                        document.getElementById("|--|" + bob[i]).style.backgroundColor = "rgb(37, 207, 242)";
+                    }
+                }
+                catch(err) {}
+            }
+        }
+        else if (document.getElementById("check").innerHTML == "NEXT") {
+            global_count += 1;
+
+            try {
+                document.getElementById("alltags").innerHTML = alltags_inner;
+                document.getElementById("allroots").innerHTML = allroots_inner;
+                document.getElementById("search_tags").value = ""
+                document.getElementById("search_roots").value = ""
+            }
+            catch(err) {}
+
+            try {
+                const tester = lalith[global_count].split("&lt;&gt;");
+                for (let i = 0; i < tester.length; i++) {
+                    document.getElementById(tester[i]).style.color = "rgb(255, 255, 255)";
+                    document.getElementById(tester[i]).style.backgroundColor = "rgb(13, 110, 253)";
+                }
+
+                const bob = rahil[global_count].split("&lt;&gt;");
+                for (let i = 0; i < bob.length; i++) {
+                    document.getElementById("|--|" + bob[i]).style.color = "rgb(255, 255, 255)";
+                    document.getElementById("|--|" + bob[i]).style.backgroundColor = "rgb(37, 207, 242)";
+                }
+            }
+            catch(err) {}
+            
+            if (global_count + 1 <= actual_count && global_count + 1 <= (document.getElementById("attempts").value.split(", ").length - 1)) {
+                document.getElementById("spelling").disabled = true;
+                document.getElementById("goback").disabled = false;
+                if (global_count + 1 == word_count) {
+                    document.getElementById("check").innerHTML = "FINISH";
+                }
+                else {
+                    document.getElementById("check").innerHTML = "NEXT";
+                }
+                document.getElementById("response").style.display = "none";
+                if (global_count == 0) {
+                    document.getElementById("goback").disabled = true;
+                }
+                neword(true);
+            }
+            else if (actual_count == (document.getElementById("attempts").value.split(", ").length - 1)) {
+                document.getElementById("response").style.display = "none";
+                try {
+                    document.getElementById("tags").style.display = "none";
+                    document.getElementById("roots").style.display = "none";
+                }
+                catch(err) {}
+                document.getElementById("spelling").value = "";
+                document.getElementById("check").innerHTML = "CHECK"
+
+                try {
+                    document.getElementById("alltags").innerHTML = alltags_inner;
+                    document.getElementById("allroots").innerHTML = allroots_inner;
+                    document.getElementById("search_tags").value = ""
+                    document.getElementById("search_roots").value = ""
+                }
+                catch(err) {}
+                
+                document.getElementById("time").innerHTML += (watch + ", ");
+                watch = 0;
+                actual_count += 1;
+                document.getElementById("goback").disabled = false;
+                document.getElementById("spelling").disabled = false;
+                neword(false);
+            }
+            else {
+                document.getElementById("spelling").disabled = false;
+                document.getElementById("spelling").value = "";
+                document.getElementById("goback").disabled = false;
+                document.getElementById("check").innerHTML = "CHECK";
+                document.getElementById("response").style.display = "none";
+                neword(false);
+            }
+        }
+        else {
+            document.getElementById("time").innerHTML += (watch + ", ");
+
+            document.getElementById("correct_array").innerHTML = correct_array;
+            document.getElementById("score").value = (correct + "/" + word_count);
+            document.getElementById('stop').click();
+        }
+    }
+
+document.onkeydown = function(e) {
+    if (event.keyCode === 13) {
+            if (document.activeElement.id == "spelling") {
+                spell();
+            }
+            else {
+                new_tag();
+            }
+        }
+  if(event.keyCode == 123) {
+     return false;
+  }
+  if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) {
+     return false;
+  }
+  if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) {
+     return false;
+  }
+  if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) {
+     return false;
+  }
+  if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) {
+     return false;
+  }
+}
+
+    var arrayLength = words.length;
+    for (var i = 0; i < arrayLength; i++) {
+        document.getElementById("words").innerHTML += (words[i] + ", ");
+    }
+    document.getElementById("progress").innerHTML = ("<b>Progress: </b>" + progress + "/" + word_count);
+    document.getElementById("correct").innerHTML = ("<b>Correct: </b>" + correct + "/" + progress);
+</script>
+
+{% if user.is_staff %}
+<script>
+    var alltags_inner = document.getElementById("alltags").innerHTML;
+    var allroots_inner = document.getElementById("allroots").innerHTML;
+    var total_tags = "{{ final_tags }}";
+    var g_alltags = "{{ alltags }}";
+    const alltags = g_alltags.split("*..*");
+    alltags.pop();
+    const lalith = total_tags.split('&gt;&lt;');
+    const lucky = total_tags.split('&gt;&lt;')
+    var total_roots = "{{ final_roots }}";
+    var g_allroots = "{{ allroots }}";
+    const allroots = g_allroots.split("*..*");
+    allroots.pop();
+    const rahil = total_roots.split('&gt;&lt;');
+    const kabra = total_roots.split('&gt;&lt;')
+
+    function add_word(tag) {
+        if (document.getElementById(tag).style.color == "rgb(13, 110, 253)" || document.getElementById(tag).style.color == "") {
+            document.getElementById(tag).style.color = "rgb(255, 255, 255)";
+            document.getElementById(tag).style.backgroundColor = "rgb(13, 110, 253)";
+            var thing = tag + "||" + words[global_count] + "[]";
+            document.getElementById("add_words").innerHTML = (document.getElementById("add_words").innerHTML).replace(("---" + thing), '');
+            const tester = lucky[global_count].split("&lt;&gt;");
+            if (!tester.includes(tag)) {
+                document.getElementById("add_words").innerHTML += thing;
+            }
+            lalith[global_count] += ("&lt;&gt;" + tag);
+        }
+        else {
+            document.getElementById(tag).style.color = "rgb(13, 110, 253)";
+            document.getElementById(tag).style.backgroundColor = "rgb(255, 255, 255)";
+            var thing = tag + "||" + words[global_count] + "[]";
+            document.getElementById("add_words").innerHTML = (document.getElementById("add_words").innerHTML).replace(thing, '');
+            const tester = lucky[global_count].split("&lt;&gt;");
+            if (tester.includes(tag)) {
+                document.getElementById("add_words").innerHTML += ("---" + thing);
+            }
+            lalith[global_count] = lalith[global_count].replace(("&lt;&gt;" + tag), "");
+        }
+    }
+
+    function add_word_root(tag) {
+        coolit = tag.replace("|--|", "");
+
+        if (document.getElementById(tag).style.color == "rgb(37, 207, 242)" || document.getElementById(tag).style.color == "") {
+            document.getElementById(tag).style.color = "rgb(255, 255, 255)";
+            document.getElementById(tag).style.backgroundColor = "rgb(37, 207, 242)";
+            var thing = coolit + "||" + words[global_count] + "[]";
+            document.getElementById("add_words_roots").innerHTML = (document.getElementById("add_words_roots").innerHTML).replace(("---" + thing), '');
+            const tester = kabra[global_count].split("&lt;&gt;");
+            if (!tester.includes(coolit)) {
+                document.getElementById("add_words_roots").innerHTML += thing;
+            }
+            rahil[global_count] += ("&lt;&gt;" + coolit);
+        }
+        else {
+            document.getElementById(tag).style.color = "rgb(37, 207, 242)";
+            document.getElementById(tag).style.backgroundColor = "rgb(255, 255, 255)";
+            var thing = coolit + "||" + words[global_count] + "[]";
+            document.getElementById("add_words_roots").innerHTML = (document.getElementById("add_words_roots").innerHTML).replace(thing, '');
+            const tester = kabra[global_count].split("&lt;&gt;");
+            if (tester.includes(coolit)) {
+                document.getElementById("add_words_roots").innerHTML += ("---" + thing);
+            }
+            rahil[global_count] = rahil[global_count].replace(("&lt;&gt;" + coolit), "");
+        }
+    }
+
+    function new_tag() {
+        name = document.getElementById("tag_value").value;
+        if (!((name.includes("---")) || (name.includes('"')) || (name.includes("'")) || (name.includes("*..*")) || (name.includes(", ")) || (name == "") || (alltags.includes(name)))) {
+            document.getElementById("tag_value").value = "";
+            other_name = "add_word('" + name + "')";
+            document.getElementById("alltags").innerHTML += '<button style="color:rgb(13, 110, 253); background-color: rgb(255, 255, 255);" onclick="' + other_name + '" id="' + name + '" type="button" class="btn btn-primary rounded-pill tag">' + name + '</button>'
+            alltags.push(name);
+            document.getElementById("new_tags").innerHTML += (name + "[]")
+            document.getElementById("id_response").style.display = "none";
+        }
+        else {
+            document.getElementById("id_response").style.display = "block";
+        }
+    }
+
+    document.addEventListener("keyup", function(event) {
+        if (document.activeElement.id == "search_tags") {
+            document.getElementById("alltags").innerHTML = "";
+            for(var i = 0; i < alltags.length; i++) {
+                if ((alltags[i].toLowerCase()).startsWith(document.getElementById("search_tags").value.toLowerCase())) {
+                    document.getElementById("alltags").innerHTML += '<button style="color:rgb(13, 110, 253); background-color: rgb(255, 255, 255);" onclick="add_word(\'' + alltags[i] + '\')" id="' + alltags[i] + '" type="button" class="btn btn-primary rounded-pill tag">' + alltags[i] + '</button>'
+                }
+            }
+            const tester = lalith[global_count].split("&lt;&gt;");
+            for (let i = 0; i < tester.length; i++) {
+                try {
+                    document.getElementById(tester[i]).style.color = "rgb(255, 255, 255)";
+                    document.getElementById(tester[i]).style.backgroundColor = "rgb(13, 110, 253)";
+                }
+                catch(err) {}
+            }
+        }
+        else if (document.activeElement.id == "search_roots") {
+            document.getElementById("allroots").innerHTML = "";
+            for(var i = 0; i < allroots.length; i++) {
+                if ((allroots[i].toLowerCase()).startsWith(document.getElementById("search_roots").value.toLowerCase())) {
+                    document.getElementById("allroots").innerHTML += '<button style="color:rgb(37, 207, 242); background-color: rgb(255, 255, 255);" onclick="add_word_root(\'|--|' + allroots[i] + '\')" id="' + allroots[i] + '" type="button" class="btn btn-info rounded-pill tag">' + allroots[i] + '</button>'
+                }
+            }
+            const tester = rahil[global_count].split("&lt;&gt;");
+            for (let i = 0; i < tester.length; i++) {
+                try {
+                    document.getElementById(tester[i]).style.color = "rgb(255, 255, 255)";
+                    document.getElementById(tester[i]).style.backgroundColor = "rgb(37, 207, 242)";
+                }
+                catch(err) {}
+            }
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}

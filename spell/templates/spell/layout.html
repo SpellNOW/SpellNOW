@@ -155,6 +155,11 @@
                   <i class="bi bi-circle"></i><span>Vocabulary</span>
                 </a>
               </li>
+              <li>
+                <a id="savedit" href="/saved">
+                  <i class="bi bi-circle"></i><span>Saved Activities</span>
+                </a>
+              </li>
             </ul>
           </li><!-- End Components Nav -->
         {% endif %}
@@ -271,7 +276,6 @@
       document.getElementById(active).classList.add("active");
     }
   };
-  document.addEventListener('contextmenu', event => event.preventDefault());
 document.onkeydown = function(e) {
     if (event.keyCode === 13) {
             if (document.activeElement.id == "spelling") {
