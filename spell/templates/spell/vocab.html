@@ -35,6 +35,8 @@
                         <p style="color: #2dab26;" id="correct"></p>
                         <div style="width: 100%;" class="row g-3">
                           <div style="width:100%;" class="col-md-4">
+                            <button id="startsave" style="width: 100%; font-size: 12px;" type="button" class="btn btn-warning" onclick="save()">Save Activity</button>
+                            <br><br>
                             <p id="question">My amazing question</p>
                             <fieldset class="row mb-3">
                                 <div class="col-sm-10">
@@ -91,6 +93,27 @@
         <input name="user" id="user" value="{{ request.user.id }}">
         <input id="stop" type="submit">
     </form>
+    <form style="display: none;" enctype="multipart/form-data" action="{% url 'save_vocab' %}" method="post">
+        {% csrf_token %}
+        <textarea name="words" id="save_words"></textarea>
+        <textarea name="questions" id="save_questions"></textarea>
+        <textarea name="options" id="save_options"></textarea>
+        <textarea name="ans" id="save_ans"></textarea>
+        <textarea name="ids_used" id="save_ids_used"></textarea>
+        <textarea name="order" id="save_order"></textarea>
+        <textarea name="correct_array" id="save_correct_array"></textarea>
+        <textarea name="attempts" id="save_attempts"></textarea>
+        <textarea name="vocabas" id="save_vocabas"></textarea>
+        <textarea name="time" id="save_time"></textarea>
+        <input name="user" id="save_user" value="{{ request.user.id }}">
+        <input name="global_count" id="glob_count">
+        <input name="actual_count" id="acc_count">
+        <input name="correct" id="corrs">
+        <input name="progress" id="progs">
+        <input name="total" id="saved_total">
+        <input name="score" id="save_score">
+        <input id="save" type="submit">
+    </form>
     </section>
   </main><!-- End #main -->
   <script>
@@ -118,6 +141,33 @@
     var stopwatch;
     stopwatch = setInterval(function () {if (document.getElementById("nothing").style.display == "none") {watch++;}}, 1000);
     
+    function save() {
+        if (document.getElementById("check").innerHTML == "NEXT") {
+            document.getElementById("check").click();
+        }
+        for (var i = 0; i < arrayLength; i++) {
+            document.getElementById("save_words").innerHTML += (questions[i] + "990099");
+        }
+        document.getElementById("save_questions").innerHTML = g_questions;
+        document.getElementById("save_options").innerHTML = g_options;
+        document.getElementById("save_ans").innerHTML = g_ans;
+        document.getElementById("save_ids_used").innerHTML = document.getElementById("ids_used").value;
+        document.getElementById("save_order").innerHTML = document.getElementById("order").value;
+        document.getElementById("save_correct_array").innerHTML = correct_array;
+        document.getElementById("save_attempts").innerHTML = document.getElementById("attempts").value;
+        document.getElementById("save_vocabas").innerHTML = document.getElementById("vocabas").value;
+        document.getElementById("save_time").innerHTML = document.getElementById("time").innerHTML;
+        document.getElementById("score").value = (correct + "/" + word_count);
+        document.getElementById("save_score").value = document.getElementById("score").value;
+        document.getElementById("saved_total").value = word_count;
+        document.getElementById("glob_count").value = global_count;
+        document.getElementById("acc_count").value = actual_count;
+        document.getElementById("corrs").value = correct;
+        document.getElementById("progs").value = progress;
+        document.getElementById("save").click();
+    }
+
+
     function back() {
         global_count -= 1;
         actual_count -= 1;

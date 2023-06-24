@@ -3,7 +3,7 @@ from django.shortcuts import render
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.urls import reverse
 from django.db.models import Count
-from .models import Account, Word, Tag, Report, Root, ReportDetail, EmailValidate, ConfirmReq, VocabReportDetail
+from .models import Account, Word, Tag, Report, Root, ReportDetail, EmailValidate, ConfirmReq, VocabReportDetail, SavedActivity, SavedVocabActivity
 import csv
 from django import forms
 from django.core.files.storage import FileSystemStorage
@@ -1023,16 +1023,14 @@ def admin_panel(request):
         parent = Account.objects.get(username=request.user.username)
         userusing = Account.objects.get(pk=request.POST["child"])
 
-        totalwords = 0
-        for report in Report.objects.filter(user=userusing, specific=False, finished__gt=datetime.date.today()):
-            totalwords += report.total
+        totalwords = ReportDetail.objects.filter(report__user=userusing, finished__gt=datetime.date.today()).count()
+        totalwords += VocabReportDetail.objects.filter(report__user=userusing, finished__gt=datetime.date.today()).count()
         
         lastwords = 0
         start = datetime.date.today() - datetime.timedelta(days = 1)
         end = datetime.date.today()
-
-        for report in Report.objects.filter(user=userusing, specific=False, finished__range=(start, end)):
-            lastwords += report.total
+        lastwords = ReportDetail.objects.filter(report__user=userusing, finished__range=(start, end)).count()
+        lastwords += VocabReportDetail.objects.filter(report__user=userusing, finished__range=(start, end)).count()
         
         word_conc = ""
         wordsperc = 0
@@ -1050,15 +1048,25 @@ def admin_panel(request):
                 wordsperc = 0
         
         correctwords = 0
-        for report in Report.objects.filter(user=userusing, specific=False, finished__gt=datetime.date.today()):
-            correctwords += report.correct
+        for report in ReportDetail.objects.filter(report__user=userusing, finished__gt=datetime.date.today()):
+            if report.result == "CORRECT":
+                correctwords += 1
+        
+        for report in VocabReportDetail.objects.filter(report__user=userusing, finished__gt=datetime.date.today()):
+            if report.result == "CORRECT":
+                correctwords += 1
         
         lastcorrs = 0
         start = datetime.date.today() - datetime.timedelta(days = 1)
         end = datetime.date.today()
 
-        for report in Report.objects.filter(user=userusing, specific=False, finished__range=(start, end)):
-            lastcorrs += report.correct
+        for report in ReportDetail.objects.filter(report__user=userusing, finished__range=(start, end)):
+            if report.result == "CORRECT":
+                lastcorrs += 1
+        
+        for report in VocabReportDetail.objects.filter(report__user=userusing, finished__range=(start, end)):
+            if report.result == "CORRECT":
+                lastcorrs += 1
         
         corrs_conc = ""
         corrsperc = 0
@@ -1076,8 +1084,13 @@ def admin_panel(request):
                 corrsperc = 0
         
         tagcount = []
-        for report in Report.objects.filter(user=userusing, specific=True, finished__gt=datetime.date.today()):
-            tagcount.append(report.used)
+        for report in ReportDetail.objects.filter(report__user=userusing, finished__gt=datetime.date.today()):
+            if report.identification not in tagcount:
+                tagcount.append(report.identification)
+        
+        for report in VocabReportDetail.objects.filter(report__user=userusing, finished__gt=datetime.date.today()):
+            if report.identification not in tagcount:
+                tagcount.append(report.identification)
         tagcount = list(dict.fromkeys(tagcount))
         alltags = tagcount
         tagcount = len(tagcount)
@@ -1086,10 +1099,13 @@ def admin_panel(request):
         start = datetime.date.today() - datetime.timedelta(days = 1)
         end = datetime.date.today()
 
-        for report in Report.objects.filter(user=userusing, specific=False, finished__range=(start, end)):
-            cool = (report.used).split(", ")
-            prevtags.extend(cool)
+        for report in ReportDetail.objects.filter(report__user=userusing, finished__gt=datetime.date.today()):
+            if report.identification not in prevtags:
+                prevtags.append(report.identification)
         
+        for report in VocabReportDetail.objects.filter(report__user=userusing, finished__gt=datetime.date.today()):
+            if report.identification not in prevtags:
+                prevtags.append(report.identification)
         prevtags = list(dict.fromkeys(prevtags))
         prevtags = len(prevtags)
         
@@ -1110,13 +1126,21 @@ def admin_panel(request):
         
         tagrep = []
         for tag in alltags:
-            reports = Report.objects.filter(user=userusing, specific=True, finished__gt=datetime.date.today(), used=tag)
+            reports = ReportDetail.objects.filter(report__user=userusing, finished__gt=datetime.date.today(), identification=tag)
             correct = 0
             total = 0
             
             for report in reports:
-                correct += report.correct
-                total += report.total
+                if report.result == "CORRECT":
+                    correct += 1
+                total += 1
+
+            reports = VocabReportDetail.objects.filter(report__user=userusing, finished__gt=datetime.date.today(), identification=tag)
+            
+            for report in reports:
+                if report.result == "CORRECT":
+                    correct += 1
+                total += 1
             
             tagrep.append({'tag': tag, 'correct': correct, 'total': total, 'percent': int((correct / total) * 100)})
         
@@ -1166,16 +1190,14 @@ def admin_panel(request):
             else:
                 userusing = Account.objects.get(username=request.user.username)
 
-                totalwords = 0
-                for report in Report.objects.filter(user=userusing, specific=False, finished__gt=datetime.date.today()):
-                    totalwords += report.total
+                totalwords = ReportDetail.objects.filter(report__user=userusing, finished__gt=datetime.date.today()).count()
+                totalwords += VocabReportDetail.objects.filter(report__user=userusing, finished__gt=datetime.date.today()).count()
                 
                 lastwords = 0
                 start = datetime.date.today() - datetime.timedelta(days = 1)
                 end = datetime.date.today()
-
-                for report in Report.objects.filter(user=userusing, specific=False, finished__range=(start, end)):
-                    lastwords += report.total
+                lastwords = ReportDetail.objects.filter(report__user=userusing, finished__range=(start, end)).count()
+                lastwords += VocabReportDetail.objects.filter(report__user=userusing, finished__range=(start, end)).count()
                 
                 word_conc = ""
                 wordsperc = 0
@@ -1193,15 +1215,25 @@ def admin_panel(request):
                         wordsperc = 0
                 
                 correctwords = 0
-                for report in Report.objects.filter(user=userusing, specific=False, finished__gt=datetime.date.today()):
-                    correctwords += report.correct
+                for report in ReportDetail.objects.filter(report__user=userusing, finished__gt=datetime.date.today()):
+                    if report.result == "CORRECT":
+                        correctwords += 1
+                
+                for report in VocabReportDetail.objects.filter(report__user=userusing, finished__gt=datetime.date.today()):
+                    if report.result == "CORRECT":
+                        correctwords += 1
                 
                 lastcorrs = 0
                 start = datetime.date.today() - datetime.timedelta(days = 1)
                 end = datetime.date.today()
 
-                for report in Report.objects.filter(user=userusing, specific=False, finished__range=(start, end)):
-                    lastcorrs += report.correct
+                for report in ReportDetail.objects.filter(report__user=userusing, finished__range=(start, end)):
+                    if report.result == "CORRECT":
+                        lastcorrs += 1
+                
+                for report in VocabReportDetail.objects.filter(report__user=userusing, finished__range=(start, end)):
+                    if report.result == "CORRECT":
+                        lastcorrs += 1
                 
                 corrs_conc = ""
                 corrsperc = 0
@@ -1219,8 +1251,13 @@ def admin_panel(request):
                         corrsperc = 0
                 
                 tagcount = []
-                for report in Report.objects.filter(user=userusing, specific=True, finished__gt=datetime.date.today()):
-                    tagcount.append(report.used)
+                for report in ReportDetail.objects.filter(report__user=userusing, finished__gt=datetime.date.today()):
+                    if report.identification not in tagcount:
+                        tagcount.append(report.identification)
+                
+                for report in VocabReportDetail.objects.filter(report__user=userusing, finished__gt=datetime.date.today()):
+                    if report.identification not in tagcount:
+                        tagcount.append(report.identification)
                 tagcount = list(dict.fromkeys(tagcount))
                 alltags = tagcount
                 tagcount = len(tagcount)
@@ -1229,10 +1266,13 @@ def admin_panel(request):
                 start = datetime.date.today() - datetime.timedelta(days = 1)
                 end = datetime.date.today()
 
-                for report in Report.objects.filter(user=userusing, specific=False, finished__range=(start, end)):
-                    cool = (report.used).split(", ")
-                    prevtags.extend(cool)
+                for report in ReportDetail.objects.filter(report__user=userusing, finished__gt=datetime.date.today()):
+                    if report.identification not in prevtags:
+                        prevtags.append(report.identification)
                 
+                for report in VocabReportDetail.objects.filter(report__user=userusing, finished__gt=datetime.date.today()):
+                    if report.identification not in prevtags:
+                        prevtags.append(report.identification)
                 prevtags = list(dict.fromkeys(prevtags))
                 prevtags = len(prevtags)
                 
@@ -1253,13 +1293,21 @@ def admin_panel(request):
                 
                 tagrep = []
                 for tag in alltags:
-                    reports = Report.objects.filter(user=userusing, specific=True, finished__gt=datetime.date.today(), used=tag)
+                    reports = ReportDetail.objects.filter(report__user=userusing, finished__gt=datetime.date.today(), identification=tag)
                     correct = 0
                     total = 0
                     
                     for report in reports:
-                        correct += report.correct
-                        total += report.total
+                        if report.result == "CORRECT":
+                            correct += 1
+                        total += 1
+
+                    reports = VocabReportDetail.objects.filter(report__user=userusing, finished__gt=datetime.date.today(), identification=tag)
+                    
+                    for report in reports:
+                        if report.result == "CORRECT":
+                            correct += 1
+                        total += 1
                     
                     tagrep.append({'tag': tag, 'correct': correct, 'total': total, 'percent': int((correct / total) * 100)})
                 
@@ -2632,13 +2680,13 @@ def spell(request):
                 "origin": allorigins,
                 "definition": alldefs,
                 "prons": allprons,
+                "order": order,
+                "ids_used": ids_used,
+                "final_roots": final_roots,
                 "tags": Tag.objects.all(),
                 "roots": Root.objects.all(),
-                "order": order,
                 "final_tags": final_tags,
-                "ids_used": ids_used,
                 "alltags": rightio,
-                "final_roots": final_roots,
                 "allroots": wrongio,
             })
 
@@ -2829,6 +2877,473 @@ def finish(request):
                 smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
     except:
         pass
+    
+    return render(request, "spell/spelling_finish.html", {
+        "bar": "activities",
+        "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+        "active": "spellit",
+        "score": request.POST["score"]
+    })
+
+def saved(request):
+    return render(request, "spell/saved.html", {
+        "bar": "activities",
+        "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+        "active": "savedit",
+        "activities": SavedActivity.objects.filter(user=request.user).order_by('-id'),
+        "vocab_activities": SavedVocabActivity.objects.filter(user=request.user).order_by('-id')
+    })
+
+def activity(request, id):
+    if request.method == "POST":
+        if request.user.is_staff:
+            tags_rep = request.POST["new_tags"]
+            tags = tags_rep.split("[]")
+            tags.remove("")
+            
+            words_rep = request.POST["add_words"]
+            added_words = words_rep.split("[]")
+            added_words.remove("")
+
+            words_pep = request.POST["add_words_roots"]
+            added_roots = words_pep.split("[]")
+            added_roots.remove("")
+
+            for tag in tags:
+                new = Tag(name=tag)
+                new.save()
+            
+            for word in added_words:
+                cool = word.split("||")
+                if (cool[0][0] + cool[0][1] + cool[0][2]) == "---":
+                    bad = Tag.objects.get(name=(cool[0].replace("---", "")))
+                    word = Word.objects.get(word=cool[1])
+                    word.tags.remove(bad)
+                    word.save()
+                    if len(word.tags.all()) == 0:
+                        word.tagged = False
+                        word.save()
+                else:
+                    bad = Tag.objects.get(name=(cool[0].replace("---", "")))
+                    word = Word.objects.get(word=cool[1])
+                    word.tags.add(bad)
+                    word.tagged = True
+                    word.save()
+            
+            for word in added_roots:
+                cool = word.split("||")
+                if (cool[0][0] + cool[0][1] + cool[0][2]) == "---":
+                    bad = Root.objects.get(name=(cool[0].replace("---", "")))
+                    word = Word.objects.get(word=cool[1])
+                    word.roots.remove(bad)
+                    word.save()
+                    if len(word.roots.all()) == 0:
+                        word.rooted = False
+                        word.save()
+                else:
+                    bad = Root.objects.get(name=(cool[0].replace("---", "")))
+                    word = Word.objects.get(word=cool[1])
+                    word.roots.add(bad)
+                    word.rooted = True
+                    word.save()
+
+        order_in = request.POST["order"]
+        order = order_in.split(", ")
+        order.remove("")
+
+        ids_used = request.POST["ids_used"]
+        total_gags = ids_used.split(", ")
+        total_gags.remove("")
+
+        corrs = request.POST["correct_array"]
+        correct_array = corrs.split(", ")
+        correct_array.remove("")
+
+        glob = request.POST["words"]
+        words = glob.split(", ")
+        words.pop()
+
+        dumb = request.POST["attempts"]
+        atts = dumb.split(", ")
+        atts.remove("")
+
+        timings = request.POST["time"]
+        time = timings.split(", ")
+        time.remove("")
+
+        cool = 0
+        id_using = 0
+        thingy = (request.POST["score"]).split("/")
+        userusing = Account.objects.get(pk=int(request.POST["user"]))
+        new = SavedActivity.objects.get(pk=id).report
+        actid = id
+        new.used = ids_used
+        new.correct = thingy[0]
+        new.total = thingy[1]
+        new.percent = (int((int(thingy[0])/int(thingy[1]))*100))
+        new.save()
+        id_using = new.id
+        id = new.id
+
+        olds = Report.objects.filter(specific=True, iid=id)
+
+        for old in olds:
+            old.delete()
+
+        wilk = []
+        for ite in total_gags:
+            if ite == "*..*":
+                nice = 0
+                cool = 0
+                abhi = 0
+                for ishaan in order:
+                    try:
+                        if ishaan == ite:
+                            nice += int(correct_array[cool])
+                            abhi += 1
+                        cool += 1
+                    except:
+                        break
+                
+                if abhi != 0:
+                    new = Report(used="Untagged", correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing, spelling=True)
+                    new.save()
+                    wilk.append("Untagged")
+            elif ite == "|--|*..*":
+                nice = 0
+                cool = 0
+                abhi = 0
+                for ishaan in order:
+                    try:
+                        if ishaan == ite:
+                            nice += int(correct_array[cool])
+                            abhi += 1
+                        cool += 1
+                    except:
+                        break
+                
+                if abhi != 0:
+                    new = Report(used="No Roots", correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing, spelling=True)
+                    new.save()
+                    wilk.append("No Roots")
+            elif "|--|" in ite:
+                nice = 0
+                cool = 0
+                abhi = 0
+                for ishaan in order:
+                    try:
+                        if ishaan == ite:
+                            nice += int(correct_array[cool])
+                            abhi += 1
+                        cool += 1
+                    except:
+                        break
+                
+                if abhi != 0:
+                    new = Report(used=("Root - " + ite.replace("|--|", "")), correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing, spelling=True)
+                    new.save()
+                    wilk.append(("Root - " + ite.replace("|--|", "")))
+            else:
+                nice = 0
+                cool = 0
+                abhi = 0
+                for ishaan in order:
+                    try:
+                        if ishaan == ite:
+                            nice += int(correct_array[cool])
+                            abhi += 1
+                        cool += 1
+                    except:
+                        break
+                
+                if abhi != 0:
+                    new = Report(used=("Tag - " + ite), correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing, spelling=True)
+                    new.save()
+                    wilk.append(("Tag - " + ite))
+        
+        for ite in order:
+            if ite == "*..*":
+                wilk.append("Untagged")
+            elif ite == "|--|*..*":
+                wilk.append("No Roots")
+            elif "|--|" in ite:
+                wilk.append(("Root - " + ite.replace("|--|", "")))
+            else:
+                wilk.append(("Tag - " + ite))
+            
+        count = 1
+
+        report_using = Report.objects.get(id=id_using)
+        for tmp in words:
+            if not ReportDetail.objects.filter(report=report_using, word=tmp).exists():
+                try:
+                    if int(correct_array[count - 1]) == 0:
+                        roger = count
+                        detail = ReportDetail(count=roger, identification=wilk[count - 1], word=tmp, attempt=atts[count - 1], result="INCORRECT", time=time[count - 1], report=report_using)
+                        detail.save()
+                    else:
+                        roger = count
+                        detail = ReportDetail(count=roger, identification=wilk[count - 1], word=tmp, attempt=atts[count - 1], result="CORRECT", time=time[count - 1], report=report_using)
+                        detail.save()
+                except:
+                    break
+            count += 1
+        
+        try:
+            parent = Account.objects.get(pk=userusing.parents)
+
+            if parent.repsub == True:
+                msg = MIMEMultipart()
+                msg['Subject'] = 'Official SpellNOW! Notification! -- New Report'
+                msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
+                msg["To"] = parent.email
+                body_text = """Hello!\n\nThis is an Official SpellNOW! Notification. """ + userusing.first_name + """ has complete a spelling activity on SpellNOW! with a score of """ + request.POST["score"] + """. You can learn more details of this activity by visiting https://spellnow.org/report/""" + str(report_using.id) + """. Thank you, and we hope for your continued progress for the future.\n\nSincerely,\nSpellNOW! Support Team"""
+
+                body_part = MIMEText(body_text, 'plain')
+                msg.attach(body_part)
+                with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
+                    smtp_obj.ehlo()
+                    smtp_obj.starttls()
+                    smtp_obj.ehlo()
+                    smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
+                    smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
+        except:
+            pass
+        
+        SavedActivity.objects.get(pk=actid).delete()
+        if (count - 1) != int(thingy[1]):
+            SavedActivity(user=Account.objects.get(pk=int(request.POST["user"])), final_tags=request.POST["final_tags"], final_roots=request.POST["final_roots"], correct_array=request.POST["correct_array"], total=int(request.POST["total"]), report=report_using, global_count=int(request.POST["global_count"]), acc_count=int(request.POST["actual_count"]), correct=int(request.POST["correct"]), progress=int(request.POST["progress"]), words=request.POST["words"], ids_used=request.POST["ids_used"], order=request.POST["order"], attempts=request.POST["attempts"], speech=request.POST["speech"], origin=request.POST["origin"], definition=request.POST["definition"], prons=request.POST["prons"], times=request.POST["time"]).save()
+
+        return render(request, "spell/spelling_finish.html", {
+            "bar": "activities",
+            "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+            "active": "spellit",
+            "score": request.POST["score"]
+        })
+    else:
+        act = SavedActivity.objects.get(pk=id)
+        if act.user.username == request.user.username:
+            rightio = ""
+            wrongio = ""
+
+            for cooolio in Tag.objects.all():
+                rightio += cooolio.name + "*..*"
+            
+            for cooolio in Root.objects.all():
+                wrongio += cooolio.name + "*..*"
+            return render(request, "spell/saved_spelling.html", {
+                "bar": "activities",
+                "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+                "active": "spellit",
+                "activity": act,
+                "ids_used": act.ids_used,
+                "order": act.order,
+                "attempts": act.attempts,
+                "times": act.times,
+                "global_count": act.global_count,
+                "correct_array": act.correct_array,
+                "acc_count": act.acc_count,
+                "correct": act.correct,
+                "progress": act.progress,
+                "total": act.total,
+                "words": act.words,
+                "speech": act.speech,
+                "origin": act.origin,
+                "definition": act.definition,
+                "prons": act.prons,
+                "final_roots": act.final_roots,
+                "tags": Tag.objects.all(),
+                "roots": Root.objects.all(),
+                "final_tags": act.final_tags,
+                "alltags": rightio,
+                "allroots": wrongio,
+            })
+        else:
+            return render(request, "spell/error_404.html", {})
+
+def save_spell(request):
+    if request.user.is_staff:
+        tags_rep = request.POST["new_tags"]
+        tags = tags_rep.split("[]")
+        tags.remove("")
+        
+        words_rep = request.POST["add_words"]
+        added_words = words_rep.split("[]")
+        added_words.remove("")
+
+        words_pep = request.POST["add_words_roots"]
+        added_roots = words_pep.split("[]")
+        added_roots.remove("")
+
+        for tag in tags:
+            new = Tag(name=tag)
+            new.save()
+        
+        for word in added_words:
+            cool = word.split("||")
+            if (cool[0][0] + cool[0][1] + cool[0][2]) == "---":
+                bad = Tag.objects.get(name=(cool[0].replace("---", "")))
+                word = Word.objects.get(word=cool[1])
+                word.tags.remove(bad)
+                word.save()
+                if len(word.tags.all()) == 0:
+                    word.tagged = False
+                    word.save()
+            else:
+                bad = Tag.objects.get(name=(cool[0].replace("---", "")))
+                word = Word.objects.get(word=cool[1])
+                word.tags.add(bad)
+                word.tagged = True
+                word.save()
+        
+        for word in added_roots:
+            cool = word.split("||")
+            if (cool[0][0] + cool[0][1] + cool[0][2]) == "---":
+                bad = Root.objects.get(name=(cool[0].replace("---", "")))
+                word = Word.objects.get(word=cool[1])
+                word.roots.remove(bad)
+                word.save()
+                if len(word.roots.all()) == 0:
+                    word.rooted = False
+                    word.save()
+            else:
+                bad = Root.objects.get(name=(cool[0].replace("---", "")))
+                word = Word.objects.get(word=cool[1])
+                word.roots.add(bad)
+                word.rooted = True
+                word.save()
+
+    order_in = request.POST["order"]
+    order = order_in.split(", ")
+    order.remove("")
+
+    ids_used = request.POST["ids_used"]
+    total_gags = ids_used.split(", ")
+    total_gags.remove("")
+
+    corrs = request.POST["correct_array"]
+    correct_array = corrs.split(", ")
+    correct_array.remove("")
+
+    glob = request.POST["words"]
+    words = glob.split(", ")
+    words.remove("")
+
+    dumb = request.POST["attempts"]
+    atts = dumb.split(", ")
+    atts.remove("")
+
+    timings = request.POST["time"]
+    time = timings.split(", ")
+    time.remove("")
+
+    cool = 0
+    id_using = 0
+    thingy = (request.POST["score"]).split("/")
+    userusing = Account.objects.get(pk=int(request.POST["user"]))
+    new = Report(used=ids_used, correct=thingy[0], total=(thingy[1]), percent=(int((int(thingy[0])/int(thingy[1]))*100)), specific=False, user=userusing, spelling=True)
+    new.save()
+    id_using = new.id
+
+    wilk = []
+    for ite in total_gags:
+        if ite == "*..*":
+            nice = 0
+            cool = 0
+            abhi = 0
+            for ishaan in order:
+                try:
+                    if ishaan == ite:
+                        nice += int(correct_array[cool])
+                        abhi += 1
+                    cool += 1
+                except:
+                    break
+            
+            if abhi != 0:
+                new = Report(used="Untagged", correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing, spelling=True)
+                new.save()
+                wilk.append("Untagged")
+        elif ite == "|--|*..*":
+            nice = 0
+            cool = 0
+            abhi = 0
+            for ishaan in order:
+                try:
+                    if ishaan == ite:
+                        nice += int(correct_array[cool])
+                        abhi += 1
+                    cool += 1
+                except:
+                    break
+            
+            if abhi != 0:
+                new = Report(used="No Roots", correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing, spelling=True)
+                new.save()
+                wilk.append("No Roots")
+        elif "|--|" in ite:
+            nice = 0
+            cool = 0
+            abhi = 0
+            for ishaan in order:
+                try:
+                    if ishaan == ite:
+                        nice += int(correct_array[cool])
+                        abhi += 1
+                    cool += 1
+                except:
+                    break
+            
+            if abhi != 0:
+                new = Report(used=("Root - " + ite.replace("|--|", "")), correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing, spelling=True)
+                new.save()
+                wilk.append(("Root - " + ite.replace("|--|", "")))
+        else:
+            nice = 0
+            cool = 0
+            abhi = 0
+            for ishaan in order:
+                try:
+                    if ishaan == ite:
+                        nice += int(correct_array[cool])
+                        abhi += 1
+                    cool += 1
+                except:
+                    break
+            
+            if abhi != 0:
+                new = Report(used=("Tag - " + ite), correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing, spelling=True)
+                new.save()
+                wilk.append(("Tag - " + ite))
+    
+    for ite in order:
+        if ite == "*..*":
+            wilk.append("Untagged")
+        elif ite == "|--|*..*":
+            wilk.append("No Roots")
+        elif "|--|" in ite:
+            wilk.append(("Root - " + ite.replace("|--|", "")))
+        else:
+            wilk.append(("Tag - " + ite))
+        
+    count = 1
+
+    report_using = Report.objects.get(id=id_using)
+    for tmp in words:
+        try:
+            if int(correct_array[count - 1]) == 0:
+                roger = count
+                detail = ReportDetail(count=roger, identification=wilk[count - 1], word=tmp, attempt=atts[count - 1], result="INCORRECT", time=time[count - 1], report=report_using)
+                detail.save()
+            else:
+                roger = count
+                detail = ReportDetail(count=roger, identification=wilk[count - 1], word=tmp, attempt=atts[count - 1], result="CORRECT", time=time[count - 1], report=report_using)
+                detail.save()
+            count += 1
+        except:
+            break
+
+    SavedActivity(user=Account.objects.get(pk=int(request.POST["user"])), final_tags=request.POST["final_tags"], final_roots=request.POST["final_roots"], correct_array=request.POST["correct_array"], total=int(request.POST["total"]), report=report_using, global_count=int(request.POST["global_count"]), acc_count=int(request.POST["actual_count"]), correct=int(request.POST["correct"]), progress=int(request.POST["progress"]), words=request.POST["words"], ids_used=request.POST["ids_used"], order=request.POST["order"], attempts=request.POST["attempts"], speech=request.POST["speech"], origin=request.POST["origin"], definition=request.POST["definition"], prons=request.POST["prons"], times=request.POST["time"]).save()
     
     return render(request, "spell/spelling_finish.html", {
         "bar": "activities",
@@ -3308,6 +3823,367 @@ def vocab(request):
                 "ids_used": ids_used,
             })
 
+def save_vocab(request):
+    order_in = request.POST["order"]
+    order = order_in.split(", ")
+    order.remove("")
+
+    ids_used = request.POST["ids_used"]
+    total_gags = ids_used.split(", ")
+    total_gags.remove("")
+
+    corrs = request.POST["correct_array"]
+    correct_array = corrs.split(", ")
+    correct_array.remove("")
+
+    glob = request.POST["words"]
+    words = glob.split("990099")
+    words.remove("")
+
+    coolb = request.POST["vocabas"]
+    vocabas = coolb.split("9009")
+    vocabas.remove("")
+
+    dumb = request.POST["attempts"]
+    atts = dumb.split("9009")
+    atts.remove("")
+
+    timings = request.POST["time"]
+    time = timings.split(", ")
+    time.remove("")
+
+    cool = 0
+    id_using = 0
+    thingy = (request.POST["score"]).split("/")
+    userusing = Account.objects.get(pk=int(request.POST["user"]))
+    new = Report(used=ids_used, correct=thingy[0], total=int(request.POST["progress"]), percent=(int((int(thingy[0])/int(request.POST["progress"]))*100)), specific=False, user=userusing, spelling=False)
+    new.save()
+    id_using = new.id
+
+    wilk = []
+    for ite in total_gags:
+        if ite == "*..*":
+            nice = 0
+            cool = 0
+            abhi = 0
+            for ishaan in order:
+                try:
+                    if ishaan == ite:
+                        nice += int(correct_array[cool])
+                        abhi += 1
+                    cool += 1
+                except:
+                    break
+            
+            if abhi != 0:
+                new = Report(used="Untagged", correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing, spelling=False)
+                new.save()
+                wilk.append("Untagged")
+        elif ite == "|--|*..*":
+            nice = 0
+            cool = 0
+            abhi = 0
+            for ishaan in order:
+                try:
+                    if ishaan == ite:
+                        nice += int(correct_array[cool])
+                        abhi += 1
+                    cool += 1
+                except:
+                    break
+            
+            if abhi != 0:
+                new = Report(used="No Roots", correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing, spelling=False)
+                new.save()
+                wilk.append("No Roots")
+        elif "|--|" in ite:
+            nice = 0
+            cool = 0
+            abhi = 0
+            for ishaan in order:
+                try:
+                    if ishaan == ite:
+                        nice += int(correct_array[cool])
+                        abhi += 1
+                    cool += 1
+                except:
+                    break
+            
+            if abhi != 0:
+                new = Report(used=("Root - " + ite.replace("|--|", "")), correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing, spelling=False)
+                new.save()
+                wilk.append(("Root - " + ite.replace("|--|", "")))
+        else:
+            nice = 0
+            cool = 0
+            abhi = 0
+            for ishaan in order:
+                try:
+                    if ishaan == ite:
+                        nice += int(correct_array[cool])
+                        abhi += 1
+                    cool += 1
+                except:
+                    break
+            
+            if abhi != 0:
+                new = Report(used=("Tag - " + ite), correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing, spelling=False)
+                new.save()
+                wilk.append(("Tag - " + ite))
+    
+    for ite in order:
+        if ite == "*..*":
+            wilk.append("Untagged")
+        elif ite == "|--|*..*":
+            wilk.append("No Roots")
+        elif "|--|" in ite:
+            wilk.append(("Root - " + ite.replace("|--|", "")))
+        else:
+            wilk.append(("Tag - " + ite))
+        
+    count = 1
+
+    report_using = Report.objects.get(id=id_using)
+    for tmp in words:
+        try:
+            if int(correct_array[count - 1]) == 0:
+                roger = count
+                detail = VocabReportDetail(count=roger, identification=wilk[count - 1], question=tmp, answer = vocabas[count-1], attempt=atts[count - 1], result="INCORRECT", time=time[count - 1], report=report_using)
+                detail.save()
+            else:
+                roger = count
+                detail = VocabReportDetail(count=roger, identification=wilk[count - 1], question=tmp, answer = vocabas[count-1], attempt=atts[count - 1], result="CORRECT", time=time[count - 1], report=report_using)
+                detail.save()
+            count += 1
+        except:
+            break
+    
+    SavedVocabActivity(user=Account.objects.get(pk=request.user.id), ids_used=request.POST["ids_used"], correct_array=request.POST["correct_array"], order=request.POST["order"], attempts=request.POST["attempts"], times=request.POST["time"], report=report_using, global_count=int(request.POST["global_count"]), acc_count=int(request.POST["actual_count"]), correct=int(request.POST["correct"]), progress=int(request.POST["progress"]), total=int(request.POST["total"]), words=request.POST["words"], questions=request.POST["questions"], options=request.POST["options"], answers=request.POST["ans"], vocabas=request.POST["vocabas"]).save()
+    
+    return render(request, "spell/vocab_finish.html", {
+        "bar": "activities",
+        "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+        "active": "vocabit",
+        "score": (thingy[0] + "/" + request.POST["progress"])
+    })
+
+def vocab_activity(request, id):
+    if request.method == "POST":
+        order_in = request.POST["order"]
+        order = order_in.split(", ")
+        order.remove("")
+
+        ids_used = request.POST["ids_used"]
+        total_gags = ids_used.split(", ")
+        total_gags.remove("")
+
+        corrs = request.POST["correct_array"]
+        correct_array = corrs.split(", ")
+        correct_array.remove("")
+
+        glob = request.POST["words"]
+        words = glob.split("990099")
+        words.remove("")
+
+        coolb = request.POST["vocabas"]
+        vocabas = coolb.split("9009")
+        vocabas.remove("")
+
+        dumb = request.POST["attempts"]
+        atts = dumb.split("9009")
+        atts.remove("")
+
+        timings = request.POST["time"]
+        time = timings.split(", ")
+        time.remove("")
+
+        cool = 0
+        id_using = 0
+        thingy = (request.POST["score"]).split("/")
+        userusing = Account.objects.get(pk=int(request.POST["user"]))
+        new = SavedVocabActivity.objects.get(pk=id).report
+        actid = id
+        new.used = ids_used
+        new.correct = thingy[0]
+        try:
+            new.total = int(request.POST["progress"])
+            new.percent = (int((int(thingy[0])/int(request.POST["progress"]))*100))
+        except:
+            new.total = thingy[1]
+            new.percent = (int((int(thingy[0])/int(thingy[1]))*100))
+        new.save()
+        id_using = new.id
+
+        olds = Report.objects.filter(specific=True, iid=new.id)
+
+        for old in olds:
+            old.delete()
+
+        wilk = []
+        for ite in total_gags:
+            if ite == "*..*":
+                nice = 0
+                cool = 0
+                abhi = 0
+                for ishaan in order:
+                    try:
+                        if ishaan == ite:
+                            nice += int(correct_array[cool])
+                            abhi += 1
+                        cool += 1
+                    except:
+                        pass
+                
+                if abhi != 0:
+                    new = Report(used="Untagged", correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing, spelling=False)
+                    new.save()
+                    wilk.append("Untagged")
+            elif ite == "|--|*..*":
+                nice = 0
+                cool = 0
+                abhi = 0
+                for ishaan in order:
+                    try:
+                        if ishaan == ite:
+                            nice += int(correct_array[cool])
+                            abhi += 1
+                        cool += 1
+                    except:
+                        pass
+                
+                if abhi != 0:
+                    new = Report(used="No Roots", correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing, spelling=False)
+                    new.save()
+                    wilk.append("No Roots")
+            elif "|--|" in ite:
+                nice = 0
+                cool = 0
+                abhi = 0
+                for ishaan in order:
+                    try:
+                        if ishaan == ite:
+                            nice += int(correct_array[cool])
+                            abhi += 1
+                        cool += 1
+                    except:
+                        pass
+                
+                if abhi != 0:
+                    new = Report(used=("Root - " + ite.replace("|--|", "")), correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing, spelling=False)
+                    new.save()
+                    wilk.append(("Root - " + ite.replace("|--|", "")))
+            else:
+                nice = 0
+                cool = 0
+                abhi = 0
+                for ishaan in order:
+                    try:
+                        if ishaan == ite:
+                            nice += int(correct_array[cool])
+                            abhi += 1
+                        cool += 1
+                    except:
+                        pass
+                
+                if abhi != 0:
+                    new = Report(used=("Tag - " + ite), correct=nice, total=abhi, percent=(int((nice/abhi)*100)), specific=True, iid=id_using, user=userusing, spelling=False)
+                    new.save()
+                    wilk.append(("Tag - " + ite))
+        
+        for ite in order:
+            if ite == "*..*":
+                wilk.append("Untagged")
+            elif ite == "|--|*..*":
+                wilk.append("No Roots")
+            elif "|--|" in ite:
+                wilk.append(("Root - " + ite.replace("|--|", "")))
+            else:
+                wilk.append(("Tag - " + ite))
+            
+        count = 1
+
+        report_using = Report.objects.get(id=id_using)
+        for tmp in words:
+            if not VocabReportDetail.objects.filter(report=report_using, question=tmp).exists():
+                try:
+                    if int(correct_array[count - 1]) == 0:
+                        roger = count
+                        detail = VocabReportDetail(count=roger, identification=wilk[count - 1], question=tmp, answer = vocabas[count-1], attempt=atts[count - 1], result="INCORRECT", time=time[count - 1], report=report_using)
+                        detail.save()
+                    else:
+                        roger = count
+                        detail = VocabReportDetail(count=roger, identification=wilk[count - 1], question=tmp, answer = vocabas[count-1], attempt=atts[count - 1], result="CORRECT", time=time[count - 1], report=report_using)
+                        detail.save()
+                except:
+                    break
+            count += 1
+        
+        try:
+            parent = Account.objects.get(pk=userusing.parents)
+
+            if parent.repsub == True:
+                msg = MIMEMultipart()
+                msg['Subject'] = 'Official SpellNOW! Notification! -- New Report'
+                msg["From"] = formataddr((str(Header('SpellNOW! Support', 'utf-8')), 'support@spellnow.org'))
+                msg["To"] = parent.email
+                body_text = """Hello!\n\nThis is an Official SpellNOW! Notification. """ + userusing.first_name + """ has complete a vocabulary activity on SpellNOW! with a score of """ + request.POST["score"] + """. You can learn more details of this activity by visiting https://spellnow.org/report/""" + str(report_using.id) + """. Thank you, and we hope for your continued progress for the future.\n\nSincerely,\nSpellNOW! Support Team"""
+
+                body_part = MIMEText(body_text, 'plain')
+                msg.attach(body_part)
+                with smtplib.SMTP(host="smtp.ionos.com", port=587) as smtp_obj:
+                    smtp_obj.ehlo()
+                    smtp_obj.starttls()
+                    smtp_obj.ehlo()
+                    smtp_obj.login("support@spellnow.org", config.SMTP_PASS)
+                    smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
+        except:
+            pass
+            
+        SavedVocabActivity.objects.get(pk=actid).delete()
+        if (count - 1) != int(thingy[1]):
+            SavedVocabActivity(user=Account.objects.get(pk=request.user.id), ids_used=request.POST["ids_used"], correct_array=request.POST["correct_array"], order=request.POST["order"], attempts=request.POST["attempts"], times=request.POST["time"], report=report_using, global_count=int(request.POST["global_count"]), acc_count=int(request.POST["actual_count"]), correct=int(request.POST["correct"]), progress=int(request.POST["progress"]), total=int(request.POST["total"]), words=request.POST["words"], questions=request.POST["questions"], options=request.POST["options"], answers=request.POST["ans"], vocabas=request.POST["vocabas"]).save()
+
+        try:
+            return render(request, "spell/vocab_finish.html", {
+                "bar": "activities",
+                "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+                "active": "vocabit",
+                "score": (thingy[0] + "/" + request.POST["progress"])
+            })
+        except:
+            return render(request, "spell/vocab_finish.html", {
+                "bar": "activities",
+                "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+                "active": "vocabit",
+                "score": (thingy[0] + "/" + thingy[1])
+            })
+    else:
+        act = SavedVocabActivity.objects.get(pk=id)
+        if act.user.username == request.user.username:
+            return render(request, "spell/saved_vocab.html", {
+                "bar": "activities",
+                "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+                "active": "vocabit",
+                "activity": act,
+                "ids_used": act.ids_used,
+                "order": act.order,
+                "attempts": act.attempts,
+                "times": act.times,
+                "global_count": act.global_count,
+                "correct_array": act.correct_array,
+                "acc_count": act.acc_count,
+                "correct": act.correct,
+                "progress": act.progress,
+                "total": act.total,
+                "words": act.words,
+                "questions": act.questions,
+                "options": act.options,
+                "ans": act.answers,
+                "vocabas": act.vocabas,
+            })
+        else:
+            return render(request, "spell/error_404.html", {})
+
 def vocab_finish(request):
     order_in = request.POST["order"]
     order = order_in.split(", ")
@@ -3448,7 +4324,6 @@ def vocab_finish(request):
                 smtp_obj.sendmail(msg['From'], [msg['To'],], msg.as_string())
     except:
         pass
-    
     return render(request, "spell/vocab_finish.html", {
         "bar": "activities",
         "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
@@ -3464,7 +4339,6 @@ def reports(request):
     if userusing.parent:
         if request.method == "POST":
             fun = Account.objects.get(pk=int(request.POST["child"]))
-            print(fun)
 
             return render(request, "spell/reports.html", {
                 "bar": "fullreports",

@@ -1,0 +1,479 @@
+{% extends "spell/layout.html" %}
+
+{% block title %}SpellNOW! -- Vocabulary Activity{% endblock %}
+
+{% block function %}
+  <main id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Vocabulary Activity</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item">Activities</li>
+          <li class="breadcrumb-item active">Vocabulary</li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
+
+    
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Vocabulary</h5>
+              <p>Choose the correct option for the given question regarding vocabulary.</p>
+              <div id="nothing">
+                <button onclick="neword()" style="display: block;" class="btn btn-primary" type="button">Click to Launch Activity</button>
+              </div>
+              
+              <div id="everything" style="display:none;">
+                <div style="width:100%" class="row g-3">
+                    <div style="width:100%;" class="col-md-4">
+                        <p style="color: #4d4d4d;" id="progress"></p>
+                        <p style="color: #2dab26;" id="correct"></p>
+                        <div style="width: 100%;" class="row g-3">
+                          <div style="width:100%;" class="col-md-4">
+                            <button id="startsave" style="width: 100%; font-size: 12px;" type="button" class="btn btn-warning" onclick="save()">Save Activity</button>
+                            <br><br>
+                            <p id="question">My amazing question</p>
+                            <fieldset class="row mb-3">
+                                <div class="col-sm-10">
+                                  <div class="form-check" id="form-checkA">
+                                    <input class="form-check-input" type="radio" name="gridRadios" id="gridRadiosA" value="option1">
+                                    <label class="form-check-label" id="optionA" for="gridRadiosA">
+                                      First radio
+                                    </label>
+                                  </div>
+                                  <div class="form-check" id="form-checkB">
+                                    <input class="form-check-input" type="radio" name="gridRadios" id="gridRadiosB" value="option2">
+                                    <label class="form-check-label" id="optionB" for="gridRadiosB">
+                                      Second radio
+                                    </label>
+                                  </div>
+                                  <div class="form-check" id="form-checkC">
+                                    <input class="form-check-input" type="radio" name="gridRadios" id="gridRadiosC" value="option">
+                                    <label class="form-check-label" id="optionC" for="gridRadiosC">
+                                      Third radio
+                                    </label>
+                                  </div>
+                                  <div class="form-check" id="form-checkD">
+                                    <input class="form-check-input" type="radio" name="gridRadios" id="gridRadiosD" value="option">
+                                    <label class="form-check-label" id="optionD" for="gridRadiosD">
+                                      Fourth radio
+                                    </label>
+                                  </div>
+                                </div>
+                              </fieldset>
+                              
+                        <p><b style="display: none;" id="response"></b></p>
+                          <div style="width:20%;" class="col-md-4">
+                            <button type="button" class="btn btn-primary" id="check" onclick="spell()">CHECK</button>
+                            <button type="button" class="btn btn-info" id="goback" onclick="back()" disabled>BACK</button>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <form style="display: none;" enctype="multipart/form-data" action="/vocab_activity/{{ activity.id }}" method="post">
+        {% csrf_token %}
+        <textarea name="words" id="words"></textarea>
+        <textarea name="ids_used" id="ids_used">{{ ids_used }}</textarea>
+        <textarea name="order" id="order">{{ order }}</textarea>
+        <textarea name="correct_array" id="correct_array"></textarea>
+        <textarea name="vocabas" id="vocabas">{{ vocabas }}</textarea>
+        <textarea name="attempts" id="attempts">{{ attempts }}</textarea>
+        <textarea name="time" id="time">{{ times }}</textarea>
+        <input name="score" id="score">
+        <input name="user" id="user" value="{{ request.user.id }}">
+        <input id="stop" type="submit">
+    </form>
+    <form style="display: none;" enctype="multipart/form-data" action="/vocab_activity/{{ activity.id }}" method="post">
+        {% csrf_token %}
+        <textarea name="words" id="save_words"></textarea>
+        <textarea name="questions" id="save_questions"></textarea>
+        <textarea name="options" id="save_options"></textarea>
+        <textarea name="ans" id="save_ans"></textarea>
+        <textarea name="ids_used" id="save_ids_used"></textarea>
+        <textarea name="order" id="save_order"></textarea>
+        <textarea name="correct_array" id="save_correct_array"></textarea>
+        <textarea name="attempts" id="save_attempts"></textarea>
+        <textarea name="vocabas" id="save_vocabas"></textarea>
+        <textarea name="time" id="save_time"></textarea>
+        <input name="user" id="save_user" value="{{ request.user.id }}">
+        <input name="global_count" id="glob_count">
+        <input name="actual_count" id="acc_count">
+        <input name="correct" id="corrs">
+        <input name="progress" id="progs">
+        <input name="total" id="saved_total">
+        <input name="score" id="save_score">
+        <input id="save" type="submit">
+    </form>
+    </section>
+  </main><!-- End #main -->
+  <script>
+    var g_words = "{{ words|safe }}";
+    var g_questions = "{{ questions|safe }}";
+    var g_options = "{{ options|safe }}";
+    var g_ans = "{{ ans|safe }}";
+    var correct_array = "{{ correct_array }}";
+    const words = g_words.split("990099");
+    words.pop();
+    const questions = g_questions.split("+--+");
+    const options = g_options.split("9889");
+    const answers = g_ans.split("||==||");
+    questions.pop();
+    options.pop();
+    answers.pop();
+
+    var global_count = parseInt("{{ global_count }}");
+    var actual_count = parseInt("{{ acc_count }}");
+    var correct = parseInt("{{ correct }}");
+    var progress = parseInt("{{ progress }}");
+    var word_count = words.length;
+    var pron_link = "";
+    var watch = 0;
+    var stopwatch;
+    stopwatch = setInterval(function () {if (document.getElementById("nothing").style.display == "none") {watch++;}}, 1000);
+    
+    if (progress > 0) {
+        document.getElementById("goback").disabled = false;
+    }
+
+    function save() {
+        if (document.getElementById("check").innerHTML == "NEXT") {
+            document.getElementById("check").click();
+        }
+        document.getElementById("save_words").innerHTML = g_words;
+        document.getElementById("save_questions").innerHTML = g_questions;
+        document.getElementById("save_options").innerHTML = g_options;
+        document.getElementById("save_ans").innerHTML = g_ans;
+        document.getElementById("save_ids_used").innerHTML = document.getElementById("ids_used").value;
+        document.getElementById("save_order").innerHTML = document.getElementById("order").value;
+        document.getElementById("save_correct_array").innerHTML = correct_array;
+        document.getElementById("save_attempts").innerHTML = document.getElementById("attempts").value;
+        document.getElementById("save_vocabas").innerHTML = document.getElementById("vocabas").value;
+        document.getElementById("save_time").innerHTML = document.getElementById("time").innerHTML;
+        document.getElementById("score").value = (correct + "/" + word_count);
+        document.getElementById("save_score").value = document.getElementById("score").value;
+        document.getElementById("saved_total").value = word_count;
+        document.getElementById("glob_count").value = global_count;
+        document.getElementById("acc_count").value = actual_count;
+        document.getElementById("corrs").value = correct;
+        document.getElementById("progs").value = progress;
+        document.getElementById("save").click();
+    }
+
+
+    function back() {
+        global_count -= 1;
+        actual_count -= 1;
+        document.getElementById("form-checkA").classList.add("disabled");
+        document.getElementById("form-checkB").classList.add("disabled");
+        document.getElementById("form-checkC").classList.add("disabled");
+        document.getElementById("form-checkD").classList.add("disabled");
+
+        document.getElementById("gridRadiosA").disabled = true;
+        document.getElementById("gridRadiosB").disabled = true;
+        document.getElementById("gridRadiosC").disabled = true;
+        document.getElementById("gridRadiosD").disabled = true;
+
+        document.getElementById("check").innerHTML = "NEXT";
+        document.getElementById("response").style.display = "none";
+        if (global_count == 0) {
+            document.getElementById("goback").disabled = true;
+        }
+        neword(true);
+    }
+
+    function neword(back) {
+      if (!back) {
+        document.getElementById("nothing").style.display = "none";
+        document.getElementById("everything").style.display = "block";
+        var coolio = options[global_count].split("--00--");
+        
+        document.getElementById("question").innerHTML = questions[global_count];
+        document.getElementById("optionA").innerHTML = coolio[0];
+        document.getElementById("optionB").innerHTML = coolio[1];
+        document.getElementById("optionC").innerHTML = coolio[2];
+        document.getElementById("optionD").innerHTML = coolio[3];
+      }
+      else {
+        document.getElementById("gridRadiosA").checked = false;
+            document.getElementById("gridRadiosB").checked = false;
+            document.getElementById("gridRadiosC").checked = false;
+            document.getElementById("gridRadiosD").checked = false;
+
+            document.getElementById("optionA").style.color = "#444444";
+            document.getElementById("optionB").style.color = "#444444";
+            document.getElementById("optionC").style.color = "#444444";
+            document.getElementById("optionD").style.color = "#444444";
+
+            document.getElementById("optionA").style.fontWeight = "normal";
+            document.getElementById("optionB").style.fontWeight = "normal";
+            document.getElementById("optionC").style.fontWeight = "normal";
+            document.getElementById("optionD").style.fontWeight = "normal";
+
+        var coolio = options[global_count].split("--00--");
+        
+        document.getElementById("question").innerHTML = questions[global_count];
+        document.getElementById("optionA").innerHTML = coolio[0];
+        document.getElementById("optionB").innerHTML = coolio[1];
+        document.getElementById("optionC").innerHTML = coolio[2];
+        document.getElementById("optionD").innerHTML = coolio[3];
+
+        var thing_answers = document.getElementById("attempts").value.split("9009");
+        thing_answers.pop();
+        
+        if (document.getElementById("optionA").innerHTML == thing_answers[global_count]) {
+            document.getElementById("gridRadiosA").checked = true;
+        } 
+        else if (document.getElementById("optionB").innerHTML == thing_answers[global_count]) {
+            document.getElementById("gridRadiosB").checked = true;
+        }
+        else if (document.getElementById("optionC").innerHTML == thing_answers[global_count]) {
+            document.getElementById("gridRadiosC").checked = true;
+        } 
+        else {
+            document.getElementById("optionD").checked = true;
+        }
+        
+        if (document.getElementById("gridRadios" + answers[global_count]).checked != true) {
+            var chosen = "";
+
+            if (document.getElementById("gridRadiosA").checked) {
+                chosen = "A";
+            } 
+            else if (document.getElementById("gridRadiosB").checked) {
+                chosen = "B";
+            } 
+            else if (document.getElementById("gridRadiosC").checked) {
+                chosen = "C";
+            } 
+            else {
+                chosen = "D";
+            }
+
+            document.getElementById("option" + chosen).style.fontWeight = "bold";
+            document.getElementById("option" + chosen).style.color = "red";
+
+            document.getElementById("option" + answers[global_count]).style.fontWeight = "bold";
+            document.getElementById("option" + answers[global_count]).style.color = "green";
+            
+            document.getElementById("response").style.display = "block";
+            document.getElementById("response").style.color = "red";
+            document.getElementById("response").innerHTML = "INCORRECT! The correct answer is " + answers[global_count] + ".";
+        }
+        else {
+            document.getElementById("option" + answers[global_count]).style.fontWeight = "bold";
+            document.getElementById("option" + answers[global_count]).style.color = "green";
+            
+            document.getElementById("response").style.display = "block";
+            document.getElementById("response").style.color = "green";
+            document.getElementById("response").innerHTML = "CORRECT!";
+        }
+      }
+    }
+
+    function spell() {
+        if (document.getElementById("check").innerHTML == "CHECK") {
+            if (document.getElementById("gridRadios" + answers[global_count]).checked != true) {
+                var chosen = "";
+
+                if (document.getElementById("gridRadiosA").checked) {
+                    chosen = "A";
+                } 
+                else if (document.getElementById("gridRadiosB").checked) {
+                    chosen = "B";
+                } 
+                else if (document.getElementById("gridRadiosC").checked) {
+                    chosen = "C";
+                } 
+                else {
+                    chosen = "D";
+                }
+
+                document.getElementById("option" + chosen).style.fontWeight = "bold";
+                document.getElementById("option" + chosen).style.color = "red";
+
+                document.getElementById("option" + answers[global_count]).style.fontWeight = "bold";
+                document.getElementById("option" + answers[global_count]).style.color = "green";
+                
+                document.getElementById("response").style.display = "block";
+                document.getElementById("response").style.color = "red";
+                document.getElementById("response").innerHTML = "INCORRECT! The correct answer is " + answers[global_count] + ".";
+
+                document.getElementById("check").innerHTML = "NEXT";
+                if (global_count + 1 == word_count) {
+                    document.getElementById("check").innerHTML = "FINISH";
+                    document.getElementById("startsave").style.display = "none";
+                }
+
+                progress += 1;
+                correct_array += "0, ";
+                document.getElementById("progress").innerHTML = ("<b>Progress: </b>" + progress + "/" + word_count);
+                document.getElementById("correct").innerHTML = ("<b>Correct: </b>" + correct + "/" + progress);
+
+                document.getElementById("attempts").innerHTML += (document.getElementById("option" + chosen).innerHTML + "9009");
+                document.getElementById("vocabas").innerHTML += (document.getElementById("option" + answers[global_count]).innerHTML + "9009");
+            }
+            else {
+                document.getElementById("option" + answers[global_count]).style.fontWeight = "bold";
+                document.getElementById("option" + answers[global_count]).style.color = "green";
+                
+                document.getElementById("response").style.display = "block";
+                document.getElementById("response").style.color = "green";
+                document.getElementById("response").innerHTML = "CORRECT!";
+
+                document.getElementById("check").innerHTML = "NEXT";
+                if (global_count + 1 == word_count) {
+                    document.getElementById("check").innerHTML = "FINISH";
+                    document.getElementById("startsave").style.display = "none";
+                }
+
+                progress += 1;
+                correct += 1;
+                correct_array += "1, ";
+                document.getElementById("progress").innerHTML = ("<b>Progress: </b>" + progress + "/" + word_count);
+                document.getElementById("correct").innerHTML = ("<b>Correct: </b>" + correct + "/" + progress);
+
+                document.getElementById("attempts").innerHTML += (document.getElementById("option" + answers[global_count]).innerHTML + "9009");
+                document.getElementById("vocabas").innerHTML += (document.getElementById("option" + answers[global_count]).innerHTML + "9009");
+            }
+        }
+        else if (document.getElementById("check").innerHTML == "NEXT") {
+            document.getElementById("gridRadiosA").checked = false;
+            document.getElementById("gridRadiosB").checked = false;
+            document.getElementById("gridRadiosC").checked = false;
+            document.getElementById("gridRadiosD").checked = false;
+
+            document.getElementById("optionA").style.color = "#444444";
+            document.getElementById("optionB").style.color = "#444444";
+            document.getElementById("optionC").style.color = "#444444";
+            document.getElementById("optionD").style.color = "#444444";
+
+            document.getElementById("optionA").style.fontWeight = "normal";
+            document.getElementById("optionB").style.fontWeight = "normal";
+            document.getElementById("optionC").style.fontWeight = "normal";
+            document.getElementById("optionD").style.fontWeight = "normal";
+
+            document.getElementById("response").style.display = "none";
+            document.getElementById("check").innerHTML = "CHECK"
+
+            global_count += 1;
+            
+            document.getElementById("time").innerHTML += (watch + ", ");
+            watch = 0;
+            actual_count += 1;
+
+            if (global_count + 1 <= actual_count && global_count + 1 <= (document.getElementById("attempts").value.split("9009").length - 1)) {
+              document.getElementById("form-checkA").classList.add("disabled");
+              document.getElementById("form-checkB").classList.add("disabled");
+              document.getElementById("form-checkC").classList.add("disabled");
+              document.getElementById("form-checkD").classList.add("disabled");
+
+              document.getElementById("gridRadiosA").disabled = true;
+              document.getElementById("gridRadiosB").disabled = true;
+              document.getElementById("gridRadiosC").disabled = true;
+              document.getElementById("gridRadiosD").disabled = true;
+                document.getElementById("goback").disabled = false;
+                if (global_count + 1 == word_count) {
+                    document.getElementById("check").innerHTML = "FINISH";
+                    document.getElementById("startsave").style.display = "none";
+                }
+                else {
+                    document.getElementById("check").innerHTML = "NEXT";
+                }
+                document.getElementById("response").style.display = "none";
+                if (global_count == 0) {
+                    document.getElementById("goback").disabled = true;
+                }
+                neword(true);
+            }
+            else if (actual_count == (document.getElementById("attempts").value.split("9009").length - 1)) {
+                document.getElementById("response").style.display = "none";
+                try {
+                    document.getElementById("tags").style.display = "none";
+                    document.getElementById("roots").style.display = "none";
+                }
+                catch(err) {}
+                document.getElementById("check").innerHTML = "CHECK"
+
+                try {
+                    document.getElementById("alltags").innerHTML = alltags_inner;
+                    document.getElementById("allroots").innerHTML = allroots_inner;
+                    document.getElementById("search_tags").value = ""
+                    document.getElementById("search_roots").value = ""
+                }
+                catch(err) {}
+                
+                document.getElementById("time").innerHTML += (watch + ", ");
+                watch = 0;
+                actual_count += 1;
+                document.getElementById("goback").disabled = false;
+                document.getElementById("form-checkA").classList.remove("disabled");
+                document.getElementById("form-checkB").classList.remove("disabled");
+                document.getElementById("form-checkC").classList.remove("disabled");
+                document.getElementById("form-checkD").classList.remove("disabled");
+
+                document.getElementById("gridRadiosA").disabled = false;
+                document.getElementById("gridRadiosB").disabled = false;
+                document.getElementById("gridRadiosC").disabled = false;
+                document.getElementById("gridRadiosD").disabled = false;
+                neword(false);
+            }
+            else {
+                document.getElementById("form-checkA").classList.remove("disabled");
+                document.getElementById("form-checkB").classList.remove("disabled");
+                document.getElementById("form-checkC").classList.remove("disabled");
+                document.getElementById("form-checkD").classList.remove("disabled");
+
+                document.getElementById("gridRadiosA").disabled = false;
+                document.getElementById("gridRadiosB").disabled = false;
+                document.getElementById("gridRadiosC").disabled = false;
+                document.getElementById("gridRadiosD").disabled = false;
+                document.getElementById("goback").disabled = false;
+                document.getElementById("check").innerHTML = "CHECK";
+                document.getElementById("response").style.display = "none";
+                neword(false);
+            }
+        }
+        else {
+            document.getElementById("time").innerHTML += (watch + ", ");
+
+            document.getElementById("correct_array").innerHTML = correct_array;
+            document.getElementById("score").value = (correct + "/" + word_count);
+            document.getElementById('stop').click();
+        }
+    }
+
+    var arrayLength = questions.length;
+    for (var i = 0; i < arrayLength; i++) {
+        document.getElementById("words").innerHTML += (questions[i] + "990099");
+    }
+    document.getElementById("progress").innerHTML = ("<b>Progress: </b>" + progress + "/" + word_count);
+    document.getElementById("correct").innerHTML = ("<b>Correct: </b>" + correct + "/" + progress);
+    document.onkeydown = function(e) {
+  if(event.keyCode == 123) {
+     return false;
+  }
+  if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) {
+     return false;
+  }
+  if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) {
+     return false;
+  }
+  if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) {
+     return false;
+  }
+  if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) {
+     return false;
+  }
+}
+</script>
+{% endblock %}

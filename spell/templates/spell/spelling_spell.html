@@ -34,6 +34,8 @@
                     <div style="width:50%;" class="col-md-4">
                         <p style="color: #4d4d4d;" id="progress"></p>
                         <p style="color: #2dab26;" id="correct"></p>
+                        <button id="startsave" style="width: 100%; font-size: 12px;" type="button" class="btn btn-warning" onclick="save()">Save Activity</button>
+                        <br><br>
                         <div style="width: 100%;" class="row g-3">
                           <div style="width:80%;" class="col-md-4">
                             <div class="form-floating mb-3">
@@ -125,17 +127,45 @@
         {% endif %}
         <input id="stop" type="submit">
     </form>
+    <form style="display: none;" enctype="multipart/form-data" action="{% url 'save_spell' %}" method="post">
+        {% csrf_token %}
+        <textarea name="words" id="save_words"></textarea>
+        <textarea name="ids_used" id="save_ids_used"></textarea>
+        <textarea name="order" id="save_order"></textarea>
+        <textarea name="correct_array" id="save_correct_array"></textarea>
+        <textarea name="attempts" id="save_attempts"></textarea>
+        <input name="user" id="save_user" value="{{ request.user.id }}">
+        {% if user.is_staff %}
+            <textarea name="new_tags" id="save_new_tags"></textarea>
+            <textarea name="add_words" id="save_add_words"></textarea>
+            <textarea name="add_words_roots" id="save_add_words_roots"></textarea>
+        {% endif %}
+        <input name="global_count" id="glob_count">
+        <input name="actual_count" id="acc_count">
+        <input name="correct" id="corrs">
+        <input name="progress" id="progs">
+        <input name="total" id="saved_total">
+        <textarea name="speech" id="save_speech"></textarea>
+        <textarea name="origin" id="save_origin"></textarea>
+        <textarea name="definition" id="save_definition"></textarea>
+        <textarea name="prons" id="save_prons"></textarea>
+        <textarea name="time" id="save_time"></textarea>
+        <textarea name="final_tags" id="final_tags">{{ final_tags }}</textarea>
+        <textarea name="final_roots" id="final_roots">{{ final_roots }}</textarea>
+        <input name="score" id="save_score">
+        <input id="save" type="submit">
+    </form>
     </section>
   </main><!-- End #main -->
   <script>
     var g_words = "{{ words|safe }}";
-    g_words = g_words.replaceAll("'", '"');
     var g_speech = "{{ speech|safe }}";
-    g_speech = g_speech.replaceAll("'", '"');
     var g_origin = "{{ origin }}";
     var g_definition = "{{ definition }}";
     var g_prons = "{{ prons|safe }}";
     var correct_array = "";
+    g_speech = g_speech.replaceAll("'", '"');
+    g_words = g_words.replaceAll("'", '"');
     const words = JSON.parse(g_words);
     const speech = JSON.parse(g_speech);
     const origins = g_origin.split("|=[]=|");
@@ -153,6 +183,37 @@
     var watch = 0;
     var stopwatch;
     stopwatch = setInterval(function () {if (document.getElementById("nothing").style.display == "none") {watch++;}}, 1000);
+
+    function save() {
+        if (document.getElementById("check").innerHTML == "NEXT") {
+            document.getElementById("check").click();
+        }
+
+        document.getElementById("glob_count").value = global_count;
+        document.getElementById("acc_count").value = actual_count;
+        document.getElementById("corrs").value = correct;
+        document.getElementById("progs").value = progress;
+        document.getElementById("saved_total").value = word_count;
+        document.getElementById("save_words").value = document.getElementById("words").value;
+        document.getElementById("save_ids_used").value = document.getElementById("ids_used").value;
+        document.getElementById("save_order").value = document.getElementById("order").value;
+        document.getElementById("save_attempts").value = document.getElementById("attempts").value;
+        document.getElementById("save_user").value = document.getElementById("user").value;
+        document.getElementById("save_speech").value = g_speech;
+        document.getElementById("save_origin").value = g_origin;
+        document.getElementById("save_definition").value = g_definition;
+        document.getElementById("save_prons").value = g_prons;
+        try {
+            document.getElementById("save_new_tags").value = document.getElementById("new_tags").innerHTML;
+            document.getElementById("save_add_words").value = document.getElementById("add_words").innerHTML;
+            document.getElementById("save_add_words_roots").value = document.getElementById("add_words_roots").innerHTML;
+        } catch(err) {}
+        document.getElementById("save_time").innerHTML += (document.getElementById("time").innerHTML + (watch + ", "));
+
+        document.getElementById("save_correct_array").innerHTML = correct_array;
+        document.getElementById("save_score").value = (correct + "/" + progress);
+        document.getElementById('save').click();
+    }
     
     function back() {
         global_count -= 1;
@@ -324,6 +385,8 @@
                 document.getElementById("check").innerHTML = "NEXT";
                 if (global_count + 1 == word_count) {
                     document.getElementById("check").innerHTML = "FINISH";
+                    document.getElementById("startsave").style.display = "none";
+
                 }
                 progress += 1;
                 correct_array += "0, ";
@@ -360,6 +423,7 @@
                 document.getElementById("check").innerHTML = "NEXT";
                 if (global_count + 1 == word_count) {
                     document.getElementById("check").innerHTML = "FINISH";
+                    document.getElementById("startsave").style.display = "none";
                 }
                 correct_array += "1, ";
                 correct += 1;
