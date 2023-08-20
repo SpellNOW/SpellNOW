@@ -2995,6 +2995,9 @@ def activity(request, id):
         id = new.id
 
         olds = Report.objects.filter(specific=True, iid=id)
+        olderep = Report.objects.get(pk=id)
+        olderep.finished = datetime.datetime.now()
+        olderep.save()
 
         for old in olds:
             old.delete()
@@ -3120,7 +3123,7 @@ def activity(request, id):
             pass
         
         SavedActivity.objects.get(pk=actid).delete()
-        if (count - 1) != int(thingy[1]):
+        if (count - 1) == int(thingy[1]):
             SavedActivity(user=Account.objects.get(pk=int(request.POST["user"])), final_tags=request.POST["final_tags"], final_roots=request.POST["final_roots"], correct_array=request.POST["correct_array"], total=int(request.POST["total"]), report=report_using, global_count=int(request.POST["global_count"]), acc_count=int(request.POST["actual_count"]), correct=int(request.POST["correct"]), progress=int(request.POST["progress"]), words=request.POST["words"], ids_used=request.POST["ids_used"], order=request.POST["order"], attempts=request.POST["attempts"], speech=request.POST["speech"], origin=request.POST["origin"], definition=request.POST["definition"], prons=request.POST["prons"], times=request.POST["time"]).save()
 
         return render(request, "spell/spelling_finish.html", {
@@ -4024,6 +4027,9 @@ def vocab_activity(request, id):
         id_using = new.id
 
         olds = Report.objects.filter(specific=True, iid=new.id)
+        olderep = Report.objects.get(pk=id)
+        olderep.finished = datetime.datetime.now()
+        olderep.save()
 
         for old in olds:
             old.delete()
@@ -4149,7 +4155,7 @@ def vocab_activity(request, id):
             pass
             
         SavedVocabActivity.objects.get(pk=actid).delete()
-        if (count - 1) != int(thingy[1]):
+        if (count - 1) == int(thingy[1]):
             SavedVocabActivity(user=Account.objects.get(pk=request.user.id), ids_used=request.POST["ids_used"], correct_array=request.POST["correct_array"], order=request.POST["order"], attempts=request.POST["attempts"], times=request.POST["time"], report=report_using, global_count=int(request.POST["global_count"]), acc_count=int(request.POST["actual_count"]), correct=int(request.POST["correct"]), progress=int(request.POST["progress"]), total=int(request.POST["total"]), words=request.POST["words"], questions=request.POST["questions"], options=request.POST["options"], answers=request.POST["ans"], vocabas=request.POST["vocabas"]).save()
 
         try:
