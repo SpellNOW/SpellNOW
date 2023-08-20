@@ -1914,7 +1914,16 @@ def word_import(request):
             fs.save(config.FILES_LOC + "spell/static/spell/words.csv", file)
             f = open(config.FILES_LOC + "spell/static/spell/words.csv", "r")
             reader = csv.reader(f)
-            next(reader)
+            try:
+                next(reader)
+            except Exception as e:
+                return render(request, "spell/error.html", {
+                    "bar": "libraries",
+                    "question": Account.objects.get(username=request.user.username) if Account.objects.filter(username=request.user.username) else {"subscribed": True, "daysleft": 10},
+                    "active": "import",
+                    "already": "ERROR",
+                    'message2': "There was an error in processing your file: <b>" + str(e) + "</b>",
+                })
             for row in reader:
                 try:
                     new_word = row[0].lower()

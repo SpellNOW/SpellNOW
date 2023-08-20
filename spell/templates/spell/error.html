@@ -33,12 +33,16 @@
                 </ul>
               {% endif %}
               {% if already %}
-                  <p>{{ message2|safe }}</p>
-                  <ul>
-                      {% for word in already %}
-                          <li>{{ word }}</li>
-                      {% endfor %}
-                  </ul>
+                  {% if already == "ERROR" %}
+                    <p>{{ message2|safe }}</p>
+                  {% else %}
+                    <p>{{ message2|safe }}</p>
+                    <ul>
+                        {% for word in already %}
+                            <li>{{ word }}</li>
+                        {% endfor %}
+                    </ul>
+                  {% endif %}
               {% endif %}
             </div>
           </div>
