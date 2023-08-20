@@ -25,7 +25,7 @@
               <h5 class="card-title">Vocabulary</h5>
               <p>Choose the correct option for the given question regarding vocabulary.</p>
               <div id="nothing">
-                <button onclick="neword()" style="display: block;" class="btn btn-primary" type="button">Click to Launch Activity</button>
+                <button onclick="neword(false)" style="display: block;" class="btn btn-primary" type="button">Click to Launch Activity</button>
               </div>
               
               <div id="everything" style="display:none;">
@@ -118,9 +118,15 @@
   </main><!-- End #main -->
   <script>
     var g_words = "{{ words|safe }}";
-    var g_questions = "{{ questions|safe }}";
-    var g_options = "{{ options|safe }}";
-    var g_ans = "{{ ans|safe }}";
+    var g_questions = "{{ questions }}";
+    var g_options = "{{ options }}";
+    var g_ans = "{{ ans }}";
+    g_questions = g_questions.replaceAll("&lt;b&gt;", '<b>');
+    g_questions = g_questions.replaceAll("&lt;/b&gt;", '</b>');
+    g_options = g_options.replaceAll("&lt;b&gt;", '<b>');
+    g_options = g_options.replaceAll("&lt;/b&gt;", '</b>');
+    g_ans = g_ans.replaceAll("&lt;b&gt;", '<b>');
+    g_ans = g_ans.replaceAll("&lt;/b&gt;", '</b>');
     var correct_array = "{{ correct_array }}";
     const words = g_words.split("990099");
     words.pop();
