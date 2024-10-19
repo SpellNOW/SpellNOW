@@ -4907,6 +4907,12 @@ def validatemail(request, userit, lockit1, lockit2):
     except:
         return render(request, "spell/error_404.html", {})
 
+def about(request):
+    return render(request, "spell/about.html", {
+        "bar": "",
+        "active": "about",
+    })
+
 def privacy(request):
     return render(request, "spell/privacy.html", {
         "bar": "",
